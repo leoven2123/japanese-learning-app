@@ -1,371 +1,244 @@
-import { useState } from "react";
-import { trpc } from "@/lib/trpc";
+import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Sparkles, BookOpen, MessageCircle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { trpc } from "@/lib/trpc";
+import { useState, useRef, useEffect } from "react";
+import { Send, Loader2, Sparkles, BookOpen, MessageCircle, Lightbulb, ArrowRight } from "lucide-react";
 import { Streamdown } from "streamdown";
-import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
 
 export default function AIAssistant() {
-  const [chatMessage, setChatMessage] = useState("");
-  const [grammarPoint, setGrammarPoint] = useState("");
-  const [grammarQuestion, setGrammarQuestion] = useState("");
-  const [vocabularyId, setVocabularyId] = useState("");
-  const [exampleCount, setExampleCount] = useState(3);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const chatMutation = trpc.ai.chat.useMutation();
-  const explainGrammarMutation = trpc.ai.explainGrammar.useMutation();
-  const generateExamplesMutation = trpc.ai.generateExamples.useMutation();
-  const adviceQuery = trpc.ai.getStudyAdvice.useQuery();
-  const generateContentMutation = trpc.ai.generateNextStageContent.useMutation();
 
-  const handleChat = async () => {
-    if (!chatMessage.trim()) {
-      toast.error("请输入问题");
-      return;
-    }
-
-    try {
-      await chatMutation.mutateAsync({ message: chatMessage });
-      setChatMessage("");
-    } catch (error) {
-      toast.error("对话失败,请重试");
-    }
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleExplainGrammar = async () => {
-    if (!grammarPoint.trim()) {
-      toast.error("请输入语法点");
-      return;
-    }
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSend = async (customMessage?: string) => {
+    const messageToSend = customMessage || input.trim();
+    if (!messageToSend || isLoading) return;
+
+    const userMessage: Message = { role: "user", content: messageToSend };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsLoading(true);
 
     try {
-      await explainGrammarMutation.mutateAsync({
-        grammarPoint,
-        question: grammarQuestion || undefined,
+      const response = await chatMutation.mutateAsync({
+        message: messageToSend,
+        context: messages.length > 0 
+          ? `对话历史:
+${messages.slice(-5).map(m => `${m.role === 'user' ? '用户' : 'AI'}: ${m.content}`).join('\n')}`
+          : undefined
       });
-      toast.success("语法解释已生成");
+
+      const assistantMessage: Message = {
+        role: "assistant",
+        content: typeof response.reply === 'string' ? response.reply : JSON.stringify(response.reply),
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
-      toast.error("生成失败,请重试");
+      console.error("Chat error:", error);
+      const errorMessage: Message = {
+        role: "assistant",
+        content: "抱歉,我遇到了一些问题。请稍后再试。",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleGenerateExamples = async () => {
-    const vocabId = parseInt(vocabularyId);
-    if (isNaN(vocabId) || vocabId <= 0) {
-      toast.error("请输入有效的词汇ID");
-      return;
-    }
-
-    try {
-      await generateExamplesMutation.mutateAsync({
-        vocabularyId: vocabId,
-        count: exampleCount,
-      });
-      toast.success("例句已生成");
-    } catch (error) {
-      toast.error("生成失败,请重试");
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
     }
   };
 
-  const handleGenerateContent = async (contentType: "vocabulary" | "grammar" | "exercise") => {
-    try {
-      await generateContentMutation.mutateAsync({
-        contentType,
-        count: 5,
-      });
-      toast.success(`${contentType === 'vocabulary' ? '词汇' : contentType === 'grammar' ? '语法' : '练习'}内容已生成`);
-    } catch (error: any) {
-      toast.error(error.message || "生成失败,请重试");
-    }
-  };
+  // 预设快捷提示词
+  const quickPrompts = [
+    {
+      icon: BookOpen,
+      label: "推荐学习内容",
+      prompt: "根据我当前的学习进度,推荐下一阶段应该学习的内容",
+      color: "text-blue-600"
+    },
+    {
+      icon: MessageCircle,
+      label: "解释语法",
+      prompt: "请解释一下「は」和「が」的区别,并给出例句",
+      color: "text-green-600"
+    },
+    {
+      icon: Lightbulb,
+      label: "生成例句",
+      prompt: "请为「食べる」这个动词生成5个不同场景的例句",
+      color: "text-amber-600"
+    },
+    {
+      icon: Sparkles,
+      label: "学习建议",
+      prompt: "作为日语初学者,我应该如何高效地记忆单词?",
+      color: "text-purple-600"
+    },
+  ];
 
   return (
-    <div className="container py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
-          <Sparkles className="h-8 w-8 text-primary" />
-          AI学习助手
-        </h1>
-        <p className="text-muted-foreground">
-          智能日语学习助手,为您提供个性化的学习建议和内容生成
-        </p>
-      </div>
+    <Layout>
+      <div className="container py-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* 页面标题 */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">AI学习助手</h1>
+              <p className="text-sm text-muted-foreground">
+                个性化学习建议、语法解释和例句生成
+              </p>
+            </div>
+          </div>
 
-      <Tabs defaultValue="advice" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="advice">学习建议</TabsTrigger>
-          <TabsTrigger value="chat">对话助手</TabsTrigger>
-          <TabsTrigger value="grammar">语法解释</TabsTrigger>
-          <TabsTrigger value="generate">内容生成</TabsTrigger>
-        </TabsList>
+          {/* 快捷提示词 - 仅在无对话时显示 */}
+          {messages.length === 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {quickPrompts.map((prompt, index) => (
+                <Card
+                  key={index}
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => handleSend(prompt.prompt)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className={`${prompt.color} mt-0.5`}>
+                        <prompt.icon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium mb-1">{prompt.label}</div>
+                        <div className="text-sm text-muted-foreground line-clamp-2">
+                          {prompt.prompt}
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
 
-        {/* 学习建议 */}
-        <TabsContent value="advice">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                个性化学习建议
-              </CardTitle>
-              <CardDescription>
-                基于您的学习进度和可靠的学习资源,AI为您提供定制化的学习建议
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {adviceQuery.isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : adviceQuery.error ? (
-                <div className="text-center py-8 text-destructive">
-                  加载失败,请刷新页面重试
-                </div>
-              ) : adviceQuery.data?.advice ? (
-                <div className="prose prose-sm max-w-none">
-                  <Streamdown>{typeof adviceQuery.data.advice === 'string' ? adviceQuery.data.advice : ''}</Streamdown>
+          {/* 对话区域 */}
+          <Card className="min-h-[500px] flex flex-col">
+            <CardContent className="flex-1 p-6 overflow-y-auto space-y-4">
+              {messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center space-y-4 py-12">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Sparkles className="w-8 h-8 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">开始对话</h3>
+                    <p className="text-sm text-muted-foreground max-w-md">
+                      选择上方的快捷提示,或在下方输入框中输入您的问题
+                    </p>
+                  </div>
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  暂无学习建议
-                </div>
-              )}
-              <div className="mt-4">
-                <Button
-                  onClick={() => adviceQuery.refetch()}
-                  disabled={adviceQuery.isLoading}
-                >
-                  {adviceQuery.isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      生成中...
-                    </>
-                  ) : (
-                    "刷新建议"
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* 对话助手 */}
-        <TabsContent value="chat">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageCircle className="h-5 w-5" />
-                AI对话助手
-              </CardTitle>
-              <CardDescription>
-                向AI提问任何日语学习相关的问题
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Textarea
-                placeholder="请输入您的问题,例如: 如何区分は和が的用法?"
-                value={chatMessage}
-                onChange={(e) => setChatMessage(e.target.value)}
-                rows={4}
-              />
-              <Button
-                onClick={handleChat}
-                disabled={chatMutation.isPending}
-              >
-                {chatMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    思考中...
-                  </>
-                ) : (
-                  "发送问题"
-                )}
-              </Button>
-
-              {chatMutation.data && (
-                <div className="mt-6 p-4 bg-muted rounded-lg">
-                  <h3 className="font-semibold mb-2">AI回复:</h3>
-                  <div className="prose prose-sm max-w-none">
-                    <Streamdown>{typeof chatMutation.data.reply === 'string' ? chatMutation.data.reply : ''}</Streamdown>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* 语法解释 */}
-        <TabsContent value="grammar">
-          <Card>
-            <CardHeader>
-              <CardTitle>语法点解释</CardTitle>
-              <CardDescription>
-                输入语法点,AI将为您详细解释其用法
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">语法点</label>
-                <Textarea
-                  placeholder="例如: ～てもいいです"
-                  value={grammarPoint}
-                  onChange={(e) => setGrammarPoint(e.target.value)}
-                  rows={2}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">具体问题(可选)</label>
-                <Textarea
-                  placeholder="例如: 这个语法和～てもかまいません有什么区别?"
-                  value={grammarQuestion}
-                  onChange={(e) => setGrammarQuestion(e.target.value)}
-                  rows={2}
-                />
-              </div>
-              <Button
-                onClick={handleExplainGrammar}
-                disabled={explainGrammarMutation.isPending}
-              >
-                {explainGrammarMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    生成中...
-                  </>
-                ) : (
-                  "获取解释"
-                )}
-              </Button>
-
-              {explainGrammarMutation.data && (
-                <div className="mt-6 p-4 bg-muted rounded-lg">
-                  <h3 className="font-semibold mb-2">语法解释:</h3>
-                  <div className="prose prose-sm max-w-none">
-                    <Streamdown>{typeof explainGrammarMutation.data.explanation === 'string' ? explainGrammarMutation.data.explanation : ''}</Streamdown>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* 内容生成 */}
-        <TabsContent value="generate">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>生成下一阶段内容</CardTitle>
-                <CardDescription>
-                  AI根据您的学习进度和大纲,生成下一阶段的学习内容
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Button
-                    className="w-full"
-                    onClick={() => handleGenerateContent("vocabulary")}
-                    disabled={generateContentMutation.isPending}
-                  >
-                    {generateContentMutation.isPending ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
-                    生成词汇
-                  </Button>
-                  <Button
-                    className="w-full"
-                    onClick={() => handleGenerateContent("grammar")}
-                    disabled={generateContentMutation.isPending}
-                  >
-                    {generateContentMutation.isPending ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
-                    生成语法
-                  </Button>
-                  <Button
-                    className="w-full"
-                    onClick={() => handleGenerateContent("exercise")}
-                    disabled={generateContentMutation.isPending}
-                  >
-                    {generateContentMutation.isPending ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
-                    生成练习
-                  </Button>
-                </div>
-
-                {generateContentMutation.data && (
-                  <div className="mt-4 p-4 bg-muted rounded-lg">
-                    <h3 className="font-semibold mb-2">生成结果:</h3>
-                    <pre className="text-xs overflow-auto">
-                      {JSON.stringify(generateContentMutation.data, null, 2)}
-                    </pre>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>生成例句</CardTitle>
-                <CardDescription>
-                  为指定词汇生成实用例句
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">词汇ID</label>
-                  <input
-                    type="number"
-                    className="w-full px-3 py-2 border rounded-md"
-                    placeholder="输入词汇ID"
-                    value={vocabularyId}
-                    onChange={(e) => setVocabularyId(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">例句数量</label>
-                  <input
-                    type="number"
-                    className="w-full px-3 py-2 border rounded-md"
-                    min="1"
-                    max="10"
-                    value={exampleCount}
-                    onChange={(e) => setExampleCount(parseInt(e.target.value) || 3)}
-                  />
-                </div>
-                <Button
-                  onClick={handleGenerateExamples}
-                  disabled={generateExamplesMutation.isPending}
-                  className="w-full"
-                >
-                  {generateExamplesMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      生成中...
-                    </>
-                  ) : (
-                    "生成例句"
-                  )}
-                </Button>
-
-                {generateExamplesMutation.data?.examples && (
-                  <div className="mt-4 space-y-3">
-                    <h3 className="font-semibold">生成的例句:</h3>
-                    {generateExamplesMutation.data.examples.map((example: any, index: number) => (
-                      <div key={index} className="p-3 bg-muted rounded-lg space-y-1">
-                        <p className="font-medium">{example.japanese}</p>
-                        <p className="text-sm text-muted-foreground">{example.reading}</p>
-                        <p className="text-sm">{example.chinese}</p>
+                <>
+                  {messages.map((message, index) => (
+                    <div
+                      key={index}
+                      className={`flex ${
+                        message.role === "user" ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={`max-w-[80%] rounded-lg px-4 py-3 ${
+                          message.role === "user"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted"
+                        }`}
+                      >
+                        {message.role === "assistant" ? (
+                          <div className="prose prose-sm max-w-none dark:prose-invert">
+                            <Streamdown>{message.content}</Streamdown>
+                          </div>
+                        ) : (
+                          <div className="whitespace-pre-wrap">{message.content}</div>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
+                    </div>
+                  ))}
+                  {isLoading && (
+                    <div className="flex justify-start">
+                      <div className="bg-muted rounded-lg px-4 py-3">
+                        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                      </div>
+                    </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </>
+              )}
+            </CardContent>
+
+            {/* 输入区域 */}
+            <div className="border-t p-4">
+              {messages.length > 0 && (
+                <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
+                  {quickPrompts.map((prompt, index) => (
+                    <Badge
+                      key={index}
+                      variant="outline"
+                      className="cursor-pointer hover:bg-accent whitespace-nowrap"
+                      onClick={() => handleSend(prompt.prompt)}
+                    >
+                      <prompt.icon className="w-3 h-3 mr-1" />
+                      {prompt.label}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="输入您的问题..."
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  disabled={isLoading}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={() => handleSend()}
+                  disabled={!input.trim() || isLoading}
+                  size="icon"
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </Layout>
   );
 }
