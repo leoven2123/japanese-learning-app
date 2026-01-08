@@ -225,3 +225,36 @@
 ## 列表状态保持优化
 - [ ] 词汇库返回时保持当前tab、页码和滚动位置
 - [ ] 语法库返回时保持当前tab、页码和滚动位置
+
+## 沉浸式场景学习系统
+- [ ] 设计场景学习系统架构
+- [ ] 设计数据库schema(场景表、对话表、媒体素材表)
+- [ ] 创建分级场景体系(幼儿园→小学→中学→高中级)
+- [ ] 实现纯日语对话模式(点击查看解释,非默认翻译)
+- [ ] 创建故事驱动学习(连续剧式故事线)
+- [ ] 实现角色扮演对话功能
+- [ ] 添加听力优先模式(先听后看)
+- [ ] 添加跟读练习功能
+- [ ] 添加填空对话训练
+- [ ] 集成动漫场景素材库
+- [ ] 集成J-POP歌词素材库
+- [ ] 集成电影场景素材库
+- [ ] 为每个素材标注来源
+- [ ] 创建场景学习页面UI
+- [ ] 测试场景学习功能
+- [ ] 保存检查点
+
+
+## 沉浸式场景学习系统 Phase 1 (已完成)
+- [x] 设计数据库schema (learning_units, media_materials, scene_categories, user_unit_progress, daily_learning_plans, expression_bank)
+- [x] 创建后端API (immersive路由: getCategories, getUnits, getUnitById, getMediaMaterials, getUserProgress, updateProgress, getDailyPlan, generateDailyPlan, getExpressions, generateDialogueVariant, completeUnit)
+- [x] 创建沉浸式学习首页 (ImmersiveLearning.tsx)
+- [x] 创建学习单元详情页 (ImmersiveDetail.tsx)
+- [x] 实现今日学习计划功能 (AI驱动生成)
+- [x] 实现对话播放和进度追踪
+- [x] 实现AI对话变体生成
+- [x] 更新导航和首页链接
+- [x] 创建初始学习单元数据 (10个单元: N5-N1各级别)
+- [x] 编写单元测试 (12个测试全部通过)
+- [x] 测试完整学习流程
+- [ ] 保存检查点

@@ -758,6 +758,287 @@ ${existingItems || '(暂无)'}
    * 艾宾浩斯复习系统路由
    * ============================================
    */
+  /**
+   * ============================================
+   * 沉浸式场景学习系统路由
+   * ============================================
+   */
+  immersive: router({
+    // 获取场景分类列表
+    getCategories: publicProcedure
+      .input(z.object({
+        parentId: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getSceneCategories(input.parentId);
+      }),
+
+    // 获取学习单元列表
+    getUnits: publicProcedure
+      .input(z.object({
+        category: z.string().optional(),
+        subCategory: z.string().optional(),
+        unitType: z.enum(["daily_conversation", "anime_scene", "jpop_lyrics", "movie_clip", "news_article", "business_japanese"]).optional(),
+        jlptLevel: z.enum(["N5", "N4", "N3", "N2", "N1"]).optional(),
+        difficulty: z.number().min(1).max(10).optional(),
+        limit: z.number().optional(),
+        offset: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getLearningUnits(input);
+      }),
+
+    // 获取学习单元详情
+    getUnitById: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getLearningUnitById(input.id);
+      }),
+
+    // 获取媒体素材列表
+    getMediaMaterials: publicProcedure
+      .input(z.object({
+        mediaType: z.enum(["anime", "jpop", "movie", "drama", "variety", "news"]).optional(),
+        jlptLevel: z.enum(["N5", "N4", "N3", "N2", "N1"]).optional(),
+        limit: z.number().optional(),
+        offset: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getMediaMaterials(input);
+      }),
+
+    // 获取媒体素材详情
+    getMediaById: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getMediaMaterialById(input.id);
+      }),
+
+    // 获取用户单元学习进度
+    getUserProgress: protectedProcedure
+      .input(z.object({
+        unitId: z.number().optional(),
+      }))
+      .query(async ({ ctx, input }) => {
+        return await db.getUserUnitProgress(ctx.user.id, input.unitId);
+      }),
+
+    // 更新用户单元学习进度
+    updateProgress: protectedProcedure
+      .input(z.object({
+        unitId: z.number(),
+        status: z.enum(["not_started", "in_progress", "completed", "mastered"]).optional(),
+        completionRate: z.number().min(0).max(100).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await db.updateUserUnitProgress({
+          userId: ctx.user.id,
+          unitId: input.unitId,
+          status: input.status,
+          completionRate: input.completionRate,
+        });
+        return { success: true };
+      }),
+
+    // 获取每日学习计划
+    getDailyPlan: protectedProcedure
+      .input(z.object({
+        date: z.string().optional(), // YYYY-MM-DD format
+      }))
+      .query(async ({ ctx, input }) => {
+        const date = input.date || new Date().toISOString().split('T')[0];
+        return await db.getDailyLearningPlan(ctx.user.id, date);
+      }),
+
+    // 生成每日学习计划 (AI驱动)
+    generateDailyPlan: protectedProcedure
+      .input(z.object({
+        targetMinutes: z.number().min(10).max(120).default(30),
+        focusAreas: z.array(z.string()).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const date = new Date().toISOString().split('T')[0];
+        
+        // 获取用户学习进度
+        const userProgress = await db.getUserUnitProgress(ctx.user.id);
+        const completedUnitIds = Array.isArray(userProgress) 
+          ? userProgress.filter(p => p.status === 'completed' || p.status === 'mastered').map(p => p.unitId)
+          : [];
+        
+        // 获取推荐单元
+        const recommendedUnits = await db.getRecommendedUnits(ctx.user.id, 20);
+        
+        // 获取待复习的单元
+        const dueReviews = await db.getDueReviews(ctx.user.id, undefined, 10);
+        
+        // 使用AI生成学习计划
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `你是一位专业的日语学习规划师。请根据用户的学习进度和目标，生成今日学习计划。
+
+规则：
+1. 优先安排待复习的内容（艾宾浩斯复习）
+2. 新内容应该循序渐进，难度适中
+3. 每个学习单元预估5-15分钟
+4. 总时长控制在用户目标时间内
+5. 返回JSON格式的计划`
+            },
+            {
+              role: "user",
+              content: `用户信息：
+- 目标学习时间：${input.targetMinutes}分钟
+- 已完成单元数：${completedUnitIds.length}
+- 待复习项目：${dueReviews.length}个
+- 关注领域：${input.focusAreas?.join(', ') || '综合学习'}
+
+可选学习单元：
+${recommendedUnits.slice(0, 10).map(u => `- ID:${u.id} 「${u.titleJa}」 难度:${u.difficulty} 类型:${u.unitType}`).join('\n')}
+
+请生成今日学习计划，返回JSON格式：
+{
+  "reasoning": "规划理由",
+  "units": [
+    {"unitId": 1, "type": "new", "estimatedMinutes": 10, "priority": 1},
+    {"unitId": 2, "type": "review", "estimatedMinutes": 5, "priority": 2}
+  ]
+}`
+            }
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "daily_plan",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  reasoning: { type: "string" },
+                  units: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        unitId: { type: "integer" },
+                        type: { type: "string", enum: ["new", "review"] },
+                        estimatedMinutes: { type: "integer" },
+                        priority: { type: "integer" }
+                      },
+                      required: ["unitId", "type", "estimatedMinutes", "priority"],
+                      additionalProperties: false
+                    }
+                  }
+                },
+                required: ["reasoning", "units"],
+                additionalProperties: false
+              }
+            }
+          }
+        });
+        
+        const content = response.choices[0]?.message?.content;
+        let plan = { reasoning: "", units: [] as any[] };
+        
+        try {
+          plan = JSON.parse(typeof content === 'string' ? content : '{}');
+        } catch (e) {
+          console.error('Failed to parse AI response:', e);
+        }
+        
+        // 保存学习计划
+        await db.upsertDailyLearningPlan({
+          userId: ctx.user.id,
+          date,
+          plannedUnits: plan.units,
+          aiReasoning: plan.reasoning,
+        });
+        
+        return await db.getDailyLearningPlan(ctx.user.id, date);
+      }),
+
+    // 获取表达库
+    getExpressions: publicProcedure
+      .input(z.object({
+        functionCategory: z.string().optional(),
+        situationCategory: z.string().optional(),
+        jlptLevel: z.enum(["N5", "N4", "N3", "N2", "N1"]).optional(),
+        limit: z.number().optional(),
+        offset: z.number().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getExpressions(input);
+      }),
+
+    // AI生成对话变体
+    generateDialogueVariant: protectedProcedure
+      .input(z.object({
+        unitId: z.number(),
+        style: z.enum(["casual", "polite", "formal", "slang"]).default("casual"),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const unit = await db.getLearningUnitById(input.unitId);
+        if (!unit) {
+          throw new Error("学习单元不存在");
+        }
+        
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `你是一位专业的日语对话生成器。请根据给定的场景和风格，生成自然的日语对话变体。
+
+要求：
+1. 对话要符合日本人的真实表达习惯
+2. 包含适当的语气词和口语表达
+3. 为每句话添加假名注音（汉字后用括号标注）
+4. 提供自然的中文翻译
+5. 标注关键表达和语法点`
+            },
+            {
+              role: "user",
+              content: `场景：${unit.titleJa}
+描述：${unit.descriptionJa || ''}
+目标表达：${JSON.stringify(unit.targetExpressions || [])}
+风格：${input.style}
+
+请生成一段新的对话变体。`
+            }
+          ]
+        });
+        
+        const content = response.choices[0]?.message?.content || "";
+        
+        // 保存生成的内容
+        await db.saveAIGeneratedContent({
+          userId: ctx.user.id,
+          contentType: "dialogue",
+          prompt: `生成对话变体: ${unit.titleJa} (${input.style})`,
+          generatedContent: { dialogue: content },
+        });
+        
+        return { dialogue: content };
+      }),
+
+    // 完成学习单元
+    completeUnit: protectedProcedure
+      .input(z.object({
+        unitId: z.number(),
+        score: z.number().min(0).max(100).optional(),
+        timeSpent: z.number().optional(), // 实际花费时间(分钟)
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await db.updateUserUnitProgress({
+          userId: ctx.user.id,
+          unitId: input.unitId,
+          status: "completed",
+          completionRate: 100,
+        });
+        
+        return { success: true };
+      }),
+  }),
+
   review: router({
     // 获取学习统计
     getStats: protectedProcedure.query(async ({ ctx }) => {

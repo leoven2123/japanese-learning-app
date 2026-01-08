@@ -12,9 +12,9 @@ export default function Home() {
   const features = [
     {
       icon: BookOpen,
-      title: "场景化学习",
+      title: "沉浸式学习",
       description: "通过真实生活场景学习日语，包括餐厅、购物、交通等多个主题",
-      href: "/scenes"
+      href: "/immersive"
     },
     {
       icon: FileText,
@@ -44,7 +44,7 @@ export default function Home() {
       icon: Award,
       title: "真实素材",
       description: "引用日剧、动漫、音乐等真实语境内容",
-      href: "/scenes"
+      href: "/immersive"
     }
   ];
 
@@ -66,7 +66,7 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" asChild>
-                <Link href="/scenes">
+                <Link href="/immersive">
                   <BookOpen className="w-5 h-5 mr-2" />
                   开始学习
                 </Link>
@@ -193,7 +193,7 @@ export default function Home() {
                 : "登录后解锁更多功能，包括个性化学习计划和AI助手"}
             </p>
             <Button size="lg" variant="secondary" asChild>
-              <Link href={isAuthenticated ? "/scenes" : "/vocabulary"}>
+              <Link href={isAuthenticated ? "/immersive" : "/vocabulary"}>
                 {isAuthenticated ? "继续学习" : "开始探索"}
               </Link>
             </Button>

@@ -1,0 +1,122 @@
+CREATE TABLE `daily_learning_plans` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`userId` int NOT NULL,
+	`date` varchar(10) NOT NULL,
+	`plannedUnits` json,
+	`completedUnits` json,
+	`aiReasoning` text,
+	`totalPlannedMinutes` int DEFAULT 0,
+	`actualStudyMinutes` int DEFAULT 0,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `daily_learning_plans_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `expression_bank` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`expressionJa` varchar(500) NOT NULL,
+	`reading` varchar(500),
+	`meaningJa` text,
+	`meaningZh` text,
+	`functionCategory` varchar(100) NOT NULL,
+	`situationCategory` varchar(100),
+	`difficulty` int NOT NULL DEFAULT 1,
+	`jlptLevel` enum('N5','N4','N3','N2','N1'),
+	`usageNotes` text,
+	`examples` json,
+	`relatedExpressions` json,
+	`relatedVocabularyIds` json,
+	`relatedGrammarIds` json,
+	`sourceType` enum('original','anime','jpop','movie','drama'),
+	`sourceTitle` varchar(255),
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `expression_bank_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `learning_units` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`unitType` enum('scene','expression','media','dialogue') NOT NULL,
+	`category` varchar(100) NOT NULL,
+	`subCategory` varchar(100),
+	`titleJa` varchar(255) NOT NULL,
+	`titleZh` varchar(255),
+	`descriptionJa` text,
+	`difficulty` int NOT NULL DEFAULT 1,
+	`jlptLevel` enum('N5','N4','N3','N2','N1'),
+	`targetExpressions` json,
+	`targetPatterns` json,
+	`targetVocabularyIds` json,
+	`targetGrammarIds` json,
+	`prerequisites` json,
+	`relatedUnits` json,
+	`content` json,
+	`sourceType` enum('original','anime','jpop','movie','drama','novel'),
+	`sourceTitle` varchar(255),
+	`sourceYear` int,
+	`sourceEpisode` varchar(100),
+	`sourceUrl` varchar(500),
+	`orderIndex` int DEFAULT 0,
+	`isPublished` boolean NOT NULL DEFAULT true,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `learning_units_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `media_materials` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`mediaType` enum('anime','jpop','movie','drama','novel','manga') NOT NULL,
+	`title` varchar(255) NOT NULL,
+	`titleJa` varchar(255),
+	`artist` varchar(255),
+	`year` int,
+	`episode` varchar(100),
+	`contentJa` text NOT NULL,
+	`contentReading` text,
+	`analysis` json,
+	`difficulty` int NOT NULL DEFAULT 5,
+	`jlptLevel` enum('N5','N4','N3','N2','N1'),
+	`tags` json,
+	`themes` json,
+	`sourceUrl` varchar(500),
+	`imageUrl` varchar(500),
+	`audioUrl` varchar(500),
+	`isPublished` boolean NOT NULL DEFAULT true,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `media_materials_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `scene_categories` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`nameJa` varchar(100) NOT NULL,
+	`nameZh` varchar(100) NOT NULL,
+	`parentId` int,
+	`descriptionJa` text,
+	`descriptionZh` text,
+	`icon` varchar(50),
+	`color` varchar(20),
+	`minDifficulty` int DEFAULT 1,
+	`maxDifficulty` int DEFAULT 10,
+	`orderIndex` int DEFAULT 0,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `scene_categories_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `user_unit_progress` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`userId` int NOT NULL,
+	`unitId` int NOT NULL,
+	`status` enum('not_started','in_progress','completed','mastered') NOT NULL DEFAULT 'not_started',
+	`completionRate` int NOT NULL DEFAULT 0,
+	`startedAt` timestamp,
+	`completedAt` timestamp,
+	`lastAccessedAt` timestamp,
+	`reviewCount` int NOT NULL DEFAULT 0,
+	`nextReviewAt` timestamp,
+	`userRating` int,
+	`userNotes` text,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `user_unit_progress_id` PRIMARY KEY(`id`)
+);

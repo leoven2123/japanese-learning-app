@@ -1,4 +1,4 @@
-import { eq, and, or, like, inArray, sql, desc, asc, gte, lte } from "drizzle-orm";
+import { eq, and, or, like, inArray, notInArray, sql, desc, asc, gte, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, 
@@ -24,7 +24,19 @@ import {
   studyRecords,
   InsertStudyRecord,
   dailyStudyStats,
-  InsertDailyStudyStats
+  InsertDailyStudyStats,
+  learningUnits,
+  InsertLearningUnit,
+  mediaMaterials,
+  InsertMediaMaterial,
+  sceneCategories,
+  InsertSceneCategory,
+  userUnitProgress,
+  InsertUserUnitProgress,
+  dailyLearningPlans,
+  InsertDailyLearningPlan,
+  expressionBank,
+  InsertExpressionBank
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1245,4 +1257,421 @@ export async function removeFromStudyPlan(
     ));
 
   return true;
+}
+
+
+/**
+ * ============================================
+ * 沉浸式场景学习系统查询
+ * ============================================
+ */
+
+/**
+ * 获取场景分类列表
+ */
+export async function getSceneCategories(parentId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  if (parentId !== undefined) {
+    return await db
+      .select()
+      .from(sceneCategories)
+      .where(eq(sceneCategories.parentId, parentId))
+      .orderBy(asc(sceneCategories.orderIndex));
+  }
+
+  return await db
+    .select()
+    .from(sceneCategories)
+    .orderBy(asc(sceneCategories.orderIndex));
+}
+
+/**
+ * 获取学习单元列表
+ */
+export async function getLearningUnits(params: {
+  category?: string;
+  subCategory?: string;
+  unitType?: string;
+  jlptLevel?: string;
+  difficulty?: number;
+  limit?: number;
+  offset?: number;
+}) {
+  const db = await getDb();
+  if (!db) return { items: [], total: 0 };
+
+  const conditions = [eq(learningUnits.isPublished, true)];
+  
+  if (params.category) {
+    conditions.push(eq(learningUnits.category, params.category));
+  }
+  if (params.subCategory) {
+    conditions.push(eq(learningUnits.subCategory, params.subCategory));
+  }
+  if (params.unitType) {
+    conditions.push(eq(learningUnits.unitType, params.unitType as any));
+  }
+  if (params.jlptLevel) {
+    conditions.push(eq(learningUnits.jlptLevel, params.jlptLevel as any));
+  }
+  if (params.difficulty) {
+    conditions.push(eq(learningUnits.difficulty, params.difficulty));
+  }
+
+  const [items, countResult] = await Promise.all([
+    db
+      .select()
+      .from(learningUnits)
+      .where(and(...conditions))
+      .orderBy(asc(learningUnits.difficulty), asc(learningUnits.orderIndex))
+      .limit(params.limit || 50)
+      .offset(params.offset || 0),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(learningUnits)
+      .where(and(...conditions))
+  ]);
+
+  return {
+    items,
+    total: countResult[0]?.count || 0
+  };
+}
+
+/**
+ * 获取学习单元详情
+ */
+export async function getLearningUnitById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(learningUnits)
+    .where(eq(learningUnits.id, id))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : null;
+}
+
+/**
+ * 创建学习单元
+ */
+export async function createLearningUnit(data: InsertLearningUnit) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(learningUnits).values(data);
+  return result[0].insertId;
+}
+
+/**
+ * 获取媒体素材列表
+ */
+export async function getMediaMaterials(params: {
+  mediaType?: string;
+  jlptLevel?: string;
+  tags?: string[];
+  limit?: number;
+  offset?: number;
+}) {
+  const db = await getDb();
+  if (!db) return { items: [], total: 0 };
+
+  const conditions = [eq(mediaMaterials.isPublished, true)];
+  
+  if (params.mediaType) {
+    conditions.push(eq(mediaMaterials.mediaType, params.mediaType as any));
+  }
+  if (params.jlptLevel) {
+    conditions.push(eq(mediaMaterials.jlptLevel, params.jlptLevel as any));
+  }
+
+  const [items, countResult] = await Promise.all([
+    db
+      .select()
+      .from(mediaMaterials)
+      .where(and(...conditions))
+      .orderBy(desc(mediaMaterials.createdAt))
+      .limit(params.limit || 50)
+      .offset(params.offset || 0),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(mediaMaterials)
+      .where(and(...conditions))
+  ]);
+
+  return {
+    items,
+    total: countResult[0]?.count || 0
+  };
+}
+
+/**
+ * 获取媒体素材详情
+ */
+export async function getMediaMaterialById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(mediaMaterials)
+    .where(eq(mediaMaterials.id, id))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : null;
+}
+
+/**
+ * 创建媒体素材
+ */
+export async function createMediaMaterial(data: InsertMediaMaterial) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(mediaMaterials).values(data);
+  return result[0].insertId;
+}
+
+/**
+ * 获取用户单元学习进度
+ */
+export async function getUserUnitProgress(userId: number, unitId?: number) {
+  const db = await getDb();
+  if (!db) return unitId ? null : [];
+
+  if (unitId) {
+    const result = await db
+      .select()
+      .from(userUnitProgress)
+      .where(
+        and(
+          eq(userUnitProgress.userId, userId),
+          eq(userUnitProgress.unitId, unitId)
+        )
+      )
+      .limit(1);
+    return result.length > 0 ? result[0] : null;
+  }
+
+  return await db
+    .select()
+    .from(userUnitProgress)
+    .where(eq(userUnitProgress.userId, userId))
+    .orderBy(desc(userUnitProgress.lastAccessedAt));
+}
+
+/**
+ * 更新用户单元学习进度
+ */
+export async function updateUserUnitProgress(data: {
+  userId: number;
+  unitId: number;
+  status?: "not_started" | "in_progress" | "completed" | "mastered";
+  completionRate?: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const existing = await getUserUnitProgress(data.userId, data.unitId);
+
+  if (existing && typeof existing === 'object' && 'id' in existing) {
+    await db
+      .update(userUnitProgress)
+      .set({
+        status: data.status || existing.status,
+        completionRate: data.completionRate ?? existing.completionRate,
+        lastAccessedAt: new Date(),
+        completedAt: data.status === 'completed' || data.status === 'mastered' ? new Date() : existing.completedAt,
+      })
+      .where(eq(userUnitProgress.id, existing.id));
+  } else {
+    await db.insert(userUnitProgress).values({
+      userId: data.userId,
+      unitId: data.unitId,
+      status: data.status || "in_progress",
+      completionRate: data.completionRate || 0,
+      startedAt: new Date(),
+      lastAccessedAt: new Date(),
+    });
+  }
+}
+
+/**
+ * 获取每日学习计划
+ */
+export async function getDailyLearningPlan(userId: number, date: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(dailyLearningPlans)
+    .where(
+      and(
+        eq(dailyLearningPlans.userId, userId),
+        eq(dailyLearningPlans.date, date)
+      )
+    )
+    .limit(1);
+
+  return result.length > 0 ? result[0] : null;
+}
+
+/**
+ * 创建或更新每日学习计划
+ */
+export async function upsertDailyLearningPlan(data: {
+  userId: number;
+  date: string;
+  plannedUnits: Array<{
+    unitId: number;
+    type: "new" | "review";
+    estimatedMinutes: number;
+    priority: number;
+  }>;
+  aiReasoning?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const existing = await getDailyLearningPlan(data.userId, data.date);
+  const totalMinutes = data.plannedUnits.reduce((sum, u) => sum + u.estimatedMinutes, 0);
+
+  if (existing) {
+    await db
+      .update(dailyLearningPlans)
+      .set({
+        plannedUnits: data.plannedUnits,
+        aiReasoning: data.aiReasoning,
+        totalPlannedMinutes: totalMinutes,
+      })
+      .where(eq(dailyLearningPlans.id, existing.id));
+    return existing.id;
+  } else {
+    const result = await db.insert(dailyLearningPlans).values({
+      userId: data.userId,
+      date: data.date,
+      plannedUnits: data.plannedUnits,
+      completedUnits: [],
+      aiReasoning: data.aiReasoning,
+      totalPlannedMinutes: totalMinutes,
+      actualStudyMinutes: 0,
+    });
+    return result[0].insertId;
+  }
+}
+
+/**
+ * 获取表达库列表
+ */
+export async function getExpressions(params: {
+  functionCategory?: string;
+  situationCategory?: string;
+  jlptLevel?: string;
+  limit?: number;
+  offset?: number;
+}) {
+  const db = await getDb();
+  if (!db) return { items: [], total: 0 };
+
+  const conditions = [];
+  
+  if (params.functionCategory) {
+    conditions.push(eq(expressionBank.functionCategory, params.functionCategory));
+  }
+  if (params.situationCategory) {
+    conditions.push(eq(expressionBank.situationCategory, params.situationCategory));
+  }
+  if (params.jlptLevel) {
+    conditions.push(eq(expressionBank.jlptLevel, params.jlptLevel as any));
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const [items, countResult] = await Promise.all([
+    db
+      .select()
+      .from(expressionBank)
+      .where(whereClause)
+      .orderBy(asc(expressionBank.difficulty))
+      .limit(params.limit || 50)
+      .offset(params.offset || 0),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(expressionBank)
+      .where(whereClause)
+  ]);
+
+  return {
+    items,
+    total: countResult[0]?.count || 0
+  };
+}
+
+/**
+ * 创建表达
+ */
+export async function createExpression(data: InsertExpressionBank) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(expressionBank).values(data);
+  return result[0].insertId;
+}
+
+/**
+ * 获取用户推荐的学习单元(基于进度和难度)
+ */
+export async function getRecommendedUnits(userId: number, limit: number = 10) {
+  const db = await getDb();
+  if (!db) return [];
+
+  // 获取用户已完成的单元
+  const completedProgress = await db
+    .select({ unitId: userUnitProgress.unitId })
+    .from(userUnitProgress)
+    .where(
+      and(
+        eq(userUnitProgress.userId, userId),
+        inArray(userUnitProgress.status, ["completed", "mastered"])
+      )
+    );
+
+  const completedIds = completedProgress.map(p => p.unitId);
+
+  // 获取用户当前的最高难度
+  const maxDifficultyResult = await db
+    .select({ maxDiff: sql<number>`MAX(${learningUnits.difficulty})` })
+    .from(learningUnits)
+    .innerJoin(userUnitProgress, eq(learningUnits.id, userUnitProgress.unitId))
+    .where(
+      and(
+        eq(userUnitProgress.userId, userId),
+        inArray(userUnitProgress.status, ["completed", "mastered"])
+      )
+    );
+
+  const currentMaxDifficulty = maxDifficultyResult[0]?.maxDiff || 0;
+
+  // 推荐难度在当前水平附近的未完成单元
+  const recommendedUnits = await db
+    .select()
+    .from(learningUnits)
+    .where(
+      and(
+        eq(learningUnits.isPublished, true),
+        lte(learningUnits.difficulty, currentMaxDifficulty + 2),
+        completedIds.length > 0 
+          ? notInArray(learningUnits.id, completedIds)
+          : undefined
+      )
+    )
+    .orderBy(asc(learningUnits.difficulty), asc(learningUnits.orderIndex))
+    .limit(limit);
+
+  return recommendedUnits;
 }

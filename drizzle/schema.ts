@@ -408,3 +408,274 @@ export const dailyStudyStats = mysqlTable("daily_study_stats", {
 
 export type DailyStudyStats = typeof dailyStudyStats.$inferSelect;
 export type InsertDailyStudyStats = typeof dailyStudyStats.$inferInsert;
+
+
+/**
+ * ============================================
+ * 沉浸式场景学习系统表
+ * ============================================
+ */
+
+/**
+ * learning_units - 学习单元表(原子化学习内容)
+ * 每个学习单元是一个可组合的原子,包含场景、表达、媒体素材等
+ */
+export const learningUnits = mysqlTable("learning_units", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // 单元类型和分类
+  unitType: mysqlEnum("unitType", ["scene", "expression", "media", "dialogue"]).notNull(),
+  category: varchar("category", { length: 100 }).notNull(), // 大类:家庭、购物、交通等
+  subCategory: varchar("subCategory", { length: 100 }), // 子类:便利店、超市等
+  
+  // 标题和描述(纯日语)
+  titleJa: varchar("titleJa", { length: 255 }).notNull(), // 日语标题
+  titleZh: varchar("titleZh", { length: 255 }), // 中文标题(可选,用于后台管理)
+  descriptionJa: text("descriptionJa"), // 日语描述
+  
+  // 难度(1-10细粒度)
+  difficulty: int("difficulty").default(1).notNull(),
+  jlptLevel: mysqlEnum("jlptLevel", ["N5", "N4", "N3", "N2", "N1"]),
+  
+  // 学习目标
+  targetExpressions: json("targetExpressions").$type<string[]>(), // 目标表达
+  targetPatterns: json("targetPatterns").$type<string[]>(), // 目标句型
+  targetVocabularyIds: json("targetVocabularyIds").$type<number[]>(), // 关联词汇ID
+  targetGrammarIds: json("targetGrammarIds").$type<number[]>(), // 关联语法ID
+  
+  // 前置条件
+  prerequisites: json("prerequisites").$type<number[]>(), // 前置单元ID
+  relatedUnits: json("relatedUnits").$type<number[]>(), // 相关单元ID
+  
+  // 内容
+  content: json("content").$type<{
+    dialogues?: Array<{
+      speaker: string;
+      speakerRole?: string;
+      text: string;
+      reading?: string;
+      notes?: string; // 点击可查看的注释
+    }>;
+    situationDescription?: string; // 场景描述(日语)
+    culturalNotes?: string; // 文化背景(日语)
+    keyPoints?: string[]; // 学习要点
+  }>(),
+  
+  // 来源标注
+  sourceType: mysqlEnum("sourceType", ["original", "anime", "jpop", "movie", "drama", "novel"]),
+  sourceTitle: varchar("sourceTitle", { length: 255 }),
+  sourceYear: int("sourceYear"),
+  sourceEpisode: varchar("sourceEpisode", { length: 100 }),
+  sourceUrl: varchar("sourceUrl", { length: 500 }),
+  
+  // 排序和状态
+  orderIndex: int("orderIndex").default(0),
+  isPublished: boolean("isPublished").default(true).notNull(),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type LearningUnit = typeof learningUnits.$inferSelect;
+export type InsertLearningUnit = typeof learningUnits.$inferInsert;
+
+/**
+ * media_materials - 媒体素材库
+ * 存储动漫、J-POP、电影等学习素材
+ */
+export const mediaMaterials = mysqlTable("media_materials", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // 素材类型
+  mediaType: mysqlEnum("mediaType", ["anime", "jpop", "movie", "drama", "novel", "manga"]).notNull(),
+  
+  // 基本信息
+  title: varchar("title", { length: 255 }).notNull(), // 作品名
+  titleJa: varchar("titleJa", { length: 255 }), // 日语原名
+  artist: varchar("artist", { length: 255 }), // 歌手/导演/作者
+  year: int("year"),
+  episode: varchar("episode", { length: 100 }), // 集数/章节
+  
+  // 内容
+  contentJa: text("contentJa").notNull(), // 日语原文(歌词/对话/片段)
+  contentReading: text("contentReading"), // 假名注音
+  
+  // 分析内容
+  analysis: json("analysis").$type<{
+    keyExpressions?: Array<{
+      expression: string;
+      reading?: string;
+      meaning?: string;
+      usageNote?: string;
+    }>;
+    grammarPoints?: string[];
+    culturalContext?: string;
+    emotionalTone?: string;
+    difficultyNotes?: string;
+  }>(),
+  
+  // 难度和分类
+  difficulty: int("difficulty").default(5).notNull(),
+  jlptLevel: mysqlEnum("jlptLevel", ["N5", "N4", "N3", "N2", "N1"]),
+  tags: json("tags").$type<string[]>(),
+  themes: json("themes").$type<string[]>(), // 主题:爱情、友情、冒险等
+  
+  // 来源
+  sourceUrl: varchar("sourceUrl", { length: 500 }),
+  imageUrl: varchar("imageUrl", { length: 500 }),
+  audioUrl: varchar("audioUrl", { length: 500 }),
+  
+  isPublished: boolean("isPublished").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MediaMaterial = typeof mediaMaterials.$inferSelect;
+export type InsertMediaMaterial = typeof mediaMaterials.$inferInsert;
+
+/**
+ * scene_categories - 场景分类表
+ * 定义场景的层级分类结构
+ */
+export const sceneCategories = mysqlTable("scene_categories", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // 分类信息
+  nameJa: varchar("nameJa", { length: 100 }).notNull(), // 日语名称
+  nameZh: varchar("nameZh", { length: 100 }).notNull(), // 中文名称
+  parentId: int("parentId"), // 父分类ID(用于层级结构)
+  
+  // 描述
+  descriptionJa: text("descriptionJa"),
+  descriptionZh: text("descriptionZh"),
+  
+  // 图标和样式
+  icon: varchar("icon", { length: 50 }),
+  color: varchar("color", { length: 20 }),
+  
+  // 难度范围
+  minDifficulty: int("minDifficulty").default(1),
+  maxDifficulty: int("maxDifficulty").default(10),
+  
+  // 排序
+  orderIndex: int("orderIndex").default(0),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SceneCategory = typeof sceneCategories.$inferSelect;
+export type InsertSceneCategory = typeof sceneCategories.$inferInsert;
+
+/**
+ * user_unit_progress - 用户单元学习进度
+ * 记录用户对每个学习单元的学习状态
+ */
+export const userUnitProgress = mysqlTable("user_unit_progress", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  unitId: int("unitId").notNull(),
+  
+  // 学习状态
+  status: mysqlEnum("status", ["not_started", "in_progress", "completed", "mastered"]).default("not_started").notNull(),
+  
+  // 完成度(0-100)
+  completionRate: int("completionRate").default(0).notNull(),
+  
+  // 学习记录
+  startedAt: timestamp("startedAt"),
+  completedAt: timestamp("completedAt"),
+  lastAccessedAt: timestamp("lastAccessedAt"),
+  
+  // 复习相关
+  reviewCount: int("reviewCount").default(0).notNull(),
+  nextReviewAt: timestamp("nextReviewAt"),
+  
+  // 用户评分和笔记
+  userRating: int("userRating"), // 1-5星
+  userNotes: text("userNotes"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserUnitProgress = typeof userUnitProgress.$inferSelect;
+export type InsertUserUnitProgress = typeof userUnitProgress.$inferInsert;
+
+/**
+ * daily_learning_plans - 每日学习计划
+ * AI生成的每日个性化学习计划
+ */
+export const dailyLearningPlans = mysqlTable("daily_learning_plans", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD
+  
+  // 计划内容
+  plannedUnits: json("plannedUnits").$type<Array<{
+    unitId: number;
+    type: "new" | "review";
+    estimatedMinutes: number;
+    priority: number;
+  }>>(),
+  
+  // 完成情况
+  completedUnits: json("completedUnits").$type<number[]>(),
+  
+  // AI决策理由
+  aiReasoning: text("aiReasoning"),
+  
+  // 统计
+  totalPlannedMinutes: int("totalPlannedMinutes").default(0),
+  actualStudyMinutes: int("actualStudyMinutes").default(0),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DailyLearningPlan = typeof dailyLearningPlans.$inferSelect;
+export type InsertDailyLearningPlan = typeof dailyLearningPlans.$inferInsert;
+
+/**
+ * expression_bank - 表达库
+ * 存储常用日语表达,按功能分类
+ */
+export const expressionBank = mysqlTable("expression_bank", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // 表达内容
+  expressionJa: varchar("expressionJa", { length: 500 }).notNull(),
+  reading: varchar("reading", { length: 500 }),
+  meaningJa: text("meaningJa"), // 日语解释(优先)
+  meaningZh: text("meaningZh"), // 中文解释
+  
+  // 分类
+  functionCategory: varchar("functionCategory", { length: 100 }).notNull(), // 功能:问候、请求、感谢等
+  situationCategory: varchar("situationCategory", { length: 100 }), // 场景:正式、非正式、商务等
+  
+  // 难度
+  difficulty: int("difficulty").default(1).notNull(),
+  jlptLevel: mysqlEnum("jlptLevel", ["N5", "N4", "N3", "N2", "N1"]),
+  
+  // 使用说明
+  usageNotes: text("usageNotes"),
+  examples: json("examples").$type<Array<{
+    sentence: string;
+    reading?: string;
+    context?: string;
+  }>>(),
+  
+  // 关联
+  relatedExpressions: json("relatedExpressions").$type<number[]>(),
+  relatedVocabularyIds: json("relatedVocabularyIds").$type<number[]>(),
+  relatedGrammarIds: json("relatedGrammarIds").$type<number[]>(),
+  
+  // 来源
+  sourceType: mysqlEnum("sourceType", ["original", "anime", "jpop", "movie", "drama"]),
+  sourceTitle: varchar("sourceTitle", { length: 255 }),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ExpressionBank = typeof expressionBank.$inferSelect;
+export type InsertExpressionBank = typeof expressionBank.$inferInsert;

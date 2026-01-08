@@ -15,6 +15,8 @@ import SceneList from "./pages/SceneList";
 import SceneDetail from "./pages/SceneDetail";
 import Review from "./pages/Review";
 import AIAssistant from "./pages/AIAssistant";
+import ImmersiveLearning from "./pages/ImmersiveLearning";
+import ImmersiveDetail from "./pages/ImmersiveDetail";
 
 function Router() {
   return (
@@ -23,11 +25,13 @@ function Router() {
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/vocabulary"} component={VocabularyList} />
       <Route path={"/vocabulary/:id"} component={VocabularyDetail} />
-        <Route path="/grammar" component={GrammarList} />
-        <Route path="/admin/import" component={DataImport} />
+      <Route path="/grammar" component={GrammarList} />
+      <Route path="/admin/import" component={DataImport} />
       <Route path={"/grammar/:id"} component={GrammarDetail} />
       <Route path={"/scenes"} component={SceneList} />
       <Route path={"/scenes/:id"} component={SceneDetail} />
+      <Route path={"/immersive"} component={ImmersiveLearning} />
+      <Route path={"/immersive/:id"} component={ImmersiveDetail} />
       <Route path={"/review"} component={Review} />
       <Route path={"/ai-assistant"} component={AIAssistant} />
       <Route path={"/404"} component={NotFound} />

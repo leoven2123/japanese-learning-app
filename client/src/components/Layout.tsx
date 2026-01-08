@@ -36,7 +36,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { href: "/", label: "首页", icon: LayoutDashboard },
-    { href: "/scenes", label: "场景学习", icon: BookOpen },
+    { href: "/immersive", label: "沉浸学习", icon: BookOpen },
     { href: "/vocabulary", label: "词汇库", icon: FileText },
     { href: "/grammar", label: "语法库", icon: FileText },
     ...(isAuthenticated ? [
