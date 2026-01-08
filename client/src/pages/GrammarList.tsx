@@ -35,11 +35,17 @@ export default function GrammarList() {
   }, [selectedLevel, searchTerm, firstLetter, sortBy]);
   
   // 获取各等级语法数量
-  const { data: n5Count } = trpc.grammar.list.useQuery({ jlptLevel: "N5" }, { select: (data) => data?.length || 0 });
-  const { data: n4Count } = trpc.grammar.list.useQuery({ jlptLevel: "N4" }, { select: (data) => data?.length || 0 });
-  const { data: n3Count } = trpc.grammar.list.useQuery({ jlptLevel: "N3" }, { select: (data) => data?.length || 0 });
-  const { data: n2Count } = trpc.grammar.list.useQuery({ jlptLevel: "N2" }, { select: (data) => data?.length || 0 });
-  const { data: n1Count } = trpc.grammar.list.useQuery({ jlptLevel: "N1" }, { select: (data) => data?.length || 0 });
+  const { data: n5Data } = trpc.grammar.list.useQuery({ jlptLevel: "N5", limit: 1 });
+  const { data: n4Data } = trpc.grammar.list.useQuery({ jlptLevel: "N4", limit: 1 });
+  const { data: n3Data } = trpc.grammar.list.useQuery({ jlptLevel: "N3", limit: 1 });
+  const { data: n2Data } = trpc.grammar.list.useQuery({ jlptLevel: "N2", limit: 1 });
+  const { data: n1Data } = trpc.grammar.list.useQuery({ jlptLevel: "N1", limit: 1 });
+  
+  const n5Count = n5Data?.total || 0;
+  const n4Count = n4Data?.total || 0;
+  const n3Count = n3Data?.total || 0;
+  const n2Count = n2Data?.total || 0;
+  const n1Count = n1Data?.total || 0;
 
   return (
     <Layout>
@@ -146,9 +152,8 @@ export default function GrammarList() {
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
-              ) : grammarList && grammarList.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {grammarList.map((grammar) => (
+              ) : grammarList && grammarList.items.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">                  {grammarList?.items.map((grammar) => (
                     <Link key={grammar.id} href={`/grammar/${grammar.id}`}>
                       <Card className="h-full card-hover cursor-pointer">
                         <CardHeader>
@@ -186,7 +191,7 @@ export default function GrammarList() {
               )}
               
               {/* 分页控件 */}
-              {grammarList && grammarList.length > 0 && (
+              {grammarList && grammarList.items.length > 0 && (
                 <div className="flex items-center justify-center gap-2 mt-8">
                   <Button
                     variant="outline"
@@ -198,13 +203,13 @@ export default function GrammarList() {
                     上一页
                   </Button>
                   <span className="text-sm text-muted-foreground px-4">
-                    第 {page} 页
+                    第 {page} 页 / 共 {Math.ceil(grammarList.total / pageSize)} 页
                   </span>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setPage(p => p + 1)}
-                    disabled={grammarList.length < pageSize}
+                    disabled={page >= Math.ceil(grammarList.total / pageSize)}
                   >
                     下一页
                     <ChevronRight className="w-4 h-4" />

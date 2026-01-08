@@ -141,7 +141,7 @@ export async function getVocabularyList(params: {
   offset?: number;
 }) {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) return { items: [], total: 0 };
 
   const conditions = [];
   if (params.jlptLevel) {
@@ -167,6 +167,16 @@ export async function getVocabularyList(params: {
     );
   }
 
+  // 获取总数
+  const countQuery = db
+    .select({ count: sql<number>`count(*)` })
+    .from(vocabulary)
+    .where(conditions.length > 0 ? and(...conditions) : undefined);
+  
+  const countResult = await countQuery;
+  const total = countResult[0]?.count || 0;
+
+  // 获取分页数据
   let query = db
     .select()
     .from(vocabulary)
@@ -181,7 +191,9 @@ export async function getVocabularyList(params: {
 
   query = query.limit(params.limit || 50).offset(params.offset || 0) as any;
 
-  return await query;
+  const items = await query;
+  
+  return { items, total };
 }
 
 export async function getVocabularyById(id: number) {
@@ -265,7 +277,7 @@ export async function getGrammarList(params: {
   offset?: number;
 }) {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) return { items: [], total: 0 };
 
   const conditions = [];
   if (params.jlptLevel) {
@@ -289,6 +301,16 @@ export async function getGrammarList(params: {
     );
   }
 
+  // 获取总数
+  const countQuery = db
+    .select({ count: sql<number>`count(*)` })
+    .from(grammar)
+    .where(conditions.length > 0 ? and(...conditions) : undefined);
+  
+  const countResult = await countQuery;
+  const total = countResult[0]?.count || 0;
+
+  // 获取分页数据
   let query = db
     .select()
     .from(grammar)
@@ -303,7 +325,9 @@ export async function getGrammarList(params: {
 
   query = query.limit(params.limit || 50).offset(params.offset || 0) as any;
 
-  return await query;
+  const items = await query;
+  
+  return { items, total };
 }
 
 export async function getGrammarById(id: number) {

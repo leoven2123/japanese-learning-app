@@ -36,12 +36,19 @@ export default function VocabularyList() {
   }, [selectedLevel, searchTerm, firstLetter, sortBy]);
   
   // 获取各等级词汇数量
-  const { data: n5Count } = trpc.vocabulary.list.useQuery({ jlptLevel: "N5" }, { select: (data) => data?.length || 0 });
-  const { data: n4Count } = trpc.vocabulary.list.useQuery({ jlptLevel: "N4" }, { select: (data) => data?.length || 0 });
-  const { data: n3Count } = trpc.vocabulary.list.useQuery({ jlptLevel: "N3" }, { select: (data) => data?.length || 0 });
-  const { data: n2Count } = trpc.vocabulary.list.useQuery({ jlptLevel: "N2" }, { select: (data) => data?.length || 0 });
-  const { data: n1Count } = trpc.vocabulary.list.useQuery({ jlptLevel: "N1" }, { select: (data) => data?.length || 0 });
-  const { data: slangCount } = trpc.vocabulary.list.useQuery({ jlptLevel: undefined }, { select: (data) => data?.filter(v => v.category === 'slang').length || 0 });
+  const { data: n5Data } = trpc.vocabulary.list.useQuery({ jlptLevel: "N5", limit: 1 });
+  const { data: n4Data } = trpc.vocabulary.list.useQuery({ jlptLevel: "N4", limit: 1 });
+  const { data: n3Data } = trpc.vocabulary.list.useQuery({ jlptLevel: "N3", limit: 1 });
+  const { data: n2Data } = trpc.vocabulary.list.useQuery({ jlptLevel: "N2", limit: 1 });
+  const { data: n1Data } = trpc.vocabulary.list.useQuery({ jlptLevel: "N1", limit: 1 });
+  const { data: slangData } = trpc.vocabulary.list.useQuery({ jlptLevel: undefined, limit: 1 });
+  
+  const n5Count = n5Data?.total || 0;
+  const n4Count = n4Data?.total || 0;
+  const n3Count = n3Data?.total || 0;
+  const n2Count = n2Data?.total || 0;
+  const n1Count = n1Data?.total || 0;
+  const slangCount = slangData?.items.filter(v => v.category === 'slang').length || 0;
 
   const { data: slangStatus } = trpc.slang.getUpdateStatus.useQuery();
   const updateSlangMutation = trpc.slang.updateSlangWords.useMutation({
@@ -200,9 +207,8 @@ export default function VocabularyList() {
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
-              ) : vocabularyList && vocabularyList.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {vocabularyList.map((vocab) => (
+              ) : vocabularyList && vocabularyList.items.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">                  {vocabularyList?.items.map((vocab) => (
                     <Link key={vocab.id} href={`/vocabulary/${vocab.id}`}>
                       <Card className="h-full card-hover cursor-pointer">
                         <CardHeader>
@@ -245,9 +251,8 @@ export default function VocabularyList() {
                   </CardContent>
                 </Card>
               )}
-              
-              {/* 分页控件 */}
-              {vocabularyList && vocabularyList.length > 0 && (
+                            {/* 分页控件 */}
+              {vocabularyList && vocabularyList.items.length > 0 && (
                 <div className="flex items-center justify-center gap-2 mt-8">
                   <Button
                     variant="outline"
@@ -259,13 +264,13 @@ export default function VocabularyList() {
                     上一页
                   </Button>
                   <span className="text-sm text-muted-foreground px-4">
-                    第 {page} 页
+                    第 {page} 页 / 共 {Math.ceil(vocabularyList.total / pageSize)} 页
                   </span>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setPage(p => p + 1)}
-                    disabled={vocabularyList.length < pageSize}
+                    disabled={page >= Math.ceil(vocabularyList.total / pageSize)}
                   >
                     下一页
                     <ChevronRight className="w-4 h-4" />
