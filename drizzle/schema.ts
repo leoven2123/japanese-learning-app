@@ -79,6 +79,9 @@ export const vocabulary = mysqlTable("vocabulary", {
   category: varchar("category", { length: 50 }).default("standard"),
   source: varchar("source", { length: 255 }),
   detailedExplanation: text("detailedExplanation"),
+  collocations: json("collocations").$type<string[]>(), // 常用搭配
+  synonyms: json("synonyms").$type<string[]>(), // 同义词
+  antonyms: json("antonyms").$type<string[]>(), // 反义词
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

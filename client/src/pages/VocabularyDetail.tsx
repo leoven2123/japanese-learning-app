@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { useRoute } from "wouter";
-import { Loader2, ArrowLeft, BookOpen, Sparkles, MessageSquare, X } from "lucide-react";
+import { Loader2, ArrowLeft, BookOpen, Sparkles, MessageSquare, X, Volume2, VolumeX } from "lucide-react";
+import { useSpeech } from "@/hooks/useSpeech";
 import { parseJapaneseWithReading } from "@/components/RubyText";
 import { Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -23,6 +24,17 @@ export default function VocabularyDetail() {
   
   const [aiExamples, setAiExamples] = React.useState<Array<{japanese: string, reading: string, chinese: string}>>([]);
   const [aiDialogue, setAiDialogue] = React.useState<{title: string, scenario: string, dialogue: Array<{speaker: string, japanese: string, reading: string, chinese: string}>} | null>(null);
+  
+  // 语音朗读功能
+  const { speak, stop, isSpeaking, isSupported } = useSpeech();
+  
+  const handleSpeak = () => {
+    if (isSpeaking) {
+      stop();
+    } else {
+      speak(vocab?.expression || '');
+    }
+  };
 
   const handleMarkAsLearned = async (level: "learning" | "familiar" | "mastered") => {
     if (!isAuthenticated) {
@@ -75,8 +87,25 @@ export default function VocabularyDetail() {
           <Card>
             <CardHeader>
               <div className="flex items-start justify-between gap-4">
-                <div className="space-y-2">
-                  <CardTitle className="japanese-text text-5xl">{vocab.expression}</CardTitle>
+                <div className="space-y-2 flex-1">
+                  <div className="flex items-center gap-3">
+                    <CardTitle className="japanese-text text-5xl">{vocab.expression}</CardTitle>
+                    {isSupported && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleSpeak}
+                        className="h-12 w-12"
+                        title={isSpeaking ? "停止朗读" : "朗读发音"}
+                      >
+                        {isSpeaking ? (
+                          <VolumeX className="w-6 h-6" />
+                        ) : (
+                          <Volume2 className="w-6 h-6" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
                   <CardDescription className="text-xl">{vocab.reading}</CardDescription>
                   {vocab.romaji && (
                     <p className="text-muted-foreground">{vocab.romaji}</p>
@@ -97,6 +126,45 @@ export default function VocabularyDetail() {
                 <div>
                   <h3 className="font-semibold mb-2">词性</h3>
                   <Badge variant="outline">{vocab.partOfSpeech}</Badge>
+                </div>
+              )}
+              
+              {vocab.collocations && vocab.collocations.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-2">常用搭配</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {vocab.collocations.map((collocation: string, index: number) => (
+                      <Badge key={index} variant="secondary" className="japanese-text">
+                        {collocation}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {vocab.synonyms && vocab.synonyms.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-2">同义词</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {vocab.synonyms.map((synonym: string, index: number) => (
+                      <Badge key={index} variant="outline" className="japanese-text">
+                        {synonym}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {vocab.antonyms && vocab.antonyms.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-2">反义词</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {vocab.antonyms.map((antonym: string, index: number) => (
+                      <Badge key={index} variant="outline" className="japanese-text">
+                        {antonym}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               )}
 
