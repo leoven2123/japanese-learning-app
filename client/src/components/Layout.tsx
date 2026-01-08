@@ -52,10 +52,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-6">
             <Link href="/">
-              <a className="flex items-center gap-2 font-semibold text-xl">
+              <span className="flex items-center gap-2 font-semibold text-xl cursor-pointer">
                 <span className="japanese-text text-primary">日本語</span>
                 <span className="text-muted-foreground text-sm">学习应用</span>
-              </a>
+              </span>
             </Link>
 
             {/* Desktop Navigation */}
@@ -65,14 +65,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 const isActive = location === item.href;
                 return (
                   <Link key={item.href} href={item.href}>
-                    <a className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    <span className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
                       isActive 
                         ? "bg-primary text-primary-foreground" 
                         : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                     }`}>
                       <Icon className="w-4 h-4" />
                       {item.label}
-                    </a>
+                    </span>
                   </Link>
                 );
               })}
@@ -133,8 +133,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 const isActive = location === item.href;
                 return (
                   <Link key={item.href} href={item.href}>
-                    <a 
-                      className={`flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-colors ${
+                    <span 
+                      className={`flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-colors cursor-pointer ${
                         isActive 
                           ? "bg-primary text-primary-foreground" 
                           : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
@@ -143,7 +143,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     >
                       <Icon className="w-5 h-5" />
                       {item.label}
-                    </a>
+                    </span>
                   </Link>
                 );
               })}
