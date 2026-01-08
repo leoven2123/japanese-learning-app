@@ -14,7 +14,11 @@ import {
   learningResources,
   learningCurriculum,
   aiGeneratedContent,
-  userLearningPath
+  userLearningPath,
+  conversations,
+  conversationMessages,
+  InsertConversation,
+  InsertConversationMessage
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -520,4 +524,121 @@ export async function saveAIGeneratedContent(data: {
   });
 
   return result;
+}
+
+
+/**
+ * ============================================
+ * AI助手对话历史查询
+ * ============================================
+ */
+
+/**
+ * 创建新的对话会话
+ */
+export async function createConversation(userId: number, title: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(conversations).values({
+    userId,
+    title,
+    lastMessageAt: new Date(),
+  });
+
+  return result[0].insertId;
+}
+
+/**
+ * 获取用户的对话列表
+ */
+export async function getUserConversations(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(conversations)
+    .where(eq(conversations.userId, userId))
+    .orderBy(desc(conversations.lastMessageAt));
+}
+
+/**
+ * 获取对话的所有消息
+ */
+export async function getConversationMessages(conversationId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(conversationMessages)
+    .where(eq(conversationMessages.conversationId, conversationId))
+    .orderBy(asc(conversationMessages.createdAt));
+}
+
+/**
+ * 添加消息到对话
+ */
+export async function addMessageToConversation(
+  conversationId: number,
+  role: "user" | "assistant",
+  content: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // 插入消息
+  await db.insert(conversationMessages).values({
+    conversationId,
+    role,
+    content,
+  });
+
+  // 更新对话的最后消息时间
+  await db
+    .update(conversations)
+    .set({ lastMessageAt: new Date() })
+    .where(eq(conversations.id, conversationId));
+}
+
+/**
+ * 删除对话
+ */
+export async function deleteConversation(conversationId: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // 先删除所有消息
+  await db
+    .delete(conversationMessages)
+    .where(eq(conversationMessages.conversationId, conversationId));
+
+  // 再删除对话(确保是用户自己的对话)
+  await db
+    .delete(conversations)
+    .where(and(
+      eq(conversations.id, conversationId),
+      eq(conversations.userId, userId)
+    ));
+}
+
+/**
+ * 更新对话标题
+ */
+export async function updateConversationTitle(
+  conversationId: number,
+  userId: number,
+  title: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(conversations)
+    .set({ title })
+    .where(and(
+      eq(conversations.id, conversationId),
+      eq(conversations.userId, userId)
+    ));
 }

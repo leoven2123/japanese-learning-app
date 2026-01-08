@@ -426,8 +426,19 @@ ${existingItems || '(暂无)'}
       .input(z.object({
         message: z.string(),
         context: z.string().optional(),
+        conversationId: z.number().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
+        // 如果没有conversationId,创建新对话
+        let convId = input.conversationId;
+        if (!convId) {
+          // 从消息中提取标题(取前20个字符)
+          const title = input.message.substring(0, 20) + (input.message.length > 20 ? '...' : '');
+          convId = await db.createConversation(ctx.user.id, title);
+        }
+        
+        // 保存用户消息
+        await db.addMessageToConversation(convId, "user", input.message);
         const response = await invokeLLM({
           messages: [
             {
@@ -443,9 +454,47 @@ ${existingItems || '(暂无)'}
           ]
         });
         
+        const replyContent = response.choices[0]?.message?.content;
+        const reply = typeof replyContent === 'string' ? replyContent : "抱歉,我现在无法回答。";
+        
+        // 保存AI回复
+        await db.addMessageToConversation(convId, "assistant", reply);
+        
         return {
-          reply: response.choices[0]?.message?.content || "抱歉,我现在无法回答。"
+          reply,
+          conversationId: convId
         };
+      }),
+    
+    // 获取对话列表
+    getConversations: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getUserConversations(ctx.user.id);
+    }),
+    
+    // 获取对话消息
+    getConversationMessages: protectedProcedure
+      .input(z.object({ conversationId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getConversationMessages(input.conversationId);
+      }),
+    
+    // 删除对话
+    deleteConversation: protectedProcedure
+      .input(z.object({ conversationId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.deleteConversation(input.conversationId, ctx.user.id);
+        return { success: true };
+      }),
+    
+    // 更新对话标题
+    updateConversationTitle: protectedProcedure
+      .input(z.object({ 
+        conversationId: z.number(),
+        title: z.string()
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await db.updateConversationTitle(input.conversationId, ctx.user.id, input.title);
+        return { success: true };
       }),
   }),
 
