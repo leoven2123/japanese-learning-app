@@ -11,6 +11,7 @@ import {
 import { Streamdown } from "streamdown";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { RomajiInput } from "@/components/RomajiInput";
 import { toast } from "sonner";
 
 interface Message {
@@ -360,24 +361,27 @@ export default function AIAssistant() {
                     ))}
                   </div>
                 )}
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="输入您的问题..."
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    disabled={isLoading}
-                    className="flex-1"
-                  />
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <RomajiInput
+                      value={input}
+                      onChange={setInput}
+                      onSubmit={() => handleSend()}
+                      placeholder="输入您的问题(支持罗马音转假名)..."
+                      disabled={isLoading}
+                      className="min-h-[60px]"
+                    />
+                  </div>
                   <Button
                     onClick={() => handleSend()}
                     disabled={!input.trim() || isLoading}
                     size="icon"
+                    className="h-[60px] w-[60px]"
                   >
                     {isLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
-                      <Send className="w-4 h-4" />
+                      <Send className="w-5 h-5" />
                     )}
                   </Button>
                 </div>
