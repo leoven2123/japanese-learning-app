@@ -25,8 +25,13 @@ export default function VocabularyDetail() {
   const [aiExamples, setAiExamples] = React.useState<Array<{japanese: string, reading: string, chinese: string}>>([]);
   const [aiDialogue, setAiDialogue] = React.useState<{title: string, scenario: string, dialogue: Array<{speaker: string, japanese: string, reading: string, chinese: string}>} | null>(null);
   
-  // 语音朗读功能
-  const { speak, stop, isSpeaking, isSupported } = useSpeech();
+  // 语音朗读功能 - 使用浏览器内置Web Speech API
+  const { speak, stop, isSpeaking, isSupported } = useSpeech({
+    lang: 'ja-JP',
+    rate: 0.85, // 略慢一些，更清晰
+    pitch: 1.0,
+    volume: 1.0,
+  });
   
   const handleSpeak = () => {
     if (isSpeaking) {
