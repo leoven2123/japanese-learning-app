@@ -76,6 +76,9 @@ export const vocabulary = mysqlTable("vocabulary", {
   jlptLevel: mysqlEnum("jlptLevel", ["N5", "N4", "N3", "N2", "N1"]).notNull(),
   difficulty: int("difficulty").default(1),
   tags: json("tags").$type<string[]>(),
+  category: varchar("category", { length: 50 }).default("standard"),
+  source: varchar("source", { length: 255 }),
+  detailedExplanation: text("detailedExplanation"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -113,6 +116,7 @@ export const sentences = mysqlTable("sentences", {
   romaji: text("romaji"),
   chinese: text("chinese").notNull(),
   source: varchar("source", { length: 255 }),
+  sourceType: mysqlEnum("sourceType", ["web", "ai", "textbook", "anime", "drama", "other"]).default("other"),
   difficulty: int("difficulty").default(1),
   tags: json("tags").$type<string[]>(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

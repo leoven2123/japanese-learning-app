@@ -6,6 +6,7 @@ import { z } from "zod";
 import * as db from "./db";
 import { invokeLLM } from "./_core/llm";
 import { transcribeAudio } from "./_core/voiceTranscription";
+import { updateSlangWords, getSlangUpdateStatus } from "./slangUpdater";
 
 export const appRouter = router({
   system: systemRouter,
@@ -26,6 +27,23 @@ export const appRouter = router({
    * 词汇相关路由
    * ============================================
    */
+  /**
+   * ============================================
+   * 网络热词相关路由
+   * ============================================
+   */
+  slang: router({
+    updateSlangWords: protectedProcedure
+      .mutation(async () => {
+        return await updateSlangWords();
+      }),
+
+    getUpdateStatus: publicProcedure
+      .query(async () => {
+        return await getSlangUpdateStatus();
+      }),
+  }),
+
   vocabulary: router({
     list: publicProcedure
       .input(z.object({

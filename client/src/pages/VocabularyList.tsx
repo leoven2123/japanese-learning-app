@@ -6,16 +6,38 @@ import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import { Link } from "wouter";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { VocabRuby } from "@/components/Ruby";
 
 export default function VocabularyList() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedLevel, setSelectedLevel] = useState<"N5" | "N4" | "N3" | "N2" | "N1">("N5");
+  const [selectedLevel, setSelectedLevel] = useState<"N5" | "N4" | "N3" | "N2" | "N1" | "slang">("N5");
   
   const { data: vocabularyList, isLoading } = trpc.vocabulary.list.useQuery({
-    jlptLevel: selectedLevel,
+    jlptLevel: selectedLevel === "slang" ? undefined : selectedLevel as any,
     search: searchTerm || undefined
+  });
+
+  const { data: slangStatus } = trpc.slang.getUpdateStatus.useQuery();
+  const updateSlangMutation = trpc.slang.updateSlangWords.useMutation({
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success("热词更新成功", {
+          description: `新增 ${result.addedCount} 个，更新 ${result.updatedCount} 个热词`,
+        });
+      } else {
+        toast.error("热词更新失败", {
+          description: result.error || "未知错误",
+        });
+      }
+    },
+    onError: (error) => {
+      toast.error("热词更新失败", {
+        description: error.message,
+      });
+    },
   });
 
   return (
@@ -39,14 +61,56 @@ export default function VocabularyList() {
             />
           </div>
 
+          <div className="flex items-center justify-between gap-4">
+            <Tabs value={selectedLevel} onValueChange={(v) => setSelectedLevel(v as any)} className="flex-1">
+              <TabsList className="grid w-full grid-cols-6">
+                <TabsTrigger value="N5">N5</TabsTrigger>
+                <TabsTrigger value="N4">N4</TabsTrigger>
+                <TabsTrigger value="N3">N3</TabsTrigger>
+                <TabsTrigger value="N2">N2</TabsTrigger>
+                <TabsTrigger value="N1">N1</TabsTrigger>
+                <TabsTrigger value="slang" className="gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  热词
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            
+            {selectedLevel === "slang" && (
+              <div className="flex items-center gap-3">
+                {slangStatus && slangStatus.lastUpdateTime && (
+                  <span className="text-sm text-muted-foreground">
+                    最后更新: {new Date(slangStatus.lastUpdateTime).toLocaleDateString()}
+                  </span>
+                )}
+                <Button
+                  onClick={() => updateSlangMutation.mutate()}
+                  disabled={updateSlangMutation.isPending}
+                  size="sm"
+                  className="gap-2"
+                >
+                  {updateSlangMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      更新中...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4" />
+                      更新热词
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
+
           <Tabs value={selectedLevel} onValueChange={(v) => setSelectedLevel(v as any)}>
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="N5">N5</TabsTrigger>
-              <TabsTrigger value="N4">N4</TabsTrigger>
-              <TabsTrigger value="N3">N3</TabsTrigger>
-              <TabsTrigger value="N2">N2</TabsTrigger>
-              <TabsTrigger value="N1">N1</TabsTrigger>
-            </TabsList>
+            <div className="hidden">
+              <TabsList>
+                <TabsTrigger value={selectedLevel}>{selectedLevel}</TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value={selectedLevel} className="mt-6">
               {isLoading ? (
