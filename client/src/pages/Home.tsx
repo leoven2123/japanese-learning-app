@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Link } from "wouter";
 import { BookOpen, FileText, RefreshCw, MessageSquare, TrendingUp, Award } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { AutoRuby } from "@/components/Ruby";
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
@@ -55,7 +56,9 @@ export default function Home() {
         <div className="container relative">
           <div className="max-w-3xl mx-auto text-center space-y-8">
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-              <span className="japanese-text text-primary block mb-4">日本語を学ぼう</span>
+              <span className="japanese-text text-primary block mb-4">
+                <AutoRuby text="日本語[にほんご]を学[まな]ぼう" />
+              </span>
               <span className="text-foreground">循序渐进，掌握日语</span>
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">

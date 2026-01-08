@@ -7,6 +7,7 @@ import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import { Link } from "wouter";
 import { Search, Loader2 } from "lucide-react";
+import { VocabRuby } from "@/components/Ruby";
 
 export default function VocabularyList() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -59,7 +60,12 @@ export default function VocabularyList() {
                       <Card className="h-full card-hover cursor-pointer">
                         <CardHeader>
                           <CardTitle className="flex items-start justify-between gap-2">
-                            <span className="japanese-text text-2xl">{vocab.expression}</span>
+                            <span className="japanese-text text-2xl">
+                              <VocabRuby 
+                                expression={vocab.expression} 
+                                reading={vocab.reading} 
+                              />
+                            </span>
                             <Badge variant="secondary" className="shrink-0">
                               {vocab.jlptLevel}
                             </Badge>

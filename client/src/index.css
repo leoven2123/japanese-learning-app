@@ -137,6 +137,16 @@
     display: block;
     text-align: center;
   }
+  /* Ruby振假名样式 */
+  ruby {
+    ruby-position: over;
+  }
+  rt {
+    font-size: 0.5em;
+    color: oklch(0.55 0.08 250);
+    font-weight: 400;
+    letter-spacing: 0.05em;
+  }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
   [type="button"]:not(:disabled),
