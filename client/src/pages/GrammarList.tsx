@@ -22,6 +22,13 @@ export default function GrammarList() {
     firstLetter: firstLetter as any,
     sortBy: sortBy,
   });
+  
+  // 获取各等级语法数量
+  const { data: n5Count } = trpc.grammar.list.useQuery({ jlptLevel: "N5" }, { select: (data) => data?.length || 0 });
+  const { data: n4Count } = trpc.grammar.list.useQuery({ jlptLevel: "N4" }, { select: (data) => data?.length || 0 });
+  const { data: n3Count } = trpc.grammar.list.useQuery({ jlptLevel: "N3" }, { select: (data) => data?.length || 0 });
+  const { data: n2Count } = trpc.grammar.list.useQuery({ jlptLevel: "N2" }, { select: (data) => data?.length || 0 });
+  const { data: n1Count } = trpc.grammar.list.useQuery({ jlptLevel: "N1" }, { select: (data) => data?.length || 0 });
 
   return (
     <Layout>
@@ -97,11 +104,21 @@ export default function GrammarList() {
           <div className="flex items-center justify-between gap-4">
             <Tabs value={selectedLevel} onValueChange={(v) => setSelectedLevel(v as any)} className="flex-1">
               <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="N5">N5</TabsTrigger>
-                <TabsTrigger value="N4">N4</TabsTrigger>
-                <TabsTrigger value="N3">N3</TabsTrigger>
-                <TabsTrigger value="N2">N2</TabsTrigger>
-                <TabsTrigger value="N1">N1</TabsTrigger>
+                <TabsTrigger value="N5">
+                  N5 {n5Count !== undefined && <span className="ml-1 text-xs opacity-70">({n5Count})</span>}
+                </TabsTrigger>
+                <TabsTrigger value="N4">
+                  N4 {n4Count !== undefined && <span className="ml-1 text-xs opacity-70">({n4Count})</span>}
+                </TabsTrigger>
+                <TabsTrigger value="N3">
+                  N3 {n3Count !== undefined && <span className="ml-1 text-xs opacity-70">({n3Count})</span>}
+                </TabsTrigger>
+                <TabsTrigger value="N2">
+                  N2 {n2Count !== undefined && <span className="ml-1 text-xs opacity-70">({n2Count})</span>}
+                </TabsTrigger>
+                <TabsTrigger value="N1">
+                  N1 {n1Count !== undefined && <span className="ml-1 text-xs opacity-70">({n1Count})</span>}
+                </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>

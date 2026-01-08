@@ -1,0 +1,30 @@
+{
+  "query": "SELECT jlptLevel, COUNT(*) as count FROM vocabulary GROUP BY jlptLevel ORDER BY FIELD(jlptLevel, 'N5', 'N4', 'N3', 'N2', 'N1');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user vYSQoPEMjLoro3N.root --database W7xsTD72zLTLxKgC6bEdsv --execute SELECT jlptLevel, COUNT(*) as count FROM vocabulary GROUP BY jlptLevel ORDER BY FIELD(jlptLevel, 'N5', 'N4', 'N3', 'N2', 'N1');",
+  "rows": [
+    {
+      "jlptLevel": "N5",
+      "count": "769"
+    },
+    {
+      "jlptLevel": "N4",
+      "count": "695"
+    },
+    {
+      "jlptLevel": "N3",
+      "count": "6418"
+    },
+    {
+      "jlptLevel": "N2",
+      "count": "3597"
+    },
+    {
+      "jlptLevel": "N1",
+      "count": "5398"
+    }
+  ],
+  "messages": [],
+  "stdout": "jlptLevel\tcount\nN5\t769\nN4\t695\nN3\t6418\nN2\t3597\nN1\t5398\n",
+  "stderr": "",
+  "execution_time_ms": 96
+}

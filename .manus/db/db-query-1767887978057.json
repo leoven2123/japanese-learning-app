@@ -1,0 +1,110 @@
+{
+  "query": "SELECT expression, reading, COUNT(*) as count FROM vocabulary GROUP BY expression, reading HAVING count > 1 LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user vYSQoPEMjLoro3N.root --database W7xsTD72zLTLxKgC6bEdsv --execute SELECT expression, reading, COUNT(*) as count FROM vocabulary GROUP BY expression, reading HAVING count > 1 LIMIT 20;",
+  "rows": [
+    {
+      "expression": "太陽",
+      "reading": "たいよう",
+      "count": "3"
+    },
+    {
+      "expression": "横切る",
+      "reading": "よこぎる",
+      "count": "3"
+    },
+    {
+      "expression": "年頃",
+      "reading": "としごろ",
+      "count": "2"
+    },
+    {
+      "expression": "弛み",
+      "reading": "たるみ",
+      "count": "2"
+    },
+    {
+      "expression": "工学",
+      "reading": "こうがく",
+      "count": "2"
+    },
+    {
+      "expression": "球",
+      "reading": "きゅう",
+      "count": "3"
+    },
+    {
+      "expression": "警備",
+      "reading": "けいび",
+      "count": "2"
+    },
+    {
+      "expression": "下書き",
+      "reading": "したがき",
+      "count": "2"
+    },
+    {
+      "expression": "すまない",
+      "reading": "すまない",
+      "count": "2"
+    },
+    {
+      "expression": "古い",
+      "reading": "ふるい",
+      "count": "2"
+    },
+    {
+      "expression": "出生",
+      "reading": "しゅっしょう",
+      "count": "2"
+    },
+    {
+      "expression": "仕掛ける",
+      "reading": "しかける",
+      "count": "2"
+    },
+    {
+      "expression": "王",
+      "reading": "おう",
+      "count": "3"
+    },
+    {
+      "expression": "大部分",
+      "reading": "だいぶぶん",
+      "count": "3"
+    },
+    {
+      "expression": "旗",
+      "reading": "はた",
+      "count": "3"
+    },
+    {
+      "expression": "増す",
+      "reading": "ます",
+      "count": "3"
+    },
+    {
+      "expression": "先々月",
+      "reading": "せんせんげつ",
+      "count": "2"
+    },
+    {
+      "expression": "引っ繰り返る",
+      "reading": "ひっくりかえる",
+      "count": "2"
+    },
+    {
+      "expression": "禁煙",
+      "reading": "きんえん",
+      "count": "3"
+    },
+    {
+      "expression": "密",
+      "reading": "みつ",
+      "count": "3"
+    }
+  ],
+  "messages": [],
+  "stdout": "expression\treading\tcount\n太陽\tたいよう\t3\n横切る\tよこぎる\t3\n年頃\tとしごろ\t2\n弛み\tたるみ\t2\n工学\tこうがく\t2\n球\tきゅう\t3\n警備\tけいび\t2\n下書き\tしたがき\t2\nすまない\tすまない\t2\n古い\tふるい\t2\n出生\tしゅっしょう\t2\n仕掛ける\tしかける\t2\n王\tおう\t3\n大部分\tだいぶぶん\t3\n旗\tはた\t3\n増す\tます\t3\n先々月\tせんせんげつ\t2\n引っ繰り返る\tひっくりかえる\t2\n禁煙\tきんえん\t3\n密\tみつ\t3\n",
+  "stderr": "",
+  "execution_time_ms": 83
+}

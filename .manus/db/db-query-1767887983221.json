@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as duplicate_count FROM (SELECT expression, reading FROM vocabulary GROUP BY expression, reading HAVING COUNT(*) > 1) as duplicates;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user vYSQoPEMjLoro3N.root --database W7xsTD72zLTLxKgC6bEdsv --execute SELECT COUNT(*) as duplicate_count FROM (SELECT expression, reading FROM vocabulary GROUP BY expression, reading HAVING COUNT(*) > 1) as duplicates;",
+  "rows": [
+    {
+      "duplicate_count": "6625"
+    }
+  ],
+  "messages": [],
+  "stdout": "duplicate_count\n6625\n",
+  "stderr": "",
+  "execution_time_ms": 72
+}
