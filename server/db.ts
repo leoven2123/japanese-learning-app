@@ -20,7 +20,11 @@ import {
   InsertConversation,
   InsertConversationMessage,
   userNotes,
-  InsertUserNote
+  InsertUserNote,
+  studyRecords,
+  InsertStudyRecord,
+  dailyStudyStats,
+  InsertDailyStudyStats
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -884,4 +888,361 @@ export async function getUserNotes(
     .from(userNotes)
     .where(and(...conditions))
     .orderBy(desc(userNotes.updatedAt));
+}
+
+
+/**
+ * ============================================
+ * 艾宾浩斯复习系统相关函数
+ * ============================================
+ */
+
+// 艾宾浩斯遗忘曲线复习间隔(天数)
+const REVIEW_INTERVALS = [1, 2, 4, 7, 15, 30];
+
+/**
+ * 计算下次复习时间
+ */
+function calculateNextReviewTime(reviewCount: number, easeFactor: number = 2.5): Date {
+  const intervalIndex = Math.min(reviewCount, REVIEW_INTERVALS.length - 1);
+  const baseInterval = REVIEW_INTERVALS[intervalIndex];
+  const adjustedInterval = Math.round(baseInterval * easeFactor / 2.5);
+  
+  const nextReview = new Date();
+  nextReview.setDate(nextReview.getDate() + adjustedInterval);
+  return nextReview;
+}
+
+/**
+ * 添加学习记录(将词汇或语法加入学习计划)
+ */
+export async function addStudyRecord(
+  userId: number,
+  itemType: "vocabulary" | "grammar",
+  itemId: number
+) {
+  const db = await getDb();
+  if (!db) return null;
+
+  // 检查是否已存在
+  const existing = await db
+    .select()
+    .from(studyRecords)
+    .where(and(
+      eq(studyRecords.userId, userId),
+      eq(studyRecords.itemType, itemType),
+      eq(studyRecords.itemId, itemId)
+    ))
+    .limit(1);
+
+  if (existing.length > 0) {
+    return existing[0]; // 已存在,直接返回
+  }
+
+  // 创建新的学习记录
+  const nextReviewAt = calculateNextReviewTime(0);
+  
+  const result = await db.insert(studyRecords).values({
+    userId,
+    itemType,
+    itemId,
+    reviewCount: 0,
+    easeFactor: "2.50",
+    firstLearnedAt: new Date(),
+    lastReviewedAt: new Date(),
+    nextReviewAt,
+    correctCount: 0,
+    incorrectCount: 0,
+    isMastered: false,
+  });
+
+  // 更新每日统计
+  await updateDailyStats(userId, { newItemsLearned: 1 });
+
+  return { id: result[0].insertId, nextReviewAt };
+}
+
+/**
+ * 获取用户待复习的内容
+ */
+export async function getDueReviews(
+  userId: number,
+  itemType?: "vocabulary" | "grammar",
+  limit: number = 50
+) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const now = new Date();
+  const conditions = [
+    eq(studyRecords.userId, userId),
+    lte(studyRecords.nextReviewAt, now),
+    eq(studyRecords.isMastered, false)
+  ];
+
+  if (itemType) {
+    conditions.push(eq(studyRecords.itemType, itemType));
+  }
+
+  return await db
+    .select()
+    .from(studyRecords)
+    .where(and(...conditions))
+    .orderBy(asc(studyRecords.nextReviewAt))
+    .limit(limit);
+}
+
+/**
+ * 获取用户的学习记录统计
+ */
+export async function getStudyStats(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const now = new Date();
+  
+  // 总学习数
+  const totalLearned = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(studyRecords)
+    .where(eq(studyRecords.userId, userId));
+
+  // 待复习数
+  const dueReviews = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(studyRecords)
+    .where(and(
+      eq(studyRecords.userId, userId),
+      lte(studyRecords.nextReviewAt, now),
+      eq(studyRecords.isMastered, false)
+    ));
+
+  // 已掌握数
+  const mastered = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(studyRecords)
+    .where(and(
+      eq(studyRecords.userId, userId),
+      eq(studyRecords.isMastered, true)
+    ));
+
+  // 按类型统计
+  const byType = await db
+    .select({
+      itemType: studyRecords.itemType,
+      count: sql<number>`count(*)`
+    })
+    .from(studyRecords)
+    .where(eq(studyRecords.userId, userId))
+    .groupBy(studyRecords.itemType);
+
+  return {
+    totalLearned: totalLearned[0]?.count || 0,
+    dueReviews: dueReviews[0]?.count || 0,
+    mastered: mastered[0]?.count || 0,
+    vocabularyCount: byType.find(b => b.itemType === "vocabulary")?.count || 0,
+    grammarCount: byType.find(b => b.itemType === "grammar")?.count || 0,
+  };
+}
+
+/**
+ * 更新复习结果
+ * @param quality 记忆质量: 1=忘记, 2=困难, 3=一般, 4=简单, 5=完美
+ */
+export async function updateReviewResult(
+  userId: number,
+  recordId: number,
+  quality: 1 | 2 | 3 | 4 | 5
+) {
+  const db = await getDb();
+  if (!db) return null;
+
+  // 获取当前记录
+  const records = await db
+    .select()
+    .from(studyRecords)
+    .where(and(
+      eq(studyRecords.id, recordId),
+      eq(studyRecords.userId, userId)
+    ))
+    .limit(1);
+
+  if (records.length === 0) return null;
+
+  const record = records[0];
+  const isCorrect = quality >= 3;
+  
+  // 计算新的难度系数 (SM-2算法简化版)
+  let newEaseFactor = parseFloat(record.easeFactor as string);
+  if (quality < 3) {
+    newEaseFactor = Math.max(1.3, newEaseFactor - 0.2);
+  } else if (quality > 3) {
+    newEaseFactor = Math.min(3.0, newEaseFactor + 0.1);
+  }
+
+  // 计算新的复习次数
+  let newReviewCount = record.reviewCount;
+  if (isCorrect) {
+    newReviewCount = Math.min(record.reviewCount + 1, REVIEW_INTERVALS.length);
+  } else {
+    // 忘记了,重置复习进度
+    newReviewCount = 0;
+  }
+
+  // 检查是否已掌握
+  const isMastered = newReviewCount >= REVIEW_INTERVALS.length;
+
+  // 计算下次复习时间
+  const nextReviewAt = isMastered 
+    ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 已掌握,一年后再复习
+    : calculateNextReviewTime(newReviewCount, newEaseFactor);
+
+  // 更新记录
+  await db
+    .update(studyRecords)
+    .set({
+      reviewCount: newReviewCount,
+      easeFactor: newEaseFactor.toFixed(2),
+      lastReviewedAt: new Date(),
+      nextReviewAt,
+      correctCount: isCorrect ? record.correctCount + 1 : record.correctCount,
+      incorrectCount: isCorrect ? record.incorrectCount : record.incorrectCount + 1,
+      isMastered,
+    })
+    .where(eq(studyRecords.id, recordId));
+
+  // 更新每日统计
+  await updateDailyStats(userId, {
+    itemsReviewed: 1,
+    correctReviews: isCorrect ? 1 : 0,
+    incorrectReviews: isCorrect ? 0 : 1,
+  });
+
+  return {
+    newReviewCount,
+    newEaseFactor,
+    nextReviewAt,
+    isMastered,
+  };
+}
+
+/**
+ * 更新每日学习统计
+ */
+async function updateDailyStats(
+  userId: number,
+  updates: {
+    newItemsLearned?: number;
+    itemsReviewed?: number;
+    correctReviews?: number;
+    incorrectReviews?: number;
+    studyMinutes?: number;
+  }
+) {
+  const db = await getDb();
+  if (!db) return;
+
+  const today = new Date().toISOString().split('T')[0];
+
+  // 尝试获取今日记录
+  const existing = await db
+    .select()
+    .from(dailyStudyStats)
+    .where(and(
+      eq(dailyStudyStats.userId, userId),
+      eq(dailyStudyStats.date, today)
+    ))
+    .limit(1);
+
+  if (existing.length > 0) {
+    // 更新现有记录
+    await db
+      .update(dailyStudyStats)
+      .set({
+        newItemsLearned: existing[0].newItemsLearned + (updates.newItemsLearned || 0),
+        itemsReviewed: existing[0].itemsReviewed + (updates.itemsReviewed || 0),
+        correctReviews: existing[0].correctReviews + (updates.correctReviews || 0),
+        incorrectReviews: existing[0].incorrectReviews + (updates.incorrectReviews || 0),
+        studyMinutes: existing[0].studyMinutes + (updates.studyMinutes || 0),
+      })
+      .where(eq(dailyStudyStats.id, existing[0].id));
+  } else {
+    // 创建新记录
+    await db.insert(dailyStudyStats).values({
+      userId,
+      date: today,
+      newItemsLearned: updates.newItemsLearned || 0,
+      itemsReviewed: updates.itemsReviewed || 0,
+      correctReviews: updates.correctReviews || 0,
+      incorrectReviews: updates.incorrectReviews || 0,
+      studyMinutes: updates.studyMinutes || 0,
+    });
+  }
+}
+
+/**
+ * 获取用户的每日学习统计(最近N天)
+ */
+export async function getDailyStats(userId: number, days: number = 7) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  const startDateStr = startDate.toISOString().split('T')[0];
+
+  return await db
+    .select()
+    .from(dailyStudyStats)
+    .where(and(
+      eq(dailyStudyStats.userId, userId),
+      gte(dailyStudyStats.date, startDateStr)
+    ))
+    .orderBy(desc(dailyStudyStats.date));
+}
+
+/**
+ * 检查用户是否已学习某个项目
+ */
+export async function isItemInStudyPlan(
+  userId: number,
+  itemType: "vocabulary" | "grammar",
+  itemId: number
+) {
+  const db = await getDb();
+  if (!db) return false;
+
+  const existing = await db
+    .select({ id: studyRecords.id })
+    .from(studyRecords)
+    .where(and(
+      eq(studyRecords.userId, userId),
+      eq(studyRecords.itemType, itemType),
+      eq(studyRecords.itemId, itemId)
+    ))
+    .limit(1);
+
+  return existing.length > 0;
+}
+
+/**
+ * 从学习计划中移除项目
+ */
+export async function removeFromStudyPlan(
+  userId: number,
+  itemType: "vocabulary" | "grammar",
+  itemId: number
+) {
+  const db = await getDb();
+  if (!db) return false;
+
+  await db
+    .delete(studyRecords)
+    .where(and(
+      eq(studyRecords.userId, userId),
+      eq(studyRecords.itemType, itemType),
+      eq(studyRecords.itemId, itemId)
+    ));
+
+  return true;
 }

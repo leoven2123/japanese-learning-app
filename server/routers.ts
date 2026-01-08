@@ -752,6 +752,92 @@ ${existingItems || '(暂无)'}
       return path;
     }),
   }),
+
+  /**
+   * ============================================
+   * 艾宾浩斯复习系统路由
+   * ============================================
+   */
+  review: router({
+    // 获取学习统计
+    getStats: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getStudyStats(ctx.user.id);
+    }),
+
+    // 获取待复习内容
+    getDueReviews: protectedProcedure
+      .input(z.object({
+        itemType: z.enum(["vocabulary", "grammar"]).optional(),
+        limit: z.number().optional().default(50),
+      }))
+      .query(async ({ ctx, input }) => {
+        const records = await db.getDueReviews(ctx.user.id, input.itemType, input.limit);
+        
+        // 获取对应的词汇或语法详情
+        const enrichedRecords = await Promise.all(
+          records.map(async (record) => {
+            let item = null;
+            if (record.itemType === "vocabulary") {
+              item = await db.getVocabularyById(record.itemId);
+            } else {
+              item = await db.getGrammarById(record.itemId);
+            }
+            return { ...record, item };
+          })
+        );
+        
+        return enrichedRecords;
+      }),
+
+    // 添加到学习计划
+    addToStudyPlan: protectedProcedure
+      .input(z.object({
+        itemType: z.enum(["vocabulary", "grammar"]),
+        itemId: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.addStudyRecord(ctx.user.id, input.itemType, input.itemId);
+      }),
+
+    // 检查是否已在学习计划中
+    isInStudyPlan: protectedProcedure
+      .input(z.object({
+        itemType: z.enum(["vocabulary", "grammar"]),
+        itemId: z.number(),
+      }))
+      .query(async ({ ctx, input }) => {
+        return await db.isItemInStudyPlan(ctx.user.id, input.itemType, input.itemId);
+      }),
+
+    // 从学习计划中移除
+    removeFromStudyPlan: protectedProcedure
+      .input(z.object({
+        itemType: z.enum(["vocabulary", "grammar"]),
+        itemId: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.removeFromStudyPlan(ctx.user.id, input.itemType, input.itemId);
+      }),
+
+    // 更新复习结果
+    updateReviewResult: protectedProcedure
+      .input(z.object({
+        recordId: z.number(),
+        quality: z.number().min(1).max(5) as z.ZodType<1 | 2 | 3 | 4 | 5>,
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.updateReviewResult(ctx.user.id, input.recordId, input.quality);
+      }),
+
+    // 获取每日学习统计
+    getDailyStats: protectedProcedure
+      .input(z.object({
+        days: z.number().optional().default(7),
+      }))
+      .query(async ({ ctx, input }) => {
+        return await db.getDailyStats(ctx.user.id, input.days);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

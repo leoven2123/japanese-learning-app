@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { useRoute } from "wouter";
-import { Loader2, ArrowLeft, Sparkles, MessageSquare, X, StickyNote, Save, Trash2 } from "lucide-react";
+import { Loader2, ArrowLeft, Sparkles, MessageSquare, X, StickyNote, Save, Trash2, Brain, Check } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { parseJapaneseWithReading } from "@/components/RubyText";
 import { JapaneseText } from "@/components/JapaneseText";
@@ -49,6 +49,38 @@ export default function GrammarDetail() {
     },
     onError: () => toast.error("删除失败"),
   });
+  
+  // 艾宾浩斯复习功能
+  const { data: isInStudyPlan, refetch: refetchStudyPlan } = trpc.review.isInStudyPlan.useQuery(
+    { itemType: "grammar", itemId: id },
+    { enabled: isAuthenticated && id > 0 }
+  );
+  const addToStudyPlan = trpc.review.addToStudyPlan.useMutation({
+    onSuccess: () => {
+      toast.success("已加入学习计划");
+      refetchStudyPlan();
+    },
+    onError: () => toast.error("添加失败"),
+  });
+  const removeFromStudyPlan = trpc.review.removeFromStudyPlan.useMutation({
+    onSuccess: () => {
+      toast.success("已从学习计划移除");
+      refetchStudyPlan();
+    },
+    onError: () => toast.error("移除失败"),
+  });
+  
+  const handleToggleStudyPlan = async () => {
+    if (!isAuthenticated) {
+      toast.error("请先登录");
+      return;
+    }
+    if (isInStudyPlan) {
+      await removeFromStudyPlan.mutateAsync({ itemType: "grammar", itemId: id });
+    } else {
+      await addToStudyPlan.mutateAsync({ itemType: "grammar", itemId: id });
+    }
+  };
   
   // 当获取到现有笔记时，更新输入框内容
   React.useEffect(() => {
@@ -95,9 +127,32 @@ export default function GrammarDetail() {
                   <CardTitle className="japanese-text text-4xl"><JapaneseText>{grammar.pattern}</JapaneseText></CardTitle>
                   <CardDescription className="text-xl">{grammar.meaning}</CardDescription>
                 </div>
-                <Badge variant="secondary" className="text-lg px-4 py-2">
-                  {grammar.jlptLevel}
-                </Badge>
+                <div className="flex flex-col items-end gap-2">
+                  <Badge variant="secondary" className="text-lg px-4 py-2">
+                    {grammar.jlptLevel}
+                  </Badge>
+                  {isAuthenticated && (
+                    <Button
+                      variant={isInStudyPlan ? "secondary" : "default"}
+                      size="sm"
+                      onClick={handleToggleStudyPlan}
+                      disabled={addToStudyPlan.isPending || removeFromStudyPlan.isPending}
+                      className="gap-1"
+                    >
+                      {isInStudyPlan ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          已加入学习
+                        </>
+                      ) : (
+                        <>
+                          <Brain className="w-4 h-4" />
+                          加入学习
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-6">

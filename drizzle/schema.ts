@@ -342,3 +342,69 @@ export const userNotes = mysqlTable("user_notes", {
 
 export type UserNote = typeof userNotes.$inferSelect;
 export type InsertUserNote = typeof userNotes.$inferInsert;
+
+
+/**
+ * ============================================
+ * 艾宾浩斯复习系统表
+ * ============================================
+ */
+
+/**
+ * study_records - 学习记录表
+ * 存储用户的学习记录和复习计划,基于艾宾浩斯遗忘曲线
+ * 复习间隔: 1天、2天、4天、7天、15天、30天
+ */
+export const studyRecords = mysqlTable("study_records", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  itemType: mysqlEnum("itemType", ["vocabulary", "grammar"]).notNull(),
+  itemId: int("itemId").notNull(),
+  
+  // 学习状态
+  reviewCount: int("reviewCount").default(0).notNull(), // 已复习次数 (0-6)
+  easeFactor: decimal("easeFactor", { precision: 3, scale: 2 }).default("2.50").notNull(), // 难度系数
+  
+  // 时间记录
+  firstLearnedAt: timestamp("firstLearnedAt").defaultNow().notNull(), // 首次学习时间
+  lastReviewedAt: timestamp("lastReviewedAt").defaultNow().notNull(), // 上次复习时间
+  nextReviewAt: timestamp("nextReviewAt").notNull(), // 下次复习时间
+  
+  // 复习结果统计
+  correctCount: int("correctCount").default(0).notNull(), // 记住次数
+  incorrectCount: int("incorrectCount").default(0).notNull(), // 忘记次数
+  
+  // 是否已掌握 (完成所有复习阶段)
+  isMastered: boolean("isMastered").default(false).notNull(),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StudyRecord = typeof studyRecords.$inferSelect;
+export type InsertStudyRecord = typeof studyRecords.$inferInsert;
+
+/**
+ * daily_study_stats - 每日学习统计表
+ * 记录用户每日的学习和复习统计数据
+ */
+export const dailyStudyStats = mysqlTable("daily_study_stats", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD 格式
+  
+  // 学习统计
+  newItemsLearned: int("newItemsLearned").default(0).notNull(), // 新学习的项目数
+  itemsReviewed: int("itemsReviewed").default(0).notNull(), // 复习的项目数
+  correctReviews: int("correctReviews").default(0).notNull(), // 正确复习数
+  incorrectReviews: int("incorrectReviews").default(0).notNull(), // 错误复习数
+  
+  // 学习时长 (分钟)
+  studyMinutes: int("studyMinutes").default(0).notNull(),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DailyStudyStats = typeof dailyStudyStats.$inferSelect;
+export type InsertDailyStudyStats = typeof dailyStudyStats.$inferInsert;
