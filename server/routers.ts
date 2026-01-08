@@ -65,6 +65,36 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return await db.getVocabularyWithExamples(input.id);
       }),
+
+    // 获取词汇笔记
+    getNote: protectedProcedure
+      .input(z.object({ vocabularyId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        return await db.getUserNote(ctx.user.id, "vocabulary", input.vocabularyId);
+      }),
+
+    // 保存词汇笔记
+    saveNote: protectedProcedure
+      .input(z.object({
+        vocabularyId: z.number(),
+        content: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.upsertUserNote({
+          userId: ctx.user.id,
+          itemType: "vocabulary",
+          itemId: input.vocabularyId,
+          content: input.content,
+        });
+      }),
+
+    // 删除词汇笔记
+    deleteNote: protectedProcedure
+      .input(z.object({ vocabularyId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.deleteUserNote(ctx.user.id, "vocabulary", input.vocabularyId);
+        return { success: true };
+      }),
   }),
 
   /**
@@ -90,6 +120,36 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         return await db.getGrammarWithExamples(input.id);
+      }),
+
+    // 获取语法笔记
+    getNote: protectedProcedure
+      .input(z.object({ grammarId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        return await db.getUserNote(ctx.user.id, "grammar", input.grammarId);
+      }),
+
+    // 保存语法笔记
+    saveNote: protectedProcedure
+      .input(z.object({
+        grammarId: z.number(),
+        content: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.upsertUserNote({
+          userId: ctx.user.id,
+          itemType: "grammar",
+          itemId: input.grammarId,
+          content: input.content,
+        });
+      }),
+
+    // 删除语法笔记
+    deleteNote: protectedProcedure
+      .input(z.object({ grammarId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.deleteUserNote(ctx.user.id, "grammar", input.grammarId);
+        return { success: true };
       }),
   }),
 

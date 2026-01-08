@@ -318,3 +318,27 @@ export const userLearningPath = mysqlTable("user_learning_path", {
 
 export type UserLearningPath = typeof userLearningPath.$inferSelect;
 export type InsertUserLearningPath = typeof userLearningPath.$inferInsert;
+
+
+/**
+ * ============================================
+ * 用户笔记表
+ * ============================================
+ */
+
+/**
+ * user_notes - 用户笔记表
+ * 存储用户对词汇和语法点的个人笔记
+ */
+export const userNotes = mysqlTable("user_notes", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  itemType: mysqlEnum("itemType", ["vocabulary", "grammar"]).notNull(),
+  itemId: int("itemId").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserNote = typeof userNotes.$inferSelect;
+export type InsertUserNote = typeof userNotes.$inferInsert;

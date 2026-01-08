@@ -16,6 +16,7 @@ import {
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import GlobalAIChat from "@/components/GlobalAIChat";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, loading } = useAuth();
@@ -189,6 +190,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <main className="flex-1">
         {children}
       </main>
+
+      {/* 全局AI问答气泡窗 */}
+      <GlobalAIChat />
 
       {/* Footer */}
       <footer className="border-t bg-card">

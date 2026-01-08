@@ -18,7 +18,9 @@ import {
   conversations,
   conversationMessages,
   InsertConversation,
-  InsertConversationMessage
+  InsertConversationMessage,
+  userNotes,
+  InsertUserNote
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -773,4 +775,113 @@ export async function updateConversationTitle(
       eq(conversations.id, conversationId),
       eq(conversations.userId, userId)
     ));
+}
+
+/**
+ * ============================================
+ * 用户笔记相关查询
+ * ============================================
+ */
+
+/**
+ * 获取用户对某个词汇或语法的笔记
+ */
+export async function getUserNote(
+  userId: number,
+  itemType: "vocabulary" | "grammar",
+  itemId: number
+) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(userNotes)
+    .where(and(
+      eq(userNotes.userId, userId),
+      eq(userNotes.itemType, itemType),
+      eq(userNotes.itemId, itemId)
+    ))
+    .limit(1);
+
+  return result[0] || null;
+}
+
+/**
+ * 创建或更新用户笔记
+ */
+export async function upsertUserNote(data: {
+  userId: number;
+  itemType: "vocabulary" | "grammar";
+  itemId: number;
+  content: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // 检查是否已存在笔记
+  const existing = await getUserNote(data.userId, data.itemType, data.itemId);
+
+  if (existing) {
+    // 更新现有笔记
+    await db
+      .update(userNotes)
+      .set({ content: data.content })
+      .where(eq(userNotes.id, existing.id));
+    return { ...existing, content: data.content };
+  } else {
+    // 创建新笔记
+    const result = await db.insert(userNotes).values({
+      userId: data.userId,
+      itemType: data.itemType,
+      itemId: data.itemId,
+      content: data.content,
+    });
+    return {
+      id: Number(result[0].insertId),
+      ...data,
+    };
+  }
+}
+
+/**
+ * 删除用户笔记
+ */
+export async function deleteUserNote(
+  userId: number,
+  itemType: "vocabulary" | "grammar",
+  itemId: number
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .delete(userNotes)
+    .where(and(
+      eq(userNotes.userId, userId),
+      eq(userNotes.itemType, itemType),
+      eq(userNotes.itemId, itemId)
+    ));
+}
+
+/**
+ * 获取用户的所有笔记
+ */
+export async function getUserNotes(
+  userId: number,
+  itemType?: "vocabulary" | "grammar"
+) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [eq(userNotes.userId, userId)];
+  if (itemType) {
+    conditions.push(eq(userNotes.itemType, itemType));
+  }
+
+  return await db
+    .select()
+    .from(userNotes)
+    .where(and(...conditions))
+    .orderBy(desc(userNotes.updatedAt));
 }

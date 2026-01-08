@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { useRoute } from "wouter";
-import { Loader2, ArrowLeft, Sparkles, MessageSquare, X } from "lucide-react";
+import { Loader2, ArrowLeft, Sparkles, MessageSquare, X, StickyNote, Save, Trash2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { parseJapaneseWithReading } from "@/components/RubyText";
 import { Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -22,6 +23,38 @@ export default function GrammarDetail() {
   
   const [aiExamples, setAiExamples] = React.useState<Array<{japanese: string, reading: string, chinese: string}>>([]);
   const [aiDialogue, setAiDialogue] = React.useState<{title: string, scenario: string, dialogue: Array<{speaker: string, japanese: string, reading: string, chinese: string}>} | null>(null);
+  
+  // 笔记功能
+  const [noteContent, setNoteContent] = React.useState("");
+  const [isEditingNote, setIsEditingNote] = React.useState(false);
+  const { data: existingNote, refetch: refetchNote } = trpc.grammar.getNote.useQuery(
+    { grammarId: id },
+    { enabled: isAuthenticated && id > 0 }
+  );
+  const saveNote = trpc.grammar.saveNote.useMutation({
+    onSuccess: () => {
+      toast.success("笔记已保存");
+      setIsEditingNote(false);
+      refetchNote();
+    },
+    onError: () => toast.error("保存失败"),
+  });
+  const deleteNote = trpc.grammar.deleteNote.useMutation({
+    onSuccess: () => {
+      toast.success("笔记已删除");
+      setNoteContent("");
+      setIsEditingNote(false);
+      refetchNote();
+    },
+    onError: () => toast.error("删除失败"),
+  });
+  
+  // 当获取到现有笔记时，更新输入框内容
+  React.useEffect(() => {
+    if (existingNote?.content) {
+      setNoteContent(existingNote.content);
+    }
+  }, [existingNote]);
 
   if (isLoading) {
     return (
@@ -153,6 +186,78 @@ export default function GrammarDetail() {
                     </div>
                   </div>
                 ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 用户笔记卡片 */}
+          {isAuthenticated && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <StickyNote className="w-5 h-5" />
+                    我的笔记
+                  </CardTitle>
+                  {existingNote && !isEditingNote && (
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => setIsEditingNote(true)}>
+                        编辑
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => deleteNote.mutate({ grammarId: id })}
+                        disabled={deleteNote.isPending}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {isEditingNote || !existingNote ? (
+                  <div className="space-y-3">
+                    <Textarea
+                      placeholder="记录你对这个语法点的理解、使用技巧或者笔记..."
+                      value={noteContent}
+                      onChange={(e) => setNoteContent(e.target.value)}
+                      rows={4}
+                      className="resize-none"
+                    />
+                    <div className="flex gap-2 justify-end">
+                      {existingNote && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            setNoteContent(existingNote.content);
+                            setIsEditingNote(false);
+                          }}
+                        >
+                          取消
+                        </Button>
+                      )}
+                      <Button 
+                        size="sm"
+                        onClick={() => saveNote.mutate({ grammarId: id, content: noteContent })}
+                        disabled={saveNote.isPending || !noteContent.trim()}
+                      >
+                        {saveNote.isPending ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Save className="w-4 h-4 mr-2" />
+                        )}
+                        保存笔记
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800">
+                    <p className="whitespace-pre-wrap">{existingNote.content}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
