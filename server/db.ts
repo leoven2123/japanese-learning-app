@@ -1,30 +1,25 @@
-import { eq, like, or, and, desc, asc, sql } from "drizzle-orm";
+import { eq, and, or, like, inArray, sql, desc, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, 
-  users, 
-  vocabulary, 
-  grammar, 
-  examples, 
-  scenes, 
-  sceneVocabulary, 
-  sceneGrammar,
-  learningRecords,
-  studySessions,
-  exercises,
-  exerciseAttempts,
-  Vocabulary,
-  Grammar,
-  Example,
-  Scene,
-  LearningRecord,
-  StudySession
+  users,
+  vocabulary,
+  grammar,
+  sentences,
+  scenes,
+  learningProgress,
+  reviewSchedule,
+  vocabularySentences,
+  grammarSentences,
+  learningResources,
+  learningCurriculum,
+  aiGeneratedContent,
+  userLearningPath
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
@@ -37,7 +32,11 @@ export async function getDb() {
   return _db;
 }
 
-// ===== User Management =====
+/**
+ * ============================================
+ * 用户相关查询
+ * ============================================
+ */
 
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) {
@@ -106,314 +105,419 @@ export async function getUserByOpenId(openId: string) {
   }
 
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-
   return result.length > 0 ? result[0] : undefined;
 }
 
-// ===== Vocabulary Queries =====
+/**
+ * ============================================
+ * 词汇相关查询
+ * ============================================
+ */
 
-export async function getVocabularyByLevel(jlptLevel: string) {
+export async function getVocabularyList(params: {
+  jlptLevel?: string;
+  search?: string;
+  limit?: number;
+  offset?: number;
+}) {
   const db = await getDb();
   if (!db) return [];
-  
-  return await db.select().from(vocabulary)
-    .where(eq(vocabulary.jlptLevel, jlptLevel as any))
-    .orderBy(desc(vocabulary.frequency));
+
+  const conditions = [];
+  if (params.jlptLevel) {
+    conditions.push(eq(vocabulary.jlptLevel, params.jlptLevel as any));
+  }
+  if (params.search) {
+    conditions.push(
+      or(
+        like(vocabulary.expression, `%${params.search}%`),
+        like(vocabulary.reading, `%${params.search}%`),
+        like(vocabulary.romaji, `%${params.search}%`),
+        like(vocabulary.meaning, `%${params.search}%`)
+      )
+    );
+  }
+
+  const query = db
+    .select()
+    .from(vocabulary)
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .limit(params.limit || 50)
+    .offset(params.offset || 0);
+
+  return await query;
 }
 
 export async function getVocabularyById(id: number) {
   const db = await getDb();
   if (!db) return null;
-  
-  const result = await db.select().from(vocabulary)
-    .where(eq(vocabulary.id, id))
-    .limit(1);
-  
-  return result[0] || null;
+
+  const result = await db.select().from(vocabulary).where(eq(vocabulary.id, id)).limit(1);
+  return result.length > 0 ? result[0] : null;
 }
 
-export async function searchVocabulary(searchTerm: string) {
+export async function getVocabularyWithExamples(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const vocab = await getVocabularyById(id);
+  if (!vocab) return null;
+
+  const exampleLinks = await db
+    .select()
+    .from(vocabularySentences)
+    .where(eq(vocabularySentences.vocabularyId, id));
+
+  const exampleIds = exampleLinks.map(link => link.sentenceId);
+  
+  let examples: any[] = [];
+  if (exampleIds.length > 0) {
+    examples = await db
+      .select()
+      .from(sentences)
+      .where(inArray(sentences.id, exampleIds));
+  }
+
+  return {
+    ...vocab,
+    examples
+  };
+}
+
+/**
+ * ============================================
+ * 语法相关查询
+ * ============================================
+ */
+
+export async function getGrammarList(params: {
+  jlptLevel?: string;
+  search?: string;
+  limit?: number;
+  offset?: number;
+}) {
   const db = await getDb();
   if (!db) return [];
-  
-  return await db.select().from(vocabulary)
-    .where(
+
+  const conditions = [];
+  if (params.jlptLevel) {
+    conditions.push(eq(grammar.jlptLevel, params.jlptLevel as any));
+  }
+  if (params.search) {
+    conditions.push(
       or(
-        like(vocabulary.expression, `%${searchTerm}%`),
-        like(vocabulary.reading, `%${searchTerm}%`),
-        like(vocabulary.romaji, `%${searchTerm}%`),
-        like(vocabulary.meaning, `%${searchTerm}%`)
+        like(grammar.pattern, `%${params.search}%`),
+        like(grammar.meaning, `%${params.search}%`)
       )
-    )
-    .limit(50);
-}
+    );
+  }
 
-export async function getVocabularyExamples(vocabId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  
-  return await db.select().from(examples)
-    .where(eq(examples.vocabularyId, vocabId));
-}
+  const query = db
+    .select()
+    .from(grammar)
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .limit(params.limit || 50)
+    .offset(params.offset || 0);
 
-// ===== Grammar Queries =====
-
-export async function getGrammarByLevel(jlptLevel: string) {
-  const db = await getDb();
-  if (!db) return [];
-  
-  return await db.select().from(grammar)
-    .where(eq(grammar.jlptLevel, jlptLevel as any));
+  return await query;
 }
 
 export async function getGrammarById(id: number) {
   const db = await getDb();
   if (!db) return null;
-  
-  const result = await db.select().from(grammar)
-    .where(eq(grammar.id, id))
-    .limit(1);
-  
-  return result[0] || null;
+
+  const result = await db.select().from(grammar).where(eq(grammar.id, id)).limit(1);
+  return result.length > 0 ? result[0] : null;
 }
 
-export async function searchGrammar(searchTerm: string) {
+export async function getGrammarWithExamples(id: number) {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) return null;
+
+  const grammarItem = await getGrammarById(id);
+  if (!grammarItem) return null;
+
+  const exampleLinks = await db
+    .select()
+    .from(grammarSentences)
+    .where(eq(grammarSentences.grammarId, id));
+
+  const exampleIds = exampleLinks.map(link => link.sentenceId);
   
-  return await db.select().from(grammar)
-    .where(
-      or(
-        like(grammar.grammarPoint, `%${searchTerm}%`),
-        like(grammar.meaning, `%${searchTerm}%`),
-        like(grammar.structure, `%${searchTerm}%`)
-      )
-    )
-    .limit(50);
+  let examples: any[] = [];
+  if (exampleIds.length > 0) {
+    examples = await db
+      .select()
+      .from(sentences)
+      .where(inArray(sentences.id, exampleIds));
+  }
+
+  return {
+    ...grammarItem,
+    examples
+  };
 }
 
-export async function getGrammarExamples(grammarId: number) {
+/**
+ * ============================================
+ * 场景相关查询
+ * ============================================
+ */
+
+export async function getSceneList() {
   const db = await getDb();
   if (!db) return [];
-  
-  return await db.select().from(examples)
-    .where(eq(examples.grammarId, grammarId));
-}
 
-// ===== Scene Queries =====
-
-export async function getAllScenes() {
-  const db = await getDb();
-  if (!db) return [];
-  
-  return await db.select().from(scenes)
-    .orderBy(asc(scenes.order));
+  return await db.select().from(scenes).orderBy(asc(scenes.orderIndex));
 }
 
 export async function getSceneById(id: number) {
   const db = await getDb();
   if (!db) return null;
-  
-  const result = await db.select().from(scenes)
-    .where(eq(scenes.id, id))
-    .limit(1);
-  
-  return result[0] || null;
+
+  const result = await db.select().from(scenes).where(eq(scenes.id, id)).limit(1);
+  return result.length > 0 ? result[0] : null;
 }
 
-export async function getSceneVocabulary(sceneId: number) {
+/**
+ * ============================================
+ * 学习进度相关查询
+ * ============================================
+ */
+
+export async function getUserProgress(userId: number, itemType?: string, itemId?: number) {
   const db = await getDb();
   if (!db) return [];
-  
-  return await db.select({
-    vocabulary: vocabulary,
-    importance: sceneVocabulary.importance
-  })
-  .from(sceneVocabulary)
-  .innerJoin(vocabulary, eq(sceneVocabulary.vocabularyId, vocabulary.id))
-  .where(eq(sceneVocabulary.sceneId, sceneId));
+
+  const conditions = [eq(learningProgress.userId, userId)];
+  if (itemType) {
+    conditions.push(eq(learningProgress.itemType, itemType as any));
+  }
+  if (itemId) {
+    conditions.push(eq(learningProgress.itemId, itemId));
+  }
+
+  return await db
+    .select()
+    .from(learningProgress)
+    .where(and(...conditions));
 }
 
-export async function getSceneGrammar(sceneId: number) {
+export async function upsertLearningProgress(data: {
+  userId: number;
+  itemType: "vocabulary" | "grammar" | "scene";
+  itemId: number;
+  masteryLevel: "learning" | "familiar" | "mastered";
+}) {
   const db = await getDb();
-  if (!db) return [];
-  
-  return await db.select({
-    grammar: grammar,
-    importance: sceneGrammar.importance
-  })
-  .from(sceneGrammar)
-  .innerJoin(grammar, eq(sceneGrammar.grammarId, grammar.id))
-  .where(eq(sceneGrammar.sceneId, sceneId));
-}
+  if (!db) return;
 
-export async function getSceneExamples(sceneId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  
-  return await db.select().from(examples)
-    .where(eq(examples.sceneId, sceneId));
-}
-
-// ===== Learning Record Queries =====
-
-export async function getUserLearningRecord(userId: number, itemType: string, itemId: number) {
-  const db = await getDb();
-  if (!db) return null;
-  
-  const result = await db.select().from(learningRecords)
+  const existing = await db
+    .select()
+    .from(learningProgress)
     .where(
       and(
-        eq(learningRecords.userId, userId),
-        eq(learningRecords.itemType, itemType as any),
-        eq(learningRecords.itemId, itemId)
+        eq(learningProgress.userId, data.userId),
+        eq(learningProgress.itemType, data.itemType),
+        eq(learningProgress.itemId, data.itemId)
       )
     )
     .limit(1);
-  
-  return result[0] || null;
-}
 
-export async function createOrUpdateLearningRecord(
-  userId: number,
-  itemType: 'vocabulary' | 'grammar' | 'scene',
-  itemId: number,
-  masteryLevel: 'learning' | 'familiar' | 'mastered',
-  nextReviewAt?: Date
-) {
-  const db = await getDb();
-  if (!db) return;
-  
-  const existing = await getUserLearningRecord(userId, itemType, itemId);
-  
-  if (existing) {
-    await db.update(learningRecords)
+  if (existing.length > 0) {
+    const currentReviewCount = existing[0].reviewCount ?? 0;
+    await db
+      .update(learningProgress)
       .set({
-        masteryLevel,
-        reviewCount: (existing.reviewCount || 0) + 1,
+        masteryLevel: data.masteryLevel,
+        reviewCount: currentReviewCount + 1,
         lastReviewedAt: new Date(),
-        nextReviewAt: nextReviewAt || existing.nextReviewAt,
         updatedAt: new Date()
       })
-      .where(eq(learningRecords.id, existing.id));
+      .where(eq(learningProgress.id, existing[0].id));
   } else {
-    await db.insert(learningRecords).values({
-      userId,
-      itemType,
-      itemId,
-      masteryLevel,
+    await db.insert(learningProgress).values({
+      userId: data.userId,
+      itemType: data.itemType,
+      itemId: data.itemId,
+      masteryLevel: data.masteryLevel,
       reviewCount: 1,
-      lastReviewedAt: new Date(),
-      nextReviewAt: nextReviewAt || new Date(Date.now() + 24 * 60 * 60 * 1000) // Default: 1 day later
+      lastReviewedAt: new Date()
     });
   }
 }
 
-export async function getDueReviews(userId: number) {
+/**
+ * ============================================
+ * 复习计划相关查询
+ * ============================================
+ */
+
+export async function getReviewSchedule(userId: number, limit?: number) {
   const db = await getDb();
   if (!db) return [];
-  
-  return await db.select().from(learningRecords)
+
+  return await db
+    .select()
+    .from(reviewSchedule)
     .where(
       and(
-        eq(learningRecords.userId, userId),
-        sql`${learningRecords.nextReviewAt} <= NOW()`
+        eq(reviewSchedule.userId, userId),
+        eq(reviewSchedule.completed, false)
       )
     )
-    .orderBy(asc(learningRecords.nextReviewAt));
+    .orderBy(asc(reviewSchedule.scheduledAt))
+    .limit(limit || 20);
 }
 
-export async function getUserProgress(userId: number) {
+/**
+ * ============================================
+ * 学习资源相关查询
+ * ============================================
+ */
+
+export async function getActiveResources(category?: string) {
   const db = await getDb();
-  if (!db) return {
-    totalLearned: 0,
-    vocabularyCount: 0,
-    grammarCount: 0,
-    sceneCount: 0,
-    masteredCount: 0
-  };
-  
-  const records = await db.select().from(learningRecords)
-    .where(eq(learningRecords.userId, userId));
-  
-  return {
-    totalLearned: records.length,
-    vocabularyCount: records.filter(r => r.itemType === 'vocabulary').length,
-    grammarCount: records.filter(r => r.itemType === 'grammar').length,
-    sceneCount: records.filter(r => r.itemType === 'scene').length,
-    masteredCount: records.filter(r => r.masteryLevel === 'mastered').length
-  };
+  if (!db) return [];
+
+  const conditions = [eq(learningResources.isActive, true)];
+  if (category) {
+    conditions.push(eq(learningResources.category, category as any));
+  }
+
+  return await db
+    .select()
+    .from(learningResources)
+    .where(and(...conditions))
+    .orderBy(desc(learningResources.reliability));
 }
 
-// ===== Study Session Queries =====
+/**
+ * ============================================
+ * 学习大纲相关查询
+ * ============================================
+ */
 
-export async function getTodayStudySession(userId: number) {
+export async function getCurriculumByLevel(level: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(learningCurriculum)
+    .where(eq(learningCurriculum.level, level as any))
+    .orderBy(asc(learningCurriculum.orderIndex));
+}
+
+export async function getCurriculumStageById(id: number) {
   const db = await getDb();
   if (!db) return null;
-  
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const result = await db.select().from(studySessions)
-    .where(
-      and(
-        eq(studySessions.userId, userId),
-        sql`DATE(${studySessions.date}) = DATE(${today})`
-      )
-    )
+
+  const result = await db
+    .select()
+    .from(learningCurriculum)
+    .where(eq(learningCurriculum.id, id))
     .limit(1);
-  
-  return result[0] || null;
+
+  return result.length > 0 ? result[0] : null;
 }
 
-export async function updateStudySession(
-  userId: number,
-  updates: {
-    duration?: number;
-    itemsLearned?: number;
-    itemsReviewed?: number;
-    exercisesCompleted?: number;
-  }
-) {
+/**
+ * ============================================
+ * 用户学习路径相关查询
+ * ============================================
+ */
+
+export async function getUserLearningPath(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(userLearningPath)
+    .where(eq(userLearningPath.userId, userId))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function initUserLearningPath(userId: number) {
   const db = await getDb();
   if (!db) return;
-  
-  const existing = await getTodayStudySession(userId);
-  
-  if (existing) {
-    await db.update(studySessions)
-      .set({
-        duration: updates.duration !== undefined ? (existing.duration || 0) + updates.duration : existing.duration,
-        itemsLearned: updates.itemsLearned !== undefined ? (existing.itemsLearned || 0) + updates.itemsLearned : existing.itemsLearned,
-        itemsReviewed: updates.itemsReviewed !== undefined ? (existing.itemsReviewed || 0) + updates.itemsReviewed : existing.itemsReviewed,
-        exercisesCompleted: updates.exercisesCompleted !== undefined ? (existing.exercisesCompleted || 0) + updates.exercisesCompleted : existing.exercisesCompleted
-      })
-      .where(eq(studySessions.id, existing.id));
-  } else {
-    await db.insert(studySessions).values({
-      userId,
-      date: new Date(),
-      duration: updates.duration || 0,
-      itemsLearned: updates.itemsLearned || 0,
-      itemsReviewed: updates.itemsReviewed || 0,
-      exercisesCompleted: updates.exercisesCompleted || 0
-    });
-  }
+
+  const existing = await getUserLearningPath(userId);
+  if (existing) return existing;
+
+  // 获取N5的第一个阶段作为起点
+  const firstStage = await db
+    .select()
+    .from(learningCurriculum)
+    .where(eq(learningCurriculum.level, "N5"))
+    .orderBy(asc(learningCurriculum.orderIndex))
+    .limit(1);
+
+  await db.insert(userLearningPath).values({
+    userId,
+    currentCurriculumStageId: firstStage.length > 0 ? firstStage[0].id : null,
+    completedStages: [],
+    startedAt: new Date(),
+    lastActiveAt: new Date(),
+    totalStudyHours: "0.00"
+  });
+
+  return await getUserLearningPath(userId);
 }
 
-export async function getUserStudyHistory(userId: number, days: number = 30) {
+/**
+ * ============================================
+ * AI生成内容相关查询
+ * ============================================
+ */
+
+export async function getAIGeneratedContent(params: {
+  userId: number;
+  contentType?: string;
+  curriculumStageId?: number;
+  limit?: number;
+}) {
   const db = await getDb();
   if (!db) return [];
-  
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
-  
-  return await db.select().from(studySessions)
-    .where(
-      and(
-        eq(studySessions.userId, userId),
-        sql`${studySessions.date} >= ${startDate}`
-      )
-    )
-    .orderBy(desc(studySessions.date));
+
+  const conditions = [eq(aiGeneratedContent.userId, params.userId)];
+  if (params.contentType) {
+    conditions.push(eq(aiGeneratedContent.contentType, params.contentType as any));
+  }
+  if (params.curriculumStageId) {
+    conditions.push(eq(aiGeneratedContent.curriculumStageId, params.curriculumStageId));
+  }
+
+  return await db
+    .select()
+    .from(aiGeneratedContent)
+    .where(and(...conditions))
+    .orderBy(desc(aiGeneratedContent.createdAt))
+    .limit(params.limit || 10);
+}
+
+export async function saveAIGeneratedContent(data: {
+  userId: number;
+  contentType: "vocabulary" | "grammar" | "exercise" | "explanation" | "dialogue";
+  prompt: string;
+  generatedContent: any;
+  curriculumStageId?: number;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.insert(aiGeneratedContent).values({
+    userId: data.userId,
+    contentType: data.contentType,
+    prompt: data.prompt,
+    generatedContent: data.generatedContent,
+    curriculumStageId: data.curriculumStageId,
+    isApproved: false,
+    createdAt: new Date()
+  });
+
+  return result;
 }

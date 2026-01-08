@@ -1,7 +1,14 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, index } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, json, decimal } from "drizzle-orm/mysql-core";
 
 /**
- * Core user table backing auth flow.
+ * ============================================
+ * 用户相关表
+ * ============================================
+ */
+
+/**
+ * users - 用户表
+ * 存储用户基本信息和认证数据
  */
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
@@ -19,192 +26,257 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
 /**
- * Vocabulary table - stores Japanese words with readings and meanings
+ * ============================================
+ * 学习内容表
+ * ============================================
+ */
+
+/**
+ * vocabulary - 词汇表
+ * 存储日语词汇的完整信息,包括汉字、假名、罗马音、释义等
  */
 export const vocabulary = mysqlTable("vocabulary", {
   id: int("id").autoincrement().primaryKey(),
-  expression: varchar("expression", { length: 200 }).notNull(), // Japanese word (kanji/kana)
-  reading: varchar("reading", { length: 200 }).notNull(), // Hiragana/katakana reading
-  romaji: varchar("romaji", { length: 200 }), // Romaji reading
-  meaning: text("meaning").notNull(), // Chinese translation
-  partOfSpeech: varchar("partOfSpeech", { length: 50 }), // 词性: 名词、动词、形容词等
+  expression: varchar("expression", { length: 255 }).notNull(),
+  reading: varchar("reading", { length: 255 }).notNull(),
+  romaji: varchar("romaji", { length: 255 }),
+  meaning: text("meaning").notNull(),
+  partOfSpeech: varchar("partOfSpeech", { length: 100 }),
   jlptLevel: mysqlEnum("jlptLevel", ["N5", "N4", "N3", "N2", "N1"]).notNull(),
-  formalityLevel: mysqlEnum("formalityLevel", ["formal", "casual", "slang"]).default("casual"),
-  frequency: int("frequency").default(0), // Usage frequency
+  difficulty: int("difficulty").default(1),
+  tags: json("tags").$type<string[]>(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-}, (table) => ({
-  jlptLevelIdx: index("jlptLevel_idx").on(table.jlptLevel),
-  expressionIdx: index("expression_idx").on(table.expression),
-}));
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
 
 export type Vocabulary = typeof vocabulary.$inferSelect;
 export type InsertVocabulary = typeof vocabulary.$inferInsert;
 
 /**
- * Grammar points table - stores Japanese grammar patterns
+ * grammar - 语法表
+ * 存储日语语法点信息,包括句型、解释、用法等
  */
 export const grammar = mysqlTable("grammar", {
   id: int("id").autoincrement().primaryKey(),
-  grammarPoint: text("grammarPoint").notNull(), // Grammar pattern in Japanese
-  meaning: text("meaning").notNull(), // Chinese explanation
-  structure: text("structure"), // Grammar structure/formula
+  pattern: varchar("pattern", { length: 255 }).notNull(),
+  meaning: text("meaning").notNull(),
+  usage: text("usage"),
   jlptLevel: mysqlEnum("jlptLevel", ["N5", "N4", "N3", "N2", "N1"]).notNull(),
-  category: varchar("category", { length: 100 }), // Category: particles, verb forms, etc.
-  formalityLevel: mysqlEnum("formalityLevel", ["formal", "casual", "both"]).default("both"),
-  usageNotes: text("usageNotes"), // Detailed usage notes
+  difficulty: int("difficulty").default(1),
+  tags: json("tags").$type<string[]>(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-}, (table) => ({
-  jlptLevelIdx: index("jlptLevel_idx").on(table.jlptLevel),
-}));
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
 
 export type Grammar = typeof grammar.$inferSelect;
 export type InsertGrammar = typeof grammar.$inferInsert;
 
 /**
- * Example sentences table - stores example sentences for vocabulary and grammar
+ * sentences - 例句表
+ * 存储日语例句和对应的中文翻译,支持标注来源
  */
-export const examples = mysqlTable("examples", {
+export const sentences = mysqlTable("sentences", {
   id: int("id").autoincrement().primaryKey(),
-  japanese: text("japanese").notNull(), // Japanese sentence
-  reading: text("reading"), // Furigana/reading
-  chinese: text("chinese").notNull(), // Chinese translation
-  romaji: text("romaji"), // Romaji
-  source: varchar("source", { length: 200 }), // Source: anime, drama, song, etc.
-  sourceType: mysqlEnum("sourceType", ["anime", "drama", "song", "literature", "daily", "other"]).default("daily"),
-  vocabularyId: int("vocabularyId"), // Related vocabulary ID
-  grammarId: int("grammarId"), // Related grammar ID
-  sceneId: int("sceneId"), // Related scene ID
-  difficulty: mysqlEnum("difficulty", ["beginner", "intermediate", "advanced"]).default("beginner"),
+  japanese: text("japanese").notNull(),
+  reading: text("reading"),
+  romaji: text("romaji"),
+  chinese: text("chinese").notNull(),
+  source: varchar("source", { length: 255 }),
+  difficulty: int("difficulty").default(1),
+  tags: json("tags").$type<string[]>(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-}, (table) => ({
-  vocabIdx: index("vocabulary_idx").on(table.vocabularyId),
-  grammarIdx: index("grammar_idx").on(table.grammarId),
-  sceneIdx: index("scene_idx").on(table.sceneId),
-}));
+});
 
-export type Example = typeof examples.$inferSelect;
-export type InsertExample = typeof examples.$inferInsert;
+export type Sentence = typeof sentences.$inferSelect;
+export type InsertSentence = typeof sentences.$inferInsert;
 
 /**
- * Learning scenes table - stores different learning scenarios
+ * scenes - 学习场景表
+ * 存储场景化学习内容,如餐厅、购物、交通等
  */
 export const scenes = mysqlTable("scenes", {
   id: int("id").autoincrement().primaryKey(),
-  title: varchar("title", { length: 200 }).notNull(), // Scene title
-  description: text("description"), // Scene description
-  category: varchar("category", { length: 100 }), // Category: shopping, restaurant, etc.
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  category: varchar("category", { length: 100 }).notNull(),
   difficulty: mysqlEnum("difficulty", ["beginner", "intermediate", "advanced"]).default("beginner"),
-  order: int("order").default(0), // Display order
-  imageUrl: text("imageUrl"), // Scene illustration
+  orderIndex: int("orderIndex").default(0),
+  content: json("content").$type<{
+    vocabularyIds?: number[];
+    grammarIds?: number[];
+    dialogues?: Array<{ speaker: string; text: string; translation: string }>;
+  }>(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 export type Scene = typeof scenes.$inferSelect;
 export type InsertScene = typeof scenes.$inferInsert;
 
 /**
- * Scene vocabulary mapping - links vocabulary to scenes
+ * ============================================
+ * 学习进度与复习表
+ * ============================================
  */
-export const sceneVocabulary = mysqlTable("sceneVocabulary", {
-  id: int("id").autoincrement().primaryKey(),
-  sceneId: int("sceneId").notNull(),
-  vocabularyId: int("vocabularyId").notNull(),
-  importance: mysqlEnum("importance", ["core", "supplementary"]).default("core"),
-}, (table) => ({
-  sceneIdx: index("scene_idx").on(table.sceneId),
-  vocabIdx: index("vocabulary_idx").on(table.vocabularyId),
-}));
 
 /**
- * Scene grammar mapping - links grammar to scenes
+ * learning_progress - 学习进度表
+ * 记录用户对每个学习项的掌握情况
  */
-export const sceneGrammar = mysqlTable("sceneGrammar", {
-  id: int("id").autoincrement().primaryKey(),
-  sceneId: int("sceneId").notNull(),
-  grammarId: int("grammarId").notNull(),
-  importance: mysqlEnum("importance", ["core", "supplementary"]).default("core"),
-}, (table) => ({
-  sceneIdx: index("scene_idx").on(table.sceneId),
-  grammarIdx: index("grammar_idx").on(table.grammarId),
-}));
-
-/**
- * Practice exercises table - stores exercises for scenes
- */
-export const exercises = mysqlTable("exercises", {
-  id: int("id").autoincrement().primaryKey(),
-  sceneId: int("sceneId").notNull(),
-  type: mysqlEnum("type", ["fillBlank", "sentenceTransform", "dialogue", "multipleChoice"]).notNull(),
-  question: text("question").notNull(), // Exercise question
-  options: text("options"), // JSON array of options for multiple choice
-  correctAnswer: text("correctAnswer").notNull(), // Correct answer
-  explanation: text("explanation"), // Answer explanation
-  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("medium"),
-  order: int("order").default(0),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-}, (table) => ({
-  sceneIdx: index("scene_idx").on(table.sceneId),
-}));
-
-export type Exercise = typeof exercises.$inferSelect;
-export type InsertExercise = typeof exercises.$inferInsert;
-
-/**
- * User learning records - tracks what users have learned
- */
-export const learningRecords = mysqlTable("learningRecords", {
+export const learningProgress = mysqlTable("learning_progress", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
   itemType: mysqlEnum("itemType", ["vocabulary", "grammar", "scene"]).notNull(),
-  itemId: int("itemId").notNull(), // ID of vocabulary, grammar, or scene
-  masteryLevel: mysqlEnum("masteryLevel", ["learning", "familiar", "mastered"]).default("learning"),
-  reviewCount: int("reviewCount").default(0), // Number of times reviewed
-  lastReviewedAt: timestamp("lastReviewedAt"), // Last review time
-  nextReviewAt: timestamp("nextReviewAt"), // Next scheduled review time
+  itemId: int("itemId").notNull(),
+  masteryLevel: mysqlEnum("masteryLevel", ["learning", "familiar", "mastered"]).default("learning").notNull(),
+  reviewCount: int("reviewCount").default(0).notNull(),
+  lastReviewedAt: timestamp("lastReviewedAt"),
+  nextReviewAt: timestamp("nextReviewAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-}, (table) => ({
-  userIdx: index("user_idx").on(table.userId),
-  itemIdx: index("item_idx").on(table.itemType, table.itemId),
-  nextReviewIdx: index("nextReview_idx").on(table.nextReviewAt),
-}));
+});
 
-export type LearningRecord = typeof learningRecords.$inferSelect;
-export type InsertLearningRecord = typeof learningRecords.$inferInsert;
+export type LearningProgress = typeof learningProgress.$inferSelect;
+export type InsertLearningProgress = typeof learningProgress.$inferInsert;
 
 /**
- * User study sessions - tracks daily study activity
+ * review_schedule - 复习计划表
+ * 基于艾宾浩斯遗忘曲线的复习计划
  */
-export const studySessions = mysqlTable("studySessions", {
+export const reviewSchedule = mysqlTable("review_schedule", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
-  date: timestamp("date").notNull(), // Study date
-  duration: int("duration").default(0), // Study duration in minutes
-  itemsLearned: int("itemsLearned").default(0), // Number of items learned
-  itemsReviewed: int("itemsReviewed").default(0), // Number of items reviewed
-  exercisesCompleted: int("exercisesCompleted").default(0), // Number of exercises completed
+  itemType: mysqlEnum("itemType", ["vocabulary", "grammar", "scene"]).notNull(),
+  itemId: int("itemId").notNull(),
+  scheduledAt: timestamp("scheduledAt").notNull(),
+  completed: boolean("completed").default(false).notNull(),
+  completedAt: timestamp("completedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-}, (table) => ({
-  userDateIdx: index("user_date_idx").on(table.userId, table.date),
-}));
+});
 
-export type StudySession = typeof studySessions.$inferSelect;
-export type InsertStudySession = typeof studySessions.$inferInsert;
+export type ReviewSchedule = typeof reviewSchedule.$inferSelect;
+export type InsertReviewSchedule = typeof reviewSchedule.$inferInsert;
 
 /**
- * Exercise attempts - tracks user exercise attempts
+ * ============================================
+ * 关联表
+ * ============================================
  */
-export const exerciseAttempts = mysqlTable("exerciseAttempts", {
+
+/**
+ * vocabulary_sentences - 词汇例句关联表
+ * 多对多关系:一个词汇可以有多个例句,一个例句可以包含多个词汇
+ */
+export const vocabularySentences = mysqlTable("vocabulary_sentences", {
+  id: int("id").autoincrement().primaryKey(),
+  vocabularyId: int("vocabularyId").notNull(),
+  sentenceId: int("sentenceId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type VocabularySentence = typeof vocabularySentences.$inferSelect;
+export type InsertVocabularySentence = typeof vocabularySentences.$inferInsert;
+
+/**
+ * grammar_sentences - 语法例句关联表
+ * 多对多关系:一个语法点可以有多个例句,一个例句可以包含多个语法点
+ */
+export const grammarSentences = mysqlTable("grammar_sentences", {
+  id: int("id").autoincrement().primaryKey(),
+  grammarId: int("grammarId").notNull(),
+  sentenceId: int("sentenceId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type GrammarSentence = typeof grammarSentences.$inferSelect;
+export type InsertGrammarSentence = typeof grammarSentences.$inferInsert;
+
+/**
+ * ============================================
+ * AI助手与资源管理表 (新增)
+ * ============================================
+ */
+
+/**
+ * learning_resources - 学习资源库表
+ * 存储可靠的日语学习资源,供AI助手参考
+ */
+export const learningResources = mysqlTable("learning_resources", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  url: varchar("url", { length: 500 }).notNull(),
+  type: mysqlEnum("type", ["website", "api", "dataset", "dictionary"]).notNull(),
+  category: mysqlEnum("category", ["vocabulary", "grammar", "listening", "reading", "comprehensive"]).notNull(),
+  description: text("description"),
+  reliability: int("reliability").default(5).notNull(), // 1-10评分
+  lastUpdatedAt: timestamp("lastUpdatedAt").defaultNow().notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  metadata: json("metadata").$type<{
+    apiKey?: string;
+    crawlRules?: any;
+    updateFrequency?: string;
+  }>(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LearningResource = typeof learningResources.$inferSelect;
+export type InsertLearningResource = typeof learningResources.$inferInsert;
+
+/**
+ * learning_curriculum - 学习大纲表
+ * 存储完整的学习路径和各个阶段的目标
+ */
+export const learningCurriculum = mysqlTable("learning_curriculum", {
+  id: int("id").autoincrement().primaryKey(),
+  level: mysqlEnum("level", ["N5", "N4", "N3", "N2", "N1"]).notNull(),
+  stage: int("stage").notNull(), // 阶段序号
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  objectives: json("objectives").$type<string[]>(), // 学习目标列表
+  requiredVocabularyCount: int("requiredVocabularyCount").default(0),
+  requiredGrammarCount: int("requiredGrammarCount").default(0),
+  estimatedHours: int("estimatedHours").default(0),
+  prerequisites: json("prerequisites").$type<number[]>(), // 前置阶段ID列表
+  orderIndex: int("orderIndex").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type LearningCurriculum = typeof learningCurriculum.$inferSelect;
+export type InsertLearningCurriculum = typeof learningCurriculum.$inferInsert;
+
+/**
+ * ai_generated_content - AI生成内容表
+ * 记录AI生成的学习内容,避免重复生成
+ */
+export const aiGeneratedContent = mysqlTable("ai_generated_content", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
-  exerciseId: int("exerciseId").notNull(),
-  userAnswer: text("userAnswer").notNull(),
-  isCorrect: boolean("isCorrect").notNull(),
-  attemptedAt: timestamp("attemptedAt").defaultNow().notNull(),
-}, (table) => ({
-  userIdx: index("user_idx").on(table.userId),
-  exerciseIdx: index("exercise_idx").on(table.exerciseId),
-}));
+  contentType: mysqlEnum("contentType", ["vocabulary", "grammar", "exercise", "explanation", "dialogue"]).notNull(),
+  prompt: text("prompt").notNull(), // 生成时使用的提示词
+  generatedContent: json("generatedContent").notNull(), // 生成的内容
+  curriculumStageId: int("curriculumStageId"), // 关联的学习阶段
+  isApproved: boolean("isApproved").default(false).notNull(), // 是否审核通过
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
 
-export type ExerciseAttempt = typeof exerciseAttempts.$inferSelect;
-export type InsertExerciseAttempt = typeof exerciseAttempts.$inferInsert;
+export type AiGeneratedContent = typeof aiGeneratedContent.$inferSelect;
+export type InsertAiGeneratedContent = typeof aiGeneratedContent.$inferInsert;
+
+/**
+ * user_learning_path - 用户学习路径表
+ * 记录用户的个性化学习路径和进度
+ */
+export const userLearningPath = mysqlTable("user_learning_path", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  currentCurriculumStageId: int("currentCurriculumStageId"), // 当前学习阶段
+  completedStages: json("completedStages").$type<number[]>(), // 已完成阶段ID列表
+  startedAt: timestamp("startedAt").defaultNow().notNull(),
+  lastActiveAt: timestamp("lastActiveAt").defaultNow().notNull(),
+  totalStudyHours: decimal("totalStudyHours", { precision: 10, scale: 2 }).default("0.00").notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserLearningPath = typeof userLearningPath.$inferSelect;
+export type InsertUserLearningPath = typeof userLearningPath.$inferInsert;

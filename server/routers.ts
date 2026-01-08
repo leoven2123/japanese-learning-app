@@ -21,184 +21,168 @@ export const appRouter = router({
     }),
   }),
 
-  // Vocabulary router
+  /**
+   * ============================================
+   * 词汇相关路由
+   * ============================================
+   */
   vocabulary: router({
     list: publicProcedure
       .input(z.object({
         jlptLevel: z.enum(["N5", "N4", "N3", "N2", "N1"]).optional(),
-        search: z.string().optional()
+        search: z.string().optional(),
+        limit: z.number().optional(),
+        offset: z.number().optional(),
       }))
       .query(async ({ input }) => {
-        if (input.search) {
-          return await db.searchVocabulary(input.search);
-        }
-        if (input.jlptLevel) {
-          return await db.getVocabularyByLevel(input.jlptLevel);
-        }
-        return [];
+        return await db.getVocabularyList(input);
       }),
-    
+
     getById: publicProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
-        const vocab = await db.getVocabularyById(input.id);
-        if (!vocab) return null;
-        
-        const examples = await db.getVocabularyExamples(input.id);
-        return { ...vocab, examples };
+        return await db.getVocabularyWithExamples(input.id);
       }),
   }),
 
-  // Grammar router
+  /**
+   * ============================================
+   * 语法相关路由
+   * ============================================
+   */
   grammar: router({
     list: publicProcedure
       .input(z.object({
         jlptLevel: z.enum(["N5", "N4", "N3", "N2", "N1"]).optional(),
-        search: z.string().optional()
+        search: z.string().optional(),
+        limit: z.number().optional(),
+        offset: z.number().optional(),
       }))
       .query(async ({ input }) => {
-        if (input.search) {
-          return await db.searchGrammar(input.search);
-        }
-        if (input.jlptLevel) {
-          return await db.getGrammarByLevel(input.jlptLevel);
-        }
-        return [];
+        return await db.getGrammarList(input);
       }),
-    
+
     getById: publicProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
-        const grammarPoint = await db.getGrammarById(input.id);
-        if (!grammarPoint) return null;
-        
-        const examples = await db.getGrammarExamples(input.id);
-        return { ...grammarPoint, examples };
+        return await db.getGrammarWithExamples(input.id);
       }),
   }),
 
-  // Scene router
+  /**
+   * ============================================
+   * 场景相关路由
+   * ============================================
+   */
   scene: router({
     list: publicProcedure.query(async () => {
-      return await db.getAllScenes();
+      return await db.getSceneList();
     }),
-    
+
     getById: publicProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
-        const scene = await db.getSceneById(input.id);
-        if (!scene) return null;
-        
-        const vocabulary = await db.getSceneVocabulary(input.id);
-        const grammar = await db.getSceneGrammar(input.id);
-        const examples = await db.getSceneExamples(input.id);
-        
-        return {
-          ...scene,
-          vocabulary,
-          grammar,
-          examples
-        };
+        return await db.getSceneById(input.id);
       }),
   }),
 
-  // Learning record router
+  /**
+   * ============================================
+   * 学习进度相关路由
+   * ============================================
+   */
   learning: router({
     recordProgress: protectedProcedure
       .input(z.object({
         itemType: z.enum(["vocabulary", "grammar", "scene"]),
         itemId: z.number(),
-        masteryLevel: z.enum(["learning", "familiar", "mastered"])
+        masteryLevel: z.enum(["learning", "familiar", "mastered"]),
       }))
       .mutation(async ({ ctx, input }) => {
-        // Calculate next review time based on Ebbinghaus forgetting curve
-        const intervals = [
-          20 * 60 * 1000, // 20 minutes
-          60 * 60 * 1000, // 1 hour
-          24 * 60 * 60 * 1000, // 1 day
-          2 * 24 * 60 * 60 * 1000, // 2 days
-          4 * 24 * 60 * 60 * 1000, // 4 days
-          7 * 24 * 60 * 60 * 1000, // 7 days
-          15 * 24 * 60 * 60 * 1000, // 15 days
-          30 * 24 * 60 * 60 * 1000, // 30 days
-        ];
-        
-        const record = await db.getUserLearningRecord(ctx.user.id, input.itemType, input.itemId);
-        const reviewCount = record ? (record.reviewCount || 0) : 0;
-        const intervalIndex = Math.min(reviewCount, intervals.length - 1);
-        const nextReviewAt = new Date(Date.now() + intervals[intervalIndex]);
-        
-        await db.createOrUpdateLearningRecord(
-          ctx.user.id,
-          input.itemType,
-          input.itemId,
-          input.masteryLevel,
-          nextReviewAt
-        );
-        
-        await db.updateStudySession(ctx.user.id, {
-          itemsLearned: reviewCount === 0 ? 1 : 0,
-          itemsReviewed: reviewCount > 0 ? 1 : 0
+        await db.upsertLearningProgress({
+          userId: ctx.user.id,
+          itemType: input.itemType,
+          itemId: input.itemId,
+          masteryLevel: input.masteryLevel,
         });
-        
         return { success: true };
       }),
-    
-    getDueReviews: protectedProcedure.query(async ({ ctx }) => {
-      const dueReviews = await db.getDueReviews(ctx.user.id);
-      
-      // Fetch full details for each review item
-      const reviewsWithDetails = await Promise.all(
-        dueReviews.map(async (review) => {
-          let item = null;
-          if (review.itemType === 'vocabulary') {
-            item = await db.getVocabularyById(review.itemId);
-          } else if (review.itemType === 'grammar') {
-            item = await db.getGrammarById(review.itemId);
-          } else if (review.itemType === 'scene') {
-            item = await db.getSceneById(review.itemId);
-          }
-          return { ...review, item };
-        })
-      );
-      
-      return reviewsWithDetails;
-    }),
-    
+
     getProgress: protectedProcedure.query(async ({ ctx }) => {
-      return await db.getUserProgress(ctx.user.id);
+      const progress = await db.getUserProgress(ctx.user.id);
+      
+      // 统计各类型学习项
+      const vocabularyCount = progress.filter(p => p.itemType === 'vocabulary').length;
+      const grammarCount = progress.filter(p => p.itemType === 'grammar').length;
+      const sceneCount = progress.filter(p => p.itemType === 'scene').length;
+      const masteredCount = progress.filter(p => p.masteryLevel === 'mastered').length;
+      const familiarCount = progress.filter(p => p.masteryLevel === 'familiar').length;
+      const learningCount = progress.filter(p => p.masteryLevel === 'learning').length;
+      
+      return {
+        totalLearned: progress.length,
+        vocabularyCount,
+        grammarCount,
+        sceneCount,
+        masteredCount,
+        familiarCount,
+        learningCount,
+        progress,
+      };
     }),
-    
-    getStudyHistory: protectedProcedure
-      .input(z.object({ days: z.number().default(30) }))
+
+    getReviewSchedule: protectedProcedure
+      .input(z.object({
+        limit: z.number().optional(),
+      }))
       .query(async ({ ctx, input }) => {
-        return await db.getUserStudyHistory(ctx.user.id, input.days);
+        return await db.getReviewSchedule(ctx.user.id, input.limit);
       }),
   }),
 
-  // AI assistant router
+  /**
+   * ============================================
+   * AI助手相关路由
+   * ============================================
+   */
   ai: router({
+    // 生成个性化例句
     generateExamples: protectedProcedure
       .input(z.object({
-        word: z.string(),
-        level: z.enum(["N5", "N4", "N3", "N2", "N1"])
+        vocabularyId: z.number().optional(),
+        grammarId: z.number().optional(),
+        count: z.number().default(3),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
+        let context = "";
+        
+        if (input.vocabularyId) {
+          const vocab = await db.getVocabularyById(input.vocabularyId);
+          if (vocab) {
+            context = `词汇: ${vocab.expression} (${vocab.reading}) - ${vocab.meaning}`;
+          }
+        } else if (input.grammarId) {
+          const grammar = await db.getGrammarById(input.grammarId);
+          if (grammar) {
+            context = `语法: ${grammar.pattern} - ${grammar.meaning}`;
+          }
+        }
+        
         const response = await invokeLLM({
           messages: [
             {
               role: "system",
-              content: "你是一位专业的日语教师。请为给定的日语词汇生成3个实用的例句,每个例句包含日文、假名标注、罗马音和中文翻译。"
+              content: "你是一位专业的日语教师。请生成真实、实用的日语例句,每个例句都要包含日文、假名标注和中文翻译。"
             },
             {
               role: "user",
-              content: `请为日语词汇"${input.word}"(JLPT ${input.level}级别)生成3个例句。`
+              content: `请为以下内容生成${input.count}个实用例句:\n${context}\n\n请以JSON格式返回,格式为: [{"japanese": "日文例句", "reading": "假名标注", "chinese": "中文翻译"}]`
             }
           ],
           response_format: {
             type: "json_schema",
             json_schema: {
-              name: "example_sentences",
+              name: "examples",
               strict: true,
               schema: {
                 type: "object",
@@ -208,12 +192,11 @@ export const appRouter = router({
                     items: {
                       type: "object",
                       properties: {
-                        japanese: { type: "string", description: "日文例句" },
-                        reading: { type: "string", description: "假名标注" },
-                        romaji: { type: "string", description: "罗马音" },
-                        chinese: { type: "string", description: "中文翻译" }
+                        japanese: { type: "string" },
+                        reading: { type: "string" },
+                        chinese: { type: "string" }
                       },
-                      required: ["japanese", "reading", "romaji", "chinese"],
+                      required: ["japanese", "reading", "chinese"],
                       additionalProperties: false
                     }
                   }
@@ -226,17 +209,28 @@ export const appRouter = router({
         });
         
         const content = response.choices[0]?.message?.content;
-        if (!content || typeof content !== 'string') throw new Error("Failed to generate examples");
+        if (!content || typeof content !== 'string') return { examples: [] };
         
-        return JSON.parse(content);
+        const parsed = JSON.parse(content);
+        
+        // 保存AI生成的内容
+        await db.saveAIGeneratedContent({
+          userId: ctx.user.id,
+          contentType: "dialogue",
+          prompt: `生成例句: ${context}`,
+          generatedContent: parsed.examples,
+        });
+        
+        return parsed;
       }),
-    
+
+    // 解释语法点
     explainGrammar: protectedProcedure
       .input(z.object({
         grammarPoint: z.string(),
-        question: z.string().optional()
+        question: z.string().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
         const response = await invokeLLM({
           messages: [
             {
@@ -252,62 +246,267 @@ export const appRouter = router({
           ]
         });
         
-        return response.choices[0]?.message?.content || "";
+        const content = response.choices[0]?.message?.content || "";
+        
+        // 保存AI生成的内容
+        await db.saveAIGeneratedContent({
+          userId: ctx.user.id,
+          contentType: "explanation",
+          prompt: `解释语法: ${input.grammarPoint}`,
+          generatedContent: { explanation: content },
+        });
+        
+        return { explanation: content };
       }),
     
+    // 获取学习建议
     getStudyAdvice: protectedProcedure.query(async ({ ctx }) => {
       const progress = await db.getUserProgress(ctx.user.id);
-      const dueReviews = await db.getDueReviews(ctx.user.id);
+      const dueReviews = await db.getReviewSchedule(ctx.user.id);
+      const userPath = await db.getUserLearningPath(ctx.user.id);
+      
+      // 统计各类型学习项
+      const vocabularyCount = progress.filter(p => p.itemType === 'vocabulary').length;
+      const grammarCount = progress.filter(p => p.itemType === 'grammar').length;
+      const sceneCount = progress.filter(p => p.itemType === 'scene').length;
+      const masteredCount = progress.filter(p => p.masteryLevel === 'mastered').length;
+      const totalLearned = progress.length;
+      
+      // 获取当前学习阶段信息
+      let currentStageInfo = "";
+      if (userPath?.currentCurriculumStageId) {
+        const stage = await db.getCurriculumStageById(userPath.currentCurriculumStageId);
+        if (stage) {
+          currentStageInfo = `\n当前学习阶段: ${stage.level} - ${stage.title}`;
+        }
+      }
+      
+      // 获取可用的学习资源
+      const resources = await db.getActiveResources();
+      const resourceInfo = resources.length > 0 
+        ? `\n\n可用学习资源:\n${resources.slice(0, 5).map(r => `- ${r.title} (${r.category})`).join('\n')}`
+        : "";
       
       const response = await invokeLLM({
         messages: [
           {
             role: "system",
-            content: "你是一位专业的日语学习顾问。根据学生的学习进度,提供个性化的学习建议。"
+            content: `你是一位专业的日语学习顾问。根据学生的学习进度,提供个性化的学习建议。
+
+你可以参考以下学习资源来源:
+${resources.map(r => `- ${r.title}: ${r.url} (${r.description || ''})`).join('\n')}
+
+请基于这些可靠的资源给出建议,避免推荐不存在的资源。`
           },
           {
             role: "user",
-            content: `我的学习进度:已学习${progress.totalLearned}项内容(词汇${progress.vocabularyCount}个,语法${progress.grammarCount}个,场景${progress.sceneCount}个),已掌握${progress.masteredCount}项。当前有${dueReviews.length}项待复习。请给我一些学习建议。`
+            content: `我的学习进度:
+- 已学习${totalLearned}项内容(词汇${vocabularyCount}个,语法${grammarCount}个,场景${sceneCount}个)
+- 已掌握${masteredCount}项
+- 当前有${dueReviews.length}项待复习${currentStageInfo}
+
+请给我一些具体的学习建议,包括:
+1. 下一步应该学习什么内容
+2. 如何安排复习计划
+3. 推荐的学习资源(基于上述可用资源列表)`
           }
         ]
       });
       
-      return response.choices[0]?.message?.content || "";
+      const advice = response.choices[0]?.message?.content || "";
+      
+      // 保存AI生成的建议
+      await db.saveAIGeneratedContent({
+        userId: ctx.user.id,
+        contentType: "explanation",
+        prompt: "获取学习建议",
+        generatedContent: { advice },
+        curriculumStageId: userPath?.currentCurriculumStageId || undefined,
+      });
+      
+      return { advice };
     }),
+
+    // 生成下一阶段学习内容
+    generateNextStageContent: protectedProcedure
+      .input(z.object({
+        contentType: z.enum(["vocabulary", "grammar", "exercise"]),
+        count: z.number().default(5),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const userPath = await db.getUserLearningPath(ctx.user.id);
+        if (!userPath) {
+          // 初始化用户学习路径
+          await db.initUserLearningPath(ctx.user.id);
+        }
+        
+        const updatedPath = await db.getUserLearningPath(ctx.user.id);
+        if (!updatedPath?.currentCurriculumStageId) {
+          throw new Error("无法获取当前学习阶段");
+        }
+        
+        const currentStage = await db.getCurriculumStageById(updatedPath.currentCurriculumStageId);
+        if (!currentStage) {
+          throw new Error("当前学习阶段不存在");
+        }
+        
+        // 获取已生成的内容,避免重复
+        const existingContent = await db.getAIGeneratedContent({
+          userId: ctx.user.id,
+          contentType: input.contentType,
+          curriculumStageId: currentStage.id,
+          limit: 50,
+        });
+        
+        const existingItems = existingContent
+          .map(c => JSON.stringify(c.generatedContent))
+          .join('\n');
+        
+        let systemPrompt = "";
+        let userPrompt = "";
+        
+        if (input.contentType === "vocabulary") {
+          systemPrompt = "你是一位专业的日语教师。请生成适合当前学习阶段的日语词汇,确保词汇实用且符合JLPT等级要求。";
+          userPrompt = `当前学习阶段: ${currentStage.level} - ${currentStage.title}
+学习目标: ${currentStage.objectives?.join(', ') || '无'}
+
+请生成${input.count}个适合这个阶段的日语词汇,要求:
+1. 符合${currentStage.level}等级
+2. 与学习目标相关
+3. 避免与以下已生成的词汇重复:
+${existingItems || '(暂无)'}
+
+请以JSON格式返回: {"vocabulary": [{"expression": "日文", "reading": "假名", "romaji": "罗马音", "meaning": "中文释义", "partOfSpeech": "词性"}]}`;
+        } else if (input.contentType === "grammar") {
+          systemPrompt = "你是一位专业的日语教师。请生成适合当前学习阶段的日语语法点,确保语法实用且符合JLPT等级要求。";
+          userPrompt = `当前学习阶段: ${currentStage.level} - ${currentStage.title}
+学习目标: ${currentStage.objectives?.join(', ') || '无'}
+
+请生成${input.count}个适合这个阶段的日语语法点,要求:
+1. 符合${currentStage.level}等级
+2. 与学习目标相关
+3. 避免与以下已生成的语法重复:
+${existingItems || '(暂无)'}
+
+请以JSON格式返回: {"grammar": [{"pattern": "语法句型", "meaning": "中文解释", "usage": "使用说明"}]}`;
+        } else {
+          systemPrompt = "你是一位专业的日语教师。请生成适合当前学习阶段的练习题。";
+          userPrompt = `当前学习阶段: ${currentStage.level} - ${currentStage.title}
+
+请生成${input.count}个练习题,以JSON格式返回: {"exercises": [{"question": "题目", "options": ["选项1", "选项2", "选项3", "选项4"], "answer": 0, "explanation": "解释"}]}`;
+        }
+        
+        const response = await invokeLLM({
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+          ]
+        });
+        
+        const content = response.choices[0]?.message?.content;
+        if (!content || typeof content !== 'string') {
+          throw new Error("无法生成内容");
+        }
+        const parsed = JSON.parse(content);
+        
+        // 保存生成的内容
+        await db.saveAIGeneratedContent({
+          userId: ctx.user.id,
+          contentType: input.contentType,
+          prompt: userPrompt,
+          generatedContent: parsed,
+          curriculumStageId: currentStage.id,
+        });
+        
+        return parsed;
+      }),
+
+    // 对话练习
+    chat: protectedProcedure
+      .input(z.object({
+        message: z.string(),
+        context: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: "你是一位友好的日语学习助手。请用中文回答学生的问题,必要时提供日语例句。"
+            },
+            {
+              role: "user",
+              content: input.context 
+                ? `${input.context}\n\n我的问题: ${input.message}`
+                : input.message
+            }
+          ]
+        });
+        
+        return {
+          reply: response.choices[0]?.message?.content || "抱歉,我现在无法回答。"
+        };
+      }),
   }),
 
-  // Voice transcription router
+  /**
+   * ============================================
+   * 语音识别相关路由
+   * ============================================
+   */
   voice: router({
     transcribe: protectedProcedure
       .input(z.object({
         audioUrl: z.string(),
-        expectedText: z.string().optional()
+        language: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const result = await transcribeAudio({
           audioUrl: input.audioUrl,
-          language: "ja"
+          language: input.language || "ja",
         });
         
-        if ('error' in result) {
-          throw new Error(result.error);
-        }
-        
-        // Compare with expected text if provided
-        let accuracy = null;
-        if (input.expectedText && result.text) {
-          const expected = input.expectedText.replace(/\s/g, '');
-          const actual = result.text.replace(/\s/g, '');
-          const matches = expected.split('').filter((char, i) => char === actual[i]).length;
-          accuracy = Math.round((matches / expected.length) * 100);
-        }
-        
-        return {
-          text: result.text,
-          language: result.language,
-          accuracy
-        };
+        return result;
       }),
+  }),
+
+  /**
+   * ============================================
+   * 学习资源管理路由
+   * ============================================
+   */
+  resources: router({
+    list: publicProcedure
+      .input(z.object({
+        category: z.string().optional(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getActiveResources(input.category);
+      }),
+  }),
+
+  /**
+   * ============================================
+   * 学习大纲路由
+   * ============================================
+   */
+  curriculum: router({
+    getByLevel: publicProcedure
+      .input(z.object({
+        level: z.enum(["N5", "N4", "N3", "N2", "N1"]),
+      }))
+      .query(async ({ input }) => {
+        return await db.getCurriculumByLevel(input.level);
+      }),
+
+    getUserPath: protectedProcedure.query(async ({ ctx }) => {
+      let path = await db.getUserLearningPath(ctx.user.id);
+      if (!path) {
+        await db.initUserLearningPath(ctx.user.id);
+        path = await db.getUserLearningPath(ctx.user.id);
+      }
+      return path;
+    }),
   }),
 });
 

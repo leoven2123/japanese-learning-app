@@ -1,137 +1,11 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "5c497e29-2878-4de5-bb65-c5d7c48bf5ce",
+  "id": "dc60b350-43b0-47aa-b966-e23977a2c7c3",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
-    "examples": {
-      "name": "examples",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "japanese": {
-          "name": "japanese",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "reading": {
-          "name": "reading",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "chinese": {
-          "name": "chinese",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "romaji": {
-          "name": "romaji",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "source": {
-          "name": "source",
-          "type": "varchar(200)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "sourceType": {
-          "name": "sourceType",
-          "type": "enum('anime','drama','song','literature','daily','other')",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "'daily'"
-        },
-        "vocabularyId": {
-          "name": "vocabularyId",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "grammarId": {
-          "name": "grammarId",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "sceneId": {
-          "name": "sceneId",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "difficulty": {
-          "name": "difficulty",
-          "type": "enum('beginner','intermediate','advanced')",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "'beginner'"
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(now())"
-        }
-      },
-      "indexes": {
-        "vocabulary_idx": {
-          "name": "vocabulary_idx",
-          "columns": [
-            "vocabularyId"
-          ],
-          "isUnique": false
-        },
-        "grammar_idx": {
-          "name": "grammar_idx",
-          "columns": [
-            "grammarId"
-          ],
-          "isUnique": false
-        },
-        "scene_idx": {
-          "name": "scene_idx",
-          "columns": [
-            "sceneId"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {
-        "examples_id": {
-          "name": "examples_id",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraint": {}
-    },
-    "exerciseAttempts": {
-      "name": "exerciseAttempts",
+    "ai_generated_content": {
+      "name": "ai_generated_content",
       "columns": {
         "id": {
           "name": "id",
@@ -147,131 +21,41 @@
           "notNull": true,
           "autoincrement": false
         },
-        "exerciseId": {
-          "name": "exerciseId",
-          "type": "int",
+        "contentType": {
+          "name": "contentType",
+          "type": "enum('vocabulary','grammar','exercise','explanation','dialogue')",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "userAnswer": {
-          "name": "userAnswer",
+        "prompt": {
+          "name": "prompt",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "isCorrect": {
-          "name": "isCorrect",
+        "generatedContent": {
+          "name": "generatedContent",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "curriculumStageId": {
+          "name": "curriculumStageId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "isApproved": {
+          "name": "isApproved",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
-        },
-        "attemptedAt": {
-          "name": "attemptedAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
           "autoincrement": false,
-          "default": "(now())"
-        }
-      },
-      "indexes": {
-        "user_idx": {
-          "name": "user_idx",
-          "columns": [
-            "userId"
-          ],
-          "isUnique": false
-        },
-        "exercise_idx": {
-          "name": "exercise_idx",
-          "columns": [
-            "exerciseId"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {
-        "exerciseAttempts_id": {
-          "name": "exerciseAttempts_id",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraint": {}
-    },
-    "exercises": {
-      "name": "exercises",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "sceneId": {
-          "name": "sceneId",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "type": {
-          "name": "type",
-          "type": "enum('fillBlank','sentenceTransform','dialogue','multipleChoice')",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "question": {
-          "name": "question",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "options": {
-          "name": "options",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "correctAnswer": {
-          "name": "correctAnswer",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "explanation": {
-          "name": "explanation",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "difficulty": {
-          "name": "difficulty",
-          "type": "enum('easy','medium','hard')",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "'medium'"
-        },
-        "order": {
-          "name": "order",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": 0
+          "default": false
         },
         "createdAt": {
           "name": "createdAt",
@@ -282,19 +66,11 @@
           "default": "(now())"
         }
       },
-      "indexes": {
-        "scene_idx": {
-          "name": "scene_idx",
-          "columns": [
-            "sceneId"
-          ],
-          "isUnique": false
-        }
-      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {
-        "exercises_id": {
-          "name": "exercises_id",
+        "ai_generated_content_id": {
+          "name": "ai_generated_content_id",
           "columns": [
             "id"
           ]
@@ -313,9 +89,9 @@
           "notNull": true,
           "autoincrement": true
         },
-        "grammarPoint": {
-          "name": "grammarPoint",
-          "type": "text",
+        "pattern": {
+          "name": "pattern",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -327,8 +103,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "structure": {
-          "name": "structure",
+        "usage": {
+          "name": "usage",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -341,24 +117,17 @@
           "notNull": true,
           "autoincrement": false
         },
-        "category": {
-          "name": "category",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "formalityLevel": {
-          "name": "formalityLevel",
-          "type": "enum('formal','casual','both')",
+        "difficulty": {
+          "name": "difficulty",
+          "type": "int",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'both'"
+          "default": 1
         },
-        "usageNotes": {
-          "name": "usageNotes",
-          "type": "text",
+        "tags": {
+          "name": "tags",
+          "type": "json",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -370,17 +139,18 @@
           "notNull": true,
           "autoincrement": false,
           "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
         }
       },
-      "indexes": {
-        "jlptLevel_idx": {
-          "name": "jlptLevel_idx",
-          "columns": [
-            "jlptLevel"
-          ],
-          "isUnique": false
-        }
-      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "grammar_id": {
@@ -393,8 +163,169 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "learningRecords": {
-      "name": "learningRecords",
+    "grammar_sentences": {
+      "name": "grammar_sentences",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "grammarId": {
+          "name": "grammarId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sentenceId": {
+          "name": "sentenceId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "grammar_sentences_id": {
+          "name": "grammar_sentences_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "learning_curriculum": {
+      "name": "learning_curriculum",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "level": {
+          "name": "level",
+          "type": "enum('N5','N4','N3','N2','N1')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "stage": {
+          "name": "stage",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "objectives": {
+          "name": "objectives",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "requiredVocabularyCount": {
+          "name": "requiredVocabularyCount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "requiredGrammarCount": {
+          "name": "requiredGrammarCount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "estimatedHours": {
+          "name": "estimatedHours",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "prerequisites": {
+          "name": "prerequisites",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "orderIndex": {
+          "name": "orderIndex",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "learning_curriculum_id": {
+          "name": "learning_curriculum_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "learning_progress": {
+      "name": "learning_progress",
       "columns": {
         "id": {
           "name": "id",
@@ -428,7 +359,7 @@
           "name": "masteryLevel",
           "type": "enum('learning','familiar','mastered')",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false,
           "default": "'learning'"
         },
@@ -436,7 +367,7 @@
           "name": "reviewCount",
           "type": "int",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false,
           "default": 0
         },
@@ -472,34 +403,11 @@
           "default": "(now())"
         }
       },
-      "indexes": {
-        "user_idx": {
-          "name": "user_idx",
-          "columns": [
-            "userId"
-          ],
-          "isUnique": false
-        },
-        "item_idx": {
-          "name": "item_idx",
-          "columns": [
-            "itemType",
-            "itemId"
-          ],
-          "isUnique": false
-        },
-        "nextReview_idx": {
-          "name": "nextReview_idx",
-          "columns": [
-            "nextReviewAt"
-          ],
-          "isUnique": false
-        }
-      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {
-        "learningRecords_id": {
-          "name": "learningRecords_id",
+        "learning_progress_id": {
+          "name": "learning_progress_id",
           "columns": [
             "id"
           ]
@@ -508,8 +416,8 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "sceneGrammar": {
-      "name": "sceneGrammar",
+    "learning_resources": {
+      "name": "learning_resources",
       "columns": {
         "id": {
           "name": "id",
@@ -518,49 +426,86 @@
           "notNull": true,
           "autoincrement": true
         },
-        "sceneId": {
-          "name": "sceneId",
-          "type": "int",
+        "title": {
+          "name": "title",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "grammarId": {
-          "name": "grammarId",
-          "type": "int",
+        "url": {
+          "name": "url",
+          "type": "varchar(500)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "importance": {
-          "name": "importance",
-          "type": "enum('core','supplementary')",
+        "type": {
+          "name": "type",
+          "type": "enum('website','api','dataset','dictionary')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "category": {
+          "name": "category",
+          "type": "enum('vocabulary','grammar','listening','reading','comprehensive')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false,
-          "default": "'core'"
-        }
-      },
-      "indexes": {
-        "scene_idx": {
-          "name": "scene_idx",
-          "columns": [
-            "sceneId"
-          ],
-          "isUnique": false
+          "autoincrement": false
         },
-        "grammar_idx": {
-          "name": "grammar_idx",
-          "columns": [
-            "grammarId"
-          ],
-          "isUnique": false
+        "reliability": {
+          "name": "reliability",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 5
+        },
+        "lastUpdatedAt": {
+          "name": "lastUpdatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "isActive": {
+          "name": "isActive",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
         }
       },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {
-        "sceneGrammar_id": {
-          "name": "sceneGrammar_id",
+        "learning_resources_id": {
+          "name": "learning_resources_id",
           "columns": [
             "id"
           ]
@@ -569,8 +514,8 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "sceneVocabulary": {
-      "name": "sceneVocabulary",
+    "review_schedule": {
+      "name": "review_schedule",
       "columns": {
         "id": {
           "name": "id",
@@ -579,49 +524,63 @@
           "notNull": true,
           "autoincrement": true
         },
-        "sceneId": {
-          "name": "sceneId",
+        "userId": {
+          "name": "userId",
           "type": "int",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "vocabularyId": {
-          "name": "vocabularyId",
+        "itemType": {
+          "name": "itemType",
+          "type": "enum('vocabulary','grammar','scene')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "itemId": {
+          "name": "itemId",
           "type": "int",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "importance": {
-          "name": "importance",
-          "type": "enum('core','supplementary')",
+        "scheduledAt": {
+          "name": "scheduledAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "completed": {
+          "name": "completed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "completedAt": {
+          "name": "completedAt",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false,
-          "default": "'core'"
-        }
-      },
-      "indexes": {
-        "scene_idx": {
-          "name": "scene_idx",
-          "columns": [
-            "sceneId"
-          ],
-          "isUnique": false
+          "autoincrement": false
         },
-        "vocabulary_idx": {
-          "name": "vocabulary_idx",
-          "columns": [
-            "vocabularyId"
-          ],
-          "isUnique": false
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
         }
       },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {
-        "sceneVocabulary_id": {
-          "name": "sceneVocabulary_id",
+        "review_schedule_id": {
+          "name": "review_schedule_id",
           "columns": [
             "id"
           ]
@@ -642,7 +601,7 @@
         },
         "title": {
           "name": "title",
-          "type": "varchar(200)",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -658,7 +617,7 @@
           "name": "category",
           "type": "varchar(100)",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "difficulty": {
@@ -669,17 +628,17 @@
           "autoincrement": false,
           "default": "'beginner'"
         },
-        "order": {
-          "name": "order",
+        "orderIndex": {
+          "name": "orderIndex",
           "type": "int",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
           "default": 0
         },
-        "imageUrl": {
-          "name": "imageUrl",
-          "type": "text",
+        "content": {
+          "name": "content",
+          "type": "json",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -690,6 +649,15 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
           "default": "(now())"
         }
       },
@@ -706,8 +674,90 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "studySessions": {
-      "name": "studySessions",
+    "sentences": {
+      "name": "sentences",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "japanese": {
+          "name": "japanese",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reading": {
+          "name": "reading",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "romaji": {
+          "name": "romaji",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "chinese": {
+          "name": "chinese",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source": {
+          "name": "source",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "difficulty": {
+          "name": "difficulty",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 1
+        },
+        "tags": {
+          "name": "tags",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "sentences_id": {
+          "name": "sentences_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "user_learning_path": {
+      "name": "user_learning_path",
       "columns": {
         "id": {
           "name": "id",
@@ -723,74 +773,72 @@
           "notNull": true,
           "autoincrement": false
         },
-        "date": {
-          "name": "date",
-          "type": "timestamp",
+        "currentCurriculumStageId": {
+          "name": "currentCurriculumStageId",
+          "type": "int",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
-        "duration": {
-          "name": "duration",
-          "type": "int",
+        "completedStages": {
+          "name": "completedStages",
+          "type": "json",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false,
-          "default": 0
+          "autoincrement": false
         },
-        "itemsLearned": {
-          "name": "itemsLearned",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": 0
-        },
-        "itemsReviewed": {
-          "name": "itemsReviewed",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": 0
-        },
-        "exercisesCompleted": {
-          "name": "exercisesCompleted",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": 0
-        },
-        "createdAt": {
-          "name": "createdAt",
+        "startedAt": {
+          "name": "startedAt",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "(now())"
+        },
+        "lastActiveAt": {
+          "name": "lastActiveAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "totalStudyHours": {
+          "name": "totalStudyHours",
+          "type": "decimal(10,2)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'0.00'"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
         }
       },
-      "indexes": {
-        "user_date_idx": {
-          "name": "user_date_idx",
-          "columns": [
-            "userId",
-            "date"
-          ],
-          "isUnique": false
-        }
-      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {
-        "studySessions_id": {
-          "name": "studySessions_id",
+        "user_learning_path_id": {
+          "name": "user_learning_path_id",
           "columns": [
             "id"
           ]
         }
       },
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "user_learning_path_userId_unique": {
+          "name": "user_learning_path_userId_unique",
+          "columns": [
+            "userId"
+          ]
+        }
+      },
       "checkConstraint": {}
     },
     "users": {
@@ -897,21 +945,21 @@
         },
         "expression": {
           "name": "expression",
-          "type": "varchar(200)",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "reading": {
           "name": "reading",
-          "type": "varchar(200)",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "romaji": {
           "name": "romaji",
-          "type": "varchar(200)",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -925,7 +973,7 @@
         },
         "partOfSpeech": {
           "name": "partOfSpeech",
-          "type": "varchar(50)",
+          "type": "varchar(100)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -937,21 +985,75 @@
           "notNull": true,
           "autoincrement": false
         },
-        "formalityLevel": {
-          "name": "formalityLevel",
-          "type": "enum('formal','casual','slang')",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "'casual'"
-        },
-        "frequency": {
-          "name": "frequency",
+        "difficulty": {
+          "name": "difficulty",
           "type": "int",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": 0
+          "default": 1
+        },
+        "tags": {
+          "name": "tags",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "vocabulary_id": {
+          "name": "vocabulary_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "vocabulary_sentences": {
+      "name": "vocabulary_sentences",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "vocabularyId": {
+          "name": "vocabularyId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sentenceId": {
+          "name": "sentenceId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         },
         "createdAt": {
           "name": "createdAt",
@@ -962,26 +1064,11 @@
           "default": "(now())"
         }
       },
-      "indexes": {
-        "jlptLevel_idx": {
-          "name": "jlptLevel_idx",
-          "columns": [
-            "jlptLevel"
-          ],
-          "isUnique": false
-        },
-        "expression_idx": {
-          "name": "expression_idx",
-          "columns": [
-            "expression"
-          ],
-          "isUnique": false
-        }
-      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {
-        "vocabulary_id": {
-          "name": "vocabulary_id",
+        "vocabulary_sentences_id": {
+          "name": "vocabulary_sentences_id",
           "columns": [
             "id"
           ]
