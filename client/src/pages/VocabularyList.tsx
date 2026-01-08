@@ -9,15 +9,20 @@ import { Link } from "wouter";
 import { Search, Loader2, RefreshCw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { VocabRuby } from "@/components/Ruby";
 
 export default function VocabularyList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<"N5" | "N4" | "N3" | "N2" | "N1" | "slang">("N5");
+  const [firstLetter, setFirstLetter] = useState<string | undefined>(undefined);
+  const [sortBy, setSortBy] = useState<"default" | "kana">("default");
   
   const { data: vocabularyList, isLoading } = trpc.vocabulary.list.useQuery({
     jlptLevel: selectedLevel === "slang" ? undefined : selectedLevel as any,
-    search: searchTerm || undefined
+    search: searchTerm || undefined,
+    firstLetter: firstLetter as any,
+    sortBy: sortBy,
   });
 
   const { data: slangStatus } = trpc.slang.getUpdateStatus.useQuery();
@@ -51,14 +56,64 @@ export default function VocabularyList() {
             </p>
           </div>
 
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input
-              placeholder="搜索词汇 (日文、假名、罗马音或中文)"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-12 text-base"
-            />
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                placeholder="搜索词汇 (日文、假名、罗马音或中文)"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-12 text-base"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-sm font-medium text-muted-foreground">首字母:</span>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={firstLetter === undefined ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFirstLetter(undefined)}
+                >
+                  全部
+                </Button>
+                {[
+                  { label: "あ行", value: "a" },
+                  { label: "か行", value: "ka" },
+                  { label: "さ行", value: "sa" },
+                  { label: "た行", value: "ta" },
+                  { label: "な行", value: "na" },
+                  { label: "は行", value: "ha" },
+                  { label: "ま行", value: "ma" },
+                  { label: "や行", value: "ya" },
+                  { label: "ら行", value: "ra" },
+                  { label: "わ行", value: "wa" },
+                ].map((item) => (
+                  <Button
+                    key={item.value}
+                    variant={firstLetter === item.value ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFirstLetter(item.value)}
+                    className="japanese-text"
+                  >
+                    {item.label}
+                  </Button>
+                ))}
+              </div>
+
+              <div className="ml-auto flex items-center gap-2">
+                <span className="text-sm font-medium text-muted-foreground">排序:</span>
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="default">默认排序</SelectItem>
+                    <SelectItem value="kana">五十音图</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center justify-between gap-4">

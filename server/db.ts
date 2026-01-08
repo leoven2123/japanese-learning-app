@@ -1,4 +1,4 @@
-import { eq, and, or, like, inArray, sql, desc, asc } from "drizzle-orm";
+import { eq, and, or, like, inArray, sql, desc, asc, gte, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, 
@@ -118,9 +118,25 @@ export async function getUserByOpenId(openId: string) {
  * ============================================
  */
 
+// 首字母范围映射
+const KANA_RANGES: Record<string, { start: string; end: string }> = {
+  a: { start: "あ", end: "お" },
+  ka: { start: "か", end: "ご" },
+  sa: { start: "さ", end: "ぞ" },
+  ta: { start: "た", end: "ど" },
+  na: { start: "な", end: "の" },
+  ha: { start: "は", end: "ぽ" },
+  ma: { start: "ま", end: "も" },
+  ya: { start: "や", end: "よ" },
+  ra: { start: "ら", end: "ろ" },
+  wa: { start: "わ", end: "ん" },
+};
+
 export async function getVocabularyList(params: {
   jlptLevel?: string;
   search?: string;
+  firstLetter?: string;
+  sortBy?: string;
   limit?: number;
   offset?: number;
 }) {
@@ -141,13 +157,29 @@ export async function getVocabularyList(params: {
       )
     );
   }
+  if (params.firstLetter && KANA_RANGES[params.firstLetter]) {
+    const range = KANA_RANGES[params.firstLetter];
+    conditions.push(
+      and(
+        gte(vocabulary.reading, range.start),
+        lte(vocabulary.reading, range.end + "ん")
+      )
+    );
+  }
 
-  const query = db
+  let query = db
     .select()
     .from(vocabulary)
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .limit(params.limit || 50)
-    .offset(params.offset || 0);
+    .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+  // 添加排序
+  if (params.sortBy === "kana") {
+    query = query.orderBy(vocabulary.reading) as any;
+  } else {
+    query = query.orderBy(vocabulary.id) as any;
+  }
+
+  query = query.limit(params.limit || 50).offset(params.offset || 0) as any;
 
   return await query;
 }
