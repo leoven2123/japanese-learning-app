@@ -1,0 +1,8 @@
+{
+  "query": "SELECT \n  (SELECT COUNT(*) FROM vocabulary) as vocabulary_count,\n  (SELECT COUNT(*) FROM grammar) as grammar_count,\n  (SELECT COUNT(*) FROM sentences) as sentences_count,\n  (SELECT COUNT(*) FROM user) as user_count",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user vYSQoPEMjLoro3N.root --database W7xsTD72zLTLxKgC6bEdsv --execute SELECT \n  (SELECT COUNT(*) FROM vocabulary) as vocabulary_count,\n  (SELECT COUNT(*) FROM grammar) as grammar_count,\n  (SELECT COUNT(*) FROM sentences) as sentences_count,\n  (SELECT COUNT(*) FROM user) as user_count",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table 'w7xstd72zltlxkgc6bedsv.user' doesn't exist"
+  ]
+}

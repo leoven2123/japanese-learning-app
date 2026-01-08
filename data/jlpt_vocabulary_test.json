@@ -1,0 +1,802 @@
+[
+  {
+    "expression": "ああ",
+    "reading": "ああ",
+    "meaning": "Ah!, Oh!",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_4 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "会う",
+    "reading": "あう",
+    "meaning": "to meet, to see",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "青",
+    "reading": "あお",
+    "meaning": "blue",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "青い",
+    "reading": "あおい",
+    "meaning": "blue",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.9 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "赤",
+    "reading": "あか",
+    "meaning": "red",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "赤い",
+    "reading": "あかい",
+    "meaning": "red",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.9 Intermediate_Japanese Intermediate_Japanese_Ln.12 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "明るい",
+    "reading": "あかるい",
+    "meaning": "bright (in reference to personality or weather); cheerful",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.18 Intermediate_Japanese Intermediate_Japanese_Ln.11 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "秋",
+    "reading": "あき",
+    "meaning": "fall (season)",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.10 Intermediate_Japanese Intermediate_Japanese_Ln.4 JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "開く",
+    "reading": "あく",
+    "meaning": "to open, to become open",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "開ける",
+    "reading": "あける",
+    "meaning": "to open (v.t.)",
+    "jlptLevel": "N5",
+    "tags": "Intermediate_Japanese Intermediate_Japanese_Ln.12 JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "上げる",
+    "reading": "あげる",
+    "meaning": "to raise, to lift",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "朝",
+    "reading": "あさ",
+    "meaning": "morning",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.3 Intermediate_Japanese Intermediate_Japanese_Ln.2 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "朝御飯",
+    "reading": "あさごはん",
+    "meaning": "breakfast",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.3 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "明後日",
+    "reading": "あさって",
+    "meaning": "day after tomorrow",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "足; 脚",
+    "reading": "あし",
+    "meaning": "foot; leg",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "明日",
+    "reading": "あした",
+    "meaning": "tomorrow",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.3 Intermediate_Japanese Intermediate_Japanese_Ln.7 JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "あそこ",
+    "reading": "あそこ",
+    "meaning": "there, over there, that place",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.2 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "遊ぶ",
+    "reading": "あそぶ",
+    "meaning": "to play; to spend time pleasantly; to hang out",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.6 Intermediate_Japanese Intermediate_Japanese_Ln.1 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "暖かい",
+    "reading": "あたたかい",
+    "meaning": "warm",
+    "jlptLevel": "N5",
+    "tags": "JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "頭",
+    "reading": "あたま",
+    "meaning": "head",
+    "jlptLevel": "N5",
+    "tags": "Intermediate_Japanese Intermediate_Japanese_Ln.2 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "新しい",
+    "reading": "あたらしい",
+    "meaning": "new",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.5 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "あちら",
+    "reading": "あちら",
+    "meaning": "this way (polite)",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.20 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "暑い",
+    "reading": "あつい",
+    "meaning": "hot (in reference to weather), warm",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.5 Intermediate_Japanese Intermediate_Japanese_Ln.4 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "熱い",
+    "reading": "あつい",
+    "meaning": "hot (objects)",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.5 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "厚い",
+    "reading": "あつい",
+    "meaning": "kind, warm(hearted), thick, deep",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "あっち",
+    "reading": "あっち",
+    "meaning": "over there",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "後",
+    "reading": "あと",
+    "meaning": "afterwards (later); in the future; the rest; since then",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.18 JLPT JLPT_2 JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "あなた",
+    "reading": "あなた",
+    "meaning": "you",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.4 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "兄",
+    "reading": "あに",
+    "meaning": "(my) older brother (humble)",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.14 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "姉",
+    "reading": "あね",
+    "meaning": "(my) older sister (humble)",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.7 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "アパート",
+    "reading": "アパート",
+    "meaning": "apartment (abbr.)",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.7 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "あの",
+    "reading": "あの",
+    "meaning": "that over there; like that, that way; um...",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_4 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "浴びる",
+    "reading": "あびる",
+    "meaning": "to bathe, to shower",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "危ない",
+    "reading": "あぶない",
+    "meaning": "dangerous, critical",
+    "jlptLevel": "N5",
+    "tags": "Intermediate_Japanese Intermediate_Japanese_Ln.15 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "甘い",
+    "reading": "あまい",
+    "meaning": "generous, sweet",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.12 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "余り",
+    "reading": "あまり",
+    "meaning": "not very; surplus",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "雨",
+    "reading": "あめ",
+    "meaning": "rain",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.8 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "飴",
+    "reading": "あめ",
+    "meaning": "(hard) candy",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "洗う",
+    "reading": "あらう",
+    "meaning": "to wash",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.8 Intermediate_Japanese Intermediate_Japanese_Ln.10 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "在る",
+    "reading": "ある",
+    "meaning": "to be, to have",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "有る",
+    "reading": "ある",
+    "meaning": "to be, to have",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "歩く",
+    "reading": "あるく",
+    "meaning": "to walk",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.20 Intermediate_Japanese Intermediate_Japanese_Ln.1 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "あれ",
+    "reading": "あれ",
+    "meaning": "that one (over there)",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.2 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "いい; よい",
+    "reading": "いい; よい",
+    "meaning": "good",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "いいえ",
+    "reading": "いいえ",
+    "meaning": "no, not at all",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "言う",
+    "reading": "いう",
+    "meaning": "to say",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.8 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "家",
+    "reading": "いえ",
+    "meaning": "house, home",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.3 JLPT JLPT_2 JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "いかが",
+    "reading": "いかが",
+    "meaning": "how, in what way",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "行く",
+    "reading": "いく; ゆく",
+    "meaning": "to go",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "いくつ",
+    "reading": "いくつ",
+    "meaning": "how many, how old",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "いくら",
+    "reading": "いくら",
+    "meaning": "how much, how many",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.2 JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "池",
+    "reading": "いけ",
+    "meaning": "pond",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "医者",
+    "reading": "いしゃ",
+    "meaning": "doctor; physician",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.1 Genki_Ln.10 Intermediate_Japanese Intermediate_Japanese_Ln.12 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "椅子",
+    "reading": "いす",
+    "meaning": "chair",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "忙しい",
+    "reading": "いそがしい",
+    "meaning": "busy (people, days)",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.5 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "痛い",
+    "reading": "いたい",
+    "meaning": "hurt; painful; sore",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.12 Intermediate_Japanese Intermediate_Japanese_Ln.5 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "一",
+    "reading": "いち",
+    "meaning": "one",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "一日",
+    "reading": "いちにち",
+    "meaning": "one day (duration)",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.13 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "一番",
+    "reading": "いちばん",
+    "meaning": "best (most), first, number one",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.10 Intermediate_Japanese Intermediate_Japanese_Ln.3 JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "いつ",
+    "reading": "いつ",
+    "meaning": "when",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.3 JLPT JLPT_2 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "五日",
+    "reading": "いつか",
+    "meaning": "five days; fifth day of the month",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.13 JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "一緒",
+    "reading": "いっしょ",
+    "meaning": "together",
+    "jlptLevel": "N5",
+    "tags": "Intermediate_Japanese Intermediate_Japanese_Ln.7 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "五つ",
+    "reading": "いつつ",
+    "meaning": "five things",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.9 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "いつも",
+    "reading": "いつも",
+    "meaning": "always, usually, every time, never (with neg. verb)",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.12 JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "犬",
+    "reading": "いぬ",
+    "meaning": "dog",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.4 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "今",
+    "reading": "いま",
+    "meaning": "now",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.1 JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "意味",
+    "reading": "いみ",
+    "meaning": "meaning, significance",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.12 Intermediate_Japanese Intermediate_Japanese_Ln.2 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "妹",
+    "reading": "いもうと",
+    "meaning": "younger sister (humble)",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.1 Genki_Ln.7 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "嫌",
+    "reading": "いや",
+    "meaning": "disagreeable, detestable, unpleasant",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "入口",
+    "reading": "いりぐち",
+    "meaning": "entrance",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "居る",
+    "reading": "いる",
+    "meaning": "(humble) to be (animate), to exist",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "要る",
+    "reading": "いる",
+    "meaning": "to need",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "入れる",
+    "reading": "いれる",
+    "meaning": "to put in",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "色",
+    "reading": "いろ",
+    "meaning": "color",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.9 Intermediate_Japanese Intermediate_Japanese_Ln.9 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "色々",
+    "reading": "いろいろ",
+    "meaning": "various",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "上",
+    "reading": "うえ",
+    "meaning": "above (up, top, etc.), over, on top of",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_2 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "後ろ",
+    "reading": "うしろ",
+    "meaning": "back, behind, rear",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "薄い",
+    "reading": "うすい",
+    "meaning": "thin, weak",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "歌",
+    "reading": "うた",
+    "meaning": "a song",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.7 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "歌う",
+    "reading": "うたう",
+    "meaning": "to sing",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.7 Intermediate_Japanese Intermediate_Japanese_Ln.7 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "うち",
+    "reading": "うち",
+    "meaning": "home; house; my place",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.3 JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "生まれる",
+    "reading": "うまれる",
+    "meaning": "to be born",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "海",
+    "reading": "うみ",
+    "meaning": "sea, beach",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.5 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "売る",
+    "reading": "うる",
+    "meaning": "to sell (v.t.)",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.15 Intermediate_Japanese Intermediate_Japanese_Ln.6 JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "うるさい",
+    "reading": "うるさい",
+    "meaning": "noisy; annoying",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.22 JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "上着",
+    "reading": "うわぎ",
+    "meaning": "coat, jacket",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "絵",
+    "reading": "え",
+    "meaning": "a painting; a picture; a drawing",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.15 JLPT JLPT_3 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "映画",
+    "reading": "えいが",
+    "meaning": "movie, film",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.3 Intermediate_Japanese Intermediate_Japanese_Ln.7 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "映画館",
+    "reading": "えいがかん",
+    "meaning": "movie theater, cinema",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.15 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "英語",
+    "reading": "えいご",
+    "meaning": "English (language)",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.1 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "ええ",
+    "reading": "ええ",
+    "meaning": "yes",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.1 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "駅",
+    "reading": "えき",
+    "meaning": "station",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.10 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "エレベーター",
+    "reading": "エレベーター",
+    "meaning": "elevator",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_2 JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "～円",
+    "reading": "～えん",
+    "meaning": "Yen",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "鉛筆",
+    "reading": "えんぴつ",
+    "meaning": "pencil",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.2 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "お～",
+    "reading": "お～",
+    "meaning": "honorable ~ (honorific)",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "美味しい",
+    "reading": "おいしい",
+    "meaning": "delicious, tasty",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "多い",
+    "reading": "おおい",
+    "meaning": "many; there are a lot",
+    "jlptLevel": "N5",
+    "tags": "Intermediate_Japanese Intermediate_Japanese_Ln.1 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "大きい",
+    "reading": "おおきい",
+    "meaning": "big, large",
+    "jlptLevel": "N5",
+    "tags": "Genki Genki_Ln.5 JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  },
+  {
+    "expression": "大きな",
+    "reading": "おおきな",
+    "meaning": "big",
+    "jlptLevel": "N5",
+    "tags": "JLPT JLPT_5 JLPT_N5",
+    "category": "standard"
+  }
+]
