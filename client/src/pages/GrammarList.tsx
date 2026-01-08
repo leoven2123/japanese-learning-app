@@ -1,0 +1,4 @@
+import Layout from "@/components/Layout";
+export default function GrammarList() {
+  return <Layout><div className="container py-8"><h1 className="text-4xl font-bold">语法库</h1><p className="text-muted-foreground mt-4">开发中...</p></div></Layout>;
+}
