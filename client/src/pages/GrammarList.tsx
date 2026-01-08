@@ -4,24 +4,35 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { JapaneseInput } from "@/components/JapaneseInput";
+import { AutoRuby } from "@/components/Ruby";
 
 export default function GrammarList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<"N5" | "N4" | "N3" | "N2" | "N1">("N5");
   const [firstLetter, setFirstLetter] = useState<string | undefined>(undefined);
   const [sortBy, setSortBy] = useState<"default" | "kana">("default");
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
   
   const { data: grammarList, isLoading } = trpc.grammar.list.useQuery({
     jlptLevel: selectedLevel as any,
     search: searchTerm || undefined,
     firstLetter: firstLetter as any,
     sortBy: sortBy,
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
   });
+  
+  // 当筛选条件改变时重置页码
+  useEffect(() => {
+    setPage(1);
+  }, [selectedLevel, searchTerm, firstLetter, sortBy]);
   
   // 获取各等级语法数量
   const { data: n5Count } = trpc.grammar.list.useQuery({ jlptLevel: "N5" }, { select: (data) => data?.length || 0 });
@@ -43,9 +54,9 @@ export default function GrammarList() {
 
           <div className="space-y-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                placeholder="搜索语法 (句型或释义)"
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10 pointer-events-none" />
+              <JapaneseInput
+                placeholder="搜索语法 (日文、假名、罗马音或中文)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 h-12 text-base"
@@ -172,6 +183,33 @@ export default function GrammarList() {
                     </p>
                   </CardContent>
                 </Card>
+              )}
+              
+              {/* 分页控件 */}
+              {grammarList && grammarList.length > 0 && (
+                <div className="flex items-center justify-center gap-2 mt-8">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    上一页
+                  </Button>
+                  <span className="text-sm text-muted-foreground px-4">
+                    第 {page} 页
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => p + 1)}
+                    disabled={grammarList.length < pageSize}
+                  >
+                    下一页
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
               )}
             </TabsContent>
           </Tabs>
