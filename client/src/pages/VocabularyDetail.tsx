@@ -1,10 +1,11 @@
+import React from "react";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { useRoute } from "wouter";
-import { Loader2, ArrowLeft, BookOpen, Sparkles, MessageSquare } from "lucide-react";
+import { Loader2, ArrowLeft, BookOpen, Sparkles, MessageSquare, X } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
@@ -18,6 +19,9 @@ export default function VocabularyDetail() {
   const recordProgress = trpc.learning.recordProgress.useMutation();
   const generateExamples = trpc.ai.generateExamples.useMutation();
   const generateDialogue = trpc.ai.generateDialogue.useMutation();
+  
+  const [aiExamples, setAiExamples] = React.useState<Array<{japanese: string, reading: string, chinese: string}>>([]);
+  const [aiDialogue, setAiDialogue] = React.useState<{title: string, scenario: string, dialogue: Array<{speaker: string, japanese: string, reading: string, chinese: string}>} | null>(null);
 
   const handleMarkAsLearned = async (level: "learning" | "familiar" | "mastered") => {
     if (!isAuthenticated) {
@@ -132,9 +136,8 @@ export default function VocabularyDetail() {
                         onClick={async () => {
                           try {
                             const result = await generateExamples.mutateAsync({ vocabularyId: id, count: 3 });
+                            setAiExamples(result.examples);
                             toast.success("已生成例句，请查看下方内容");
-                            // 可以将结果显示在页面上
-                            console.log(result);
                           } catch (error) {
                             toast.error("生成失败");
                           }
@@ -153,8 +156,8 @@ export default function VocabularyDetail() {
                         onClick={async () => {
                           try {
                             const result = await generateDialogue.mutateAsync({ vocabularyId: id });
+                            setAiDialogue(result);
                             toast.success("已生成对话场景，请查看下方内容");
-                            console.log(result);
                           } catch (error) {
                             toast.error("生成失败");
                           }
@@ -204,6 +207,71 @@ export default function VocabularyDetail() {
                             {example.source}
                           </Badge>
                         )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {aiExamples.length > 0 && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5" />
+                    AI生成的例句
+                  </CardTitle>
+                  <Button variant="ghost" size="sm" onClick={() => setAiExamples([])}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {aiExamples.map((example, index) => (
+                  <div key={index} className="p-4 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 space-y-2">
+                    <div className="flex items-start gap-3">
+                      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold shrink-0">
+                        {index + 1}
+                      </span>
+                      <div className="space-y-1 flex-1">
+                        <p className="japanese-text text-lg font-medium">{example.japanese}</p>
+                        <p className="text-sm text-muted-foreground">{example.reading}</p>
+                        <p className="text-base">{example.chinese}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {aiDialogue && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageSquare className="w-5 h-5" />
+                      {aiDialogue.title}
+                    </CardTitle>
+                    <CardDescription>{aiDialogue.scenario}</CardDescription>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => setAiDialogue(null)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {aiDialogue.dialogue.map((line, index) => (
+                  <div key={index} className="p-4 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 space-y-2">
+                    <div className="flex items-start gap-3">
+                      <Badge variant="outline" className="shrink-0">{line.speaker}</Badge>
+                      <div className="space-y-1 flex-1">
+                        <p className="japanese-text text-lg font-medium">{line.japanese}</p>
+                        <p className="text-sm text-muted-foreground">{line.reading}</p>
+                        <p className="text-base">{line.chinese}</p>
                       </div>
                     </div>
                   </div>
