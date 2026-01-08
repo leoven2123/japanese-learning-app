@@ -269,7 +269,7 @@ export default function AIAssistant() {
                   <Card
                     key={index}
                     className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => handleSend(prompt.prompt)}
+                    onClick={() => setInput(prompt.prompt)}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
@@ -352,7 +352,7 @@ export default function AIAssistant() {
                         key={index}
                         variant="outline"
                         className="cursor-pointer hover:bg-accent whitespace-nowrap"
-                        onClick={() => handleSend(prompt.prompt)}
+                        onClick={() => setInput(prompt.prompt)}
                       >
                         <prompt.icon className="w-3 h-3 mr-1" />
                         {prompt.label}
