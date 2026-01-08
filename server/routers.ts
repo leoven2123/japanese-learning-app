@@ -246,6 +246,88 @@ export const appRouter = router({
         return parsed;
       }),
 
+    // 生成对话场景
+    generateDialogue: protectedProcedure
+      .input(z.object({
+        vocabularyId: z.number().optional(),
+        grammarId: z.number().optional(),
+        scenario: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        let context = "";
+        
+        if (input.vocabularyId) {
+          const vocab = await db.getVocabularyById(input.vocabularyId);
+          if (vocab) {
+            context = `词汇: ${vocab.expression} (${vocab.reading}) - ${vocab.meaning}`;
+          }
+        } else if (input.grammarId) {
+          const grammar = await db.getGrammarById(input.grammarId);
+          if (grammar) {
+            context = `语法: ${grammar.pattern} - ${grammar.meaning}`;
+          }
+        }
+        
+        const scenarioText = input.scenario || "日常对话";
+        
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: "你是一位专业的日语教师。请生成真实、自然的日语对话场景,对话要实用且符合日本文化习惯。"
+            },
+            {
+              role: "user",
+              content: `请创建一个${scenarioText}场景的日语对话,对话中要自然地使用以下内容:\n${context}\n\n要求:\n1. 对话要有2-3个回合\n2. 每句对话都要包含日文、假名标注和中文翻译\n3. 对话要真实、自然、实用\n\n请以JSON格式返回,格式为: {"title": "对话标题", "scenario": "场景描述", "dialogue": [{"speaker": "说话人", "japanese": "日文", "reading": "假名", "chinese": "中文"}]}`
+            }
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "dialogue",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  scenario: { type: "string" },
+                  dialogue: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        speaker: { type: "string" },
+                        japanese: { type: "string" },
+                        reading: { type: "string" },
+                        chinese: { type: "string" }
+                      },
+                      required: ["speaker", "japanese", "reading", "chinese"],
+                      additionalProperties: false
+                    }
+                  }
+                },
+                required: ["title", "scenario", "dialogue"],
+                additionalProperties: false
+              }
+            }
+          }
+        });
+        
+        const content = response.choices[0]?.message?.content;
+        const contentStr = typeof content === 'string' ? content : '{}';
+        const result = JSON.parse(contentStr);
+        
+        // 保存AI生成的内容
+        await db.saveAIGeneratedContent({
+          userId: ctx.user.id,
+          contentType: "dialogue",
+          prompt: `生成对话场景: ${context}`,
+          generatedContent: result,
+        });
+        
+        return result;
+      }),
+
     // 解释语法点
     explainGrammar: protectedProcedure
       .input(z.object({

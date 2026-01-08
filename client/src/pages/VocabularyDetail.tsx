@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { useRoute } from "wouter";
-import { Loader2, ArrowLeft, BookOpen } from "lucide-react";
+import { Loader2, ArrowLeft, BookOpen, Sparkles, MessageSquare } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
@@ -16,6 +16,8 @@ export default function VocabularyDetail() {
   
   const { data: vocab, isLoading } = trpc.vocabulary.getById.useQuery({ id });
   const recordProgress = trpc.learning.recordProgress.useMutation();
+  const generateExamples = trpc.ai.generateExamples.useMutation();
+  const generateDialogue = trpc.ai.generateDialogue.useMutation();
 
   const handleMarkAsLearned = async (level: "learning" | "familiar" | "mastered") => {
     if (!isAuthenticated) {
@@ -94,30 +96,79 @@ export default function VocabularyDetail() {
               )}
 
               {isAuthenticated && (
-                <div>
-                  <h3 className="font-semibold mb-3">标记掌握程度</h3>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => handleMarkAsLearned("learning")}
-                      disabled={recordProgress.isPending}
-                    >
-                      学习中
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => handleMarkAsLearned("familiar")}
-                      disabled={recordProgress.isPending}
-                    >
-                      熟悉
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => handleMarkAsLearned("mastered")}
-                      disabled={recordProgress.isPending}
-                    >
-                      已掌握
-                    </Button>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold mb-3">标记掌握程度</h3>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => handleMarkAsLearned("learning")}
+                        disabled={recordProgress.isPending}
+                      >
+                        学习中
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => handleMarkAsLearned("familiar")}
+                        disabled={recordProgress.isPending}
+                      >
+                        熟悉
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => handleMarkAsLearned("mastered")}
+                        disabled={recordProgress.isPending}
+                      >
+                        已掌握
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold mb-3">AI生成内容</h3>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline"
+                        onClick={async () => {
+                          try {
+                            const result = await generateExamples.mutateAsync({ vocabularyId: id, count: 3 });
+                            toast.success("已生成例句，请查看下方内容");
+                            // 可以将结果显示在页面上
+                            console.log(result);
+                          } catch (error) {
+                            toast.error("生成失败");
+                          }
+                        }}
+                        disabled={generateExamples.isPending}
+                      >
+                        {generateExamples.isPending ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Sparkles className="w-4 h-4 mr-2" />
+                        )}
+                        生成例句
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={async () => {
+                          try {
+                            const result = await generateDialogue.mutateAsync({ vocabularyId: id });
+                            toast.success("已生成对话场景，请查看下方内容");
+                            console.log(result);
+                          } catch (error) {
+                            toast.error("生成失败");
+                          }
+                        }}
+                        disabled={generateDialogue.isPending}
+                      >
+                        {generateDialogue.isPending ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <MessageSquare className="w-4 h-4 mr-2" />
+                        )}
+                        生成对话场景
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}

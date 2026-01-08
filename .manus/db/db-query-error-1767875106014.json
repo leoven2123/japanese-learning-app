@@ -1,0 +1,13 @@
+{
+  "query": "INSERT INTO grammar (pattern, meaning, usage, jlptLevel, difficulty) VALUES \n('ば～ほど', 'the more... the more...', '罗马音: ba~hodo', 'N4', 1),\n('ばかり', 'only; nothing but', '罗马音: bakari', 'N4', 1),\n('べき', 'should; ought to', '罗马音: beki', 'N4', 1),\n('ことがある', 'there are times when', '罗马音: koto ga aru', 'N4', 1),\n('ことにする', 'to decide on', '罗马音: koto ni suru', 'N4', 1),\n('そうだ', 'I heard that; it is said that', '罗马音: sou da', 'N4', 1),\n('たことがある', 'have done before', '罗马音: ta koto ga aru', 'N4', 1),\n('たばかり', 'just did', '罗马音: ta bakari', 'N4', 1),\n('たまま', 'still; as it is', '罗马音: ta mama', 'N4', 1),\n('ために', 'in order to; for', '罗马音: tame ni', 'N4', 1)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user vYSQoPEMjLoro3N.root --database W7xsTD72zLTLxKgC6bEdsv --execute INSERT INTO grammar (pattern, meaning, usage, jlptLevel, difficulty) VALUES \n('ば～ほど', 'the more... the more...', '罗马音: ba~hodo', 'N4', 1),\n('ばかり', 'only; nothing but', '罗马音: bakari', 'N4', 1),\n('べき', 'should; ought to', '罗马音: beki', 'N4', 1),\n('ことがある', 'there are times when', '罗马音: koto ga aru', 'N4', 1),\n('ことにする', 'to decide on', '罗马音: koto ni suru', 'N4', 1),\n('そうだ', 'I heard that; it is said that', '罗马音: sou da', 'N4', 1),\n('たことがある', 'have done before', '罗马音: ta koto ga aru', 'N4', 1),\n('たばかり', 'just did', '罗马音: ta bakari', 'N4', 1),\n('たまま', 'still; as it is', '罗马音: ta mama', 'N4', 1),\n('ために', 'in order to; for', '罗马音: tame ni', 'N4', 1)",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 1 column 44 near \"usage, jlptLevel, difficulty) VALUES ",
+    "('ば～ほど', 'the more... the more...', '罗马音: ba~hodo', 'N4', 1),",
+    "('ばかり', 'only; nothing but', '罗马音: bakari', 'N4', 1),",
+    "('べき', 'should; ought to', '罗马音: beki', 'N4', 1),",
+    "('ことがある', 'there are times when', '罗马音: koto ga aru', 'N4', 1),",
+    "('ことにする', 'to decide on', '罗马音:"
+  ]
+}
