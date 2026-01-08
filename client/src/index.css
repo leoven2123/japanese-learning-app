@@ -140,12 +140,33 @@
   /* Ruby振假名样式 */
   ruby {
     ruby-position: over;
+    ruby-align: center;
   }
   rt {
     font-size: 0.5em;
     color: oklch(0.55 0.08 250);
     font-weight: 400;
     letter-spacing: 0.05em;
+    line-height: 1.2;
+    user-select: none;
+  }
+  .dark rt {
+    color: oklch(0.70 0.08 250);
+  }
+  /* Ruby组件特定样式 */
+  .japanese-ruby, .kanji-ruby {
+    font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  .japanese-ruby-group {
+    display: inline;
+    font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+  }
+  .japanese-ruby-group .kana {
+    display: inline;
+    margin: 0 0.05em;
+  }
+  .japanese-ruby-group .kanji-ruby {
+    margin: 0 0.1em;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),

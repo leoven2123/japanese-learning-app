@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { useRoute } from "wouter";
 import { Loader2, ArrowLeft, BookOpen, Sparkles, MessageSquare, X } from "lucide-react";
+import { parseJapaneseWithReading } from "@/components/RubyText";
 import { Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
@@ -236,8 +237,9 @@ export default function VocabularyDetail() {
                         {index + 1}
                       </span>
                       <div className="space-y-1 flex-1">
-                        <p className="japanese-text text-lg font-medium">{example.japanese}</p>
-                        <p className="text-sm text-muted-foreground">{example.reading}</p>
+                        <p className="japanese-text text-lg font-medium">
+                          {parseJapaneseWithReading(example.japanese)}
+                        </p>
                         <p className="text-base">{example.chinese}</p>
                       </div>
                     </div>
@@ -269,8 +271,9 @@ export default function VocabularyDetail() {
                     <div className="flex items-start gap-3">
                       <Badge variant="outline" className="shrink-0">{line.speaker}</Badge>
                       <div className="space-y-1 flex-1">
-                        <p className="japanese-text text-lg font-medium">{line.japanese}</p>
-                        <p className="text-sm text-muted-foreground">{line.reading}</p>
+                        <p className="japanese-text text-lg font-medium">
+                          {parseJapaneseWithReading(line.japanese)}
+                        </p>
                         <p className="text-base">{line.chinese}</p>
                       </div>
                     </div>

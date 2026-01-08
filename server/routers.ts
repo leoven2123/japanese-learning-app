@@ -194,11 +194,11 @@ export const appRouter = router({
           messages: [
             {
               role: "system",
-              content: "你是一位专业的日语教师。请生成真实、实用的日语例句,每个例句都要包含日文、假名标注和中文翻译。"
+              content: "你是一位专业的日语教师。请生成真实、实用的日语例句,每个例句都要包含带注音的日文、假名标注和中文翻译。"
             },
             {
               role: "user",
-              content: `请为以下内容生成${input.count}个实用例句:\n${context}\n\n请以JSON格式返回,格式为: [{"japanese": "日文例句", "reading": "假名标注", "chinese": "中文翻译"}]`
+              content: `请为以下内容生成${input.count}个实用例句:\n${context}\n\n请以JSON格式返回,格式为: [{"japanese": "汉字(假名)平假名汉字(假名)", "reading": "假名标注", "chinese": "中文翻译"}]\n\n注意: japanese字段中的汉字必须用括号标注假名,例如: “私(わたし)は日本語(にほんご)を勉強(べんきょう)しています。”`
             }
           ],
           response_format: {
@@ -213,11 +213,11 @@ export const appRouter = router({
                     type: "array",
                     items: {
                       type: "object",
-                      properties: {
-                        japanese: { type: "string" },
-                        reading: { type: "string" },
-                        chinese: { type: "string" }
-                      },
+                       properties: {
+                         japanese: { type: "string", description: "带注音的日文,汉字后用括号标注假名" },
+                         reading: { type: "string", description: "假名标注" },
+                         chinese: { type: "string", description: "中文翻译" }
+                       },
                       required: ["japanese", "reading", "chinese"],
                       additionalProperties: false
                     }
@@ -278,7 +278,7 @@ export const appRouter = router({
             },
             {
               role: "user",
-              content: `请创建一个${scenarioText}场景的日语对话,对话中要自然地使用以下内容:\n${context}\n\n要求:\n1. 对话要有2-3个回合\n2. 每句对话都要包含日文、假名标注和中文翻译\n3. 对话要真实、自然、实用\n\n请以JSON格式返回,格式为: {"title": "对话标题", "scenario": "场景描述", "dialogue": [{"speaker": "说话人", "japanese": "日文", "reading": "假名", "chinese": "中文"}]}`
+              content: `请创建一个${scenarioText}场景的日语对话,对话中要自然地使用以下内容:\n${context}\n\n要求:\n1. 对话要有2-3个回合\n2. 每句对话都要包含带注音的日文、假名标注和中文翻译\n3. 对话要真实、自然、实用\n\n请以JSON格式返回,格式为: {"title": "对话标题", "scenario": "场景描述", "dialogue": [{"speaker": "说话人", "japanese": "汉字(假名)平假名汉字(假名)", "reading": "假名", "chinese": "中文"}]}\n\n注意: japanese字段中的汉字必须用括号标注假名,例如: “私(わたし)は日本語(にほんご)を勉強(べんきょう)しています。”`
             }
           ],
           response_format: {
@@ -295,12 +295,12 @@ export const appRouter = router({
                     type: "array",
                     items: {
                       type: "object",
-                      properties: {
-                        speaker: { type: "string" },
-                        japanese: { type: "string" },
-                        reading: { type: "string" },
-                        chinese: { type: "string" }
-                      },
+                       properties: {
+                         speaker: { type: "string", description: "说话人" },
+                         japanese: { type: "string", description: "带注音的日文,汉字后用括号标注假名" },
+                         reading: { type: "string", description: "假名标注" },
+                         chinese: { type: "string", description: "中文翻译" }
+                       },
                       required: ["speaker", "japanese", "reading", "chinese"],
                       additionalProperties: false
                     }
