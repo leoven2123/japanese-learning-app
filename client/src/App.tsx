@@ -8,7 +8,8 @@ import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import VocabularyList from "./pages/VocabularyList";
 import VocabularyDetail from "./pages/VocabularyDetail";
-import GrammarList from "./pages/GrammarList";
+import GrammarList from "@/pages/GrammarList";
+import DataImport from "@/pages/DataImport";
 import GrammarDetail from "./pages/GrammarDetail";
 import SceneList from "./pages/SceneList";
 import SceneDetail from "./pages/SceneDetail";
@@ -22,7 +23,8 @@ function Router() {
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/vocabulary"} component={VocabularyList} />
       <Route path={"/vocabulary/:id"} component={VocabularyDetail} />
-      <Route path={"/grammar"} component={GrammarList} />
+        <Route path="/grammar" component={GrammarList} />
+        <Route path="/admin/import" component={DataImport} />
       <Route path={"/grammar/:id"} component={GrammarDetail} />
       <Route path={"/scenes"} component={SceneList} />
       <Route path={"/scenes/:id"} component={SceneDetail} />

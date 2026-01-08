@@ -1,7 +1,8 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { router, publicProcedure, protectedProcedure } from "./_core/trpc";
+import { adminRouter } from "./routers/admin";
 import { z } from "zod";
 import * as db from "./db";
 import { invokeLLM } from "./_core/llm";
@@ -9,6 +10,7 @@ import { transcribeAudio } from "./_core/voiceTranscription";
 import { updateSlangWords, getSlangUpdateStatus } from "./slangUpdater";
 
 export const appRouter = router({
+  admin: adminRouter,
   system: systemRouter,
   
   auth: router({

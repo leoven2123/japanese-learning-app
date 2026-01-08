@@ -192,6 +192,36 @@ export async function getVocabularyById(id: number) {
   return result.length > 0 ? result[0] : null;
 }
 
+export async function getVocabularyByExpression(expression: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.select().from(vocabulary).where(eq(vocabulary.expression, expression)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function createVocabulary(data: {
+  expression: string;
+  reading: string;
+  meaning: string;
+  level: "N5" | "N4" | "N3" | "N2" | "N1";
+  partOfSpeech: string | null;
+  tags: string | null;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(vocabulary).values([{
+    expression: data.expression,
+    reading: data.reading,
+    meaning: data.meaning,
+    jlptLevel: data.level,
+    partOfSpeech: data.partOfSpeech,
+    tags: data.tags ? [data.tags] : undefined,
+  }]);
+  return result;
+}
+
 export async function getVocabularyWithExamples(id: number) {
   const db = await getDb();
   if (!db) return null;
@@ -282,6 +312,34 @@ export async function getGrammarById(id: number) {
 
   const result = await db.select().from(grammar).where(eq(grammar.id, id)).limit(1);
   return result.length > 0 ? result[0] : null;
+}
+
+export async function getGrammarByPattern(pattern: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.select().from(grammar).where(eq(grammar.pattern, pattern)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function createGrammar(data: {
+  pattern: string;
+  meaning: string;
+  level: "N5" | "N4" | "N3" | "N2" | "N1";
+  explanation: string | null;
+  tags: string | null;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(grammar).values([{
+    pattern: data.pattern,
+    meaning: data.meaning,
+    jlptLevel: data.level,
+    usage: data.explanation,
+    tags: data.tags ? [data.tags] : undefined,
+  }]);
+  return result;
 }
 
 export async function getGrammarWithExamples(id: number) {
