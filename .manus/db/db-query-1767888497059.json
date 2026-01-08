@@ -1,0 +1,50 @@
+{
+  "query": "SELECT expression, COUNT(*) as count FROM vocabulary GROUP BY expression HAVING count > 1 LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user vYSQoPEMjLoro3N.root --database W7xsTD72zLTLxKgC6bEdsv --execute SELECT expression, COUNT(*) as count FROM vocabulary GROUP BY expression HAVING count > 1 LIMIT 10;",
+  "rows": [
+    {
+      "expression": "高価",
+      "count": "3"
+    },
+    {
+      "expression": "必死",
+      "count": "3"
+    },
+    {
+      "expression": "先祖",
+      "count": "2"
+    },
+    {
+      "expression": "工場",
+      "count": "4"
+    },
+    {
+      "expression": "官庁",
+      "count": "2"
+    },
+    {
+      "expression": "遂に",
+      "count": "3"
+    },
+    {
+      "expression": "転がる",
+      "count": "2"
+    },
+    {
+      "expression": "追及",
+      "count": "2"
+    },
+    {
+      "expression": "突っ突く",
+      "count": "2"
+    },
+    {
+      "expression": "化合",
+      "count": "2"
+    }
+  ],
+  "messages": [],
+  "stdout": "expression\tcount\n高価\t3\n必死\t3\n先祖\t2\n工場\t4\n官庁\t2\n遂に\t3\n転がる\t2\n追及\t2\n突っ突く\t2\n化合\t2\n",
+  "stderr": "",
+  "execution_time_ms": 75
+}

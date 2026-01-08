@@ -1,0 +1,70 @@
+{
+  "query": "SELECT id, expression, reading, meaning FROM vocabulary WHERE meaning REGEXP '^[A-Za-z]' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user vYSQoPEMjLoro3N.root --database W7xsTD72zLTLxKgC6bEdsv --execute SELECT id, expression, reading, meaning FROM vocabulary WHERE meaning REGEXP '^[A-Za-z]' LIMIT 10;",
+  "rows": [
+    {
+      "id": "21",
+      "expression": "作法",
+      "reading": "さほう",
+      "meaning": "manners, etiquette, propriety"
+    },
+    {
+      "id": "22",
+      "expression": "様々",
+      "reading": "さまざま",
+      "meaning": "varied, various"
+    },
+    {
+      "id": "23",
+      "expression": "冷ます",
+      "reading": "さます",
+      "meaning": "to cool, to let cool"
+    },
+    {
+      "id": "24",
+      "expression": "覚ます",
+      "reading": "さます",
+      "meaning": "to awaken"
+    },
+    {
+      "id": "25",
+      "expression": "冷める",
+      "reading": "さめる",
+      "meaning": "to become cool, to wear off"
+    },
+    {
+      "id": "26",
+      "expression": "覚める",
+      "reading": "さめる",
+      "meaning": "to wake, to wake up"
+    },
+    {
+      "id": "27",
+      "expression": "左右",
+      "reading": "さゆう",
+      "meaning": "left and right; influence"
+    },
+    {
+      "id": "28",
+      "expression": "皿",
+      "reading": "さら",
+      "meaning": "plate, dish"
+    },
+    {
+      "id": "29",
+      "expression": "更に",
+      "reading": "さらに",
+      "meaning": "furthermore, moreover"
+    },
+    {
+      "id": "30",
+      "expression": "去る",
+      "reading": "さる",
+      "meaning": "to leave, to go away"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\texpression\treading\tmeaning\n21\t作法\tさほう\tmanners, etiquette, propriety\n22\t様々\tさまざま\tvaried, various\n23\t冷ます\tさます\tto cool, to let cool\n24\t覚ます\tさます\tto awaken\n25\t冷める\tさめる\tto become cool, to wear off\n26\t覚める\tさめる\tto wake, to wake up\n27\t左右\tさゆう\tleft and right; influence\n28\t皿\tさら\tplate, dish\n29\t更に\tさらに\tfurthermore, moreover\n30\t去る\tさる\tto leave, to go away\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

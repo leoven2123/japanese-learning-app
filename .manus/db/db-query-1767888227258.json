@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as english_count FROM vocabulary WHERE meaning REGEXP '^[A-Za-z]';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user vYSQoPEMjLoro3N.root --database W7xsTD72zLTLxKgC6bEdsv --execute SELECT COUNT(*) as english_count FROM vocabulary WHERE meaning REGEXP '^[A-Za-z]';",
+  "rows": [
+    {
+      "english_count": "16403"
+    }
+  ],
+  "messages": [],
+  "stdout": "english_count\n16403\n",
+  "stderr": "",
+  "execution_time_ms": 80
+}
