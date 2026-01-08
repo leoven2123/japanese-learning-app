@@ -9,6 +9,7 @@ import { Loader2, ArrowLeft, BookOpen, Sparkles, MessageSquare, X, Volume2, Volu
 import { Textarea } from "@/components/ui/textarea";
 import { useSpeech } from "@/hooks/useSpeech";
 import { parseJapaneseWithReading } from "@/components/RubyText";
+import { JapaneseText } from "@/components/JapaneseText";
 import { Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
@@ -301,7 +302,7 @@ export default function VocabularyDetail() {
                         {index + 1}
                       </span>
                       <div className="space-y-1 flex-1">
-                        <p className="japanese-text text-lg">{example.japanese}</p>
+                        <p className="japanese-text text-lg"><JapaneseText reading={example.reading}>{example.japanese}</JapaneseText></p>
                         {example.reading && (
                           <p className="text-sm text-muted-foreground">{example.reading}</p>
                         )}

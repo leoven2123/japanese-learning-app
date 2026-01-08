@@ -8,6 +8,7 @@ import { useRoute } from "wouter";
 import { Loader2, ArrowLeft, Sparkles, MessageSquare, X, StickyNote, Save, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { parseJapaneseWithReading } from "@/components/RubyText";
+import { JapaneseText } from "@/components/JapaneseText";
 import { Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
@@ -91,7 +92,7 @@ export default function GrammarDetail() {
             <CardHeader>
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-2">
-                  <CardTitle className="japanese-text text-4xl">{grammar.pattern}</CardTitle>
+                  <CardTitle className="japanese-text text-4xl"><JapaneseText>{grammar.pattern}</JapaneseText></CardTitle>
                   <CardDescription className="text-xl">{grammar.meaning}</CardDescription>
                 </div>
                 <Badge variant="secondary" className="text-lg px-4 py-2">

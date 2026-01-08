@@ -200,3 +200,13 @@
 - [x] 实现知识点添加功能(添加到学习按钮)
 - [x] 确保选中正文时弹窗不消失(使用mouseup事件)
 - [x] 测试全局AI问答功能(气泡窗正常打开)
+
+## 全局汉字注音功能
+- [x] 分析当前注音组件的实现方式
+- [x] 创建JapaneseText组件(支持自动获取读音和手动传入reading)
+- [x] 添加getReading API端点
+- [x] 在GrammarList页面应用注音
+- [x] 在GrammarDetail页面应用注音
+- [x] 在VocabularyDetail例句中应用注音
+- [x] 测试全局注音效果(首页、语法详情页正常显示)
+- [x] 保存检查点

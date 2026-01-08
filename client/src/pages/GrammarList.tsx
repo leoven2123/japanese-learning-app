@@ -8,6 +8,7 @@ import { Link } from "wouter";
 import { Search, Loader2, ChevronLeft, ChevronRight, SlidersHorizontal, ArrowUpDown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { JapaneseInput } from "@/components/JapaneseInput";
+import { JapaneseText } from "@/components/JapaneseText";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -314,7 +315,7 @@ export default function GrammarList() {
                         <CardHeader>
                           <CardTitle className="flex items-start justify-between gap-2">
                             <span className="japanese-text text-xl">
-                              {grammar.pattern}
+                              <JapaneseText>{grammar.pattern}</JapaneseText>
                             </span>
                             <Badge variant="secondary" className="shrink-0">
                               {grammar.jlptLevel}

@@ -662,6 +662,35 @@ ${existingItems || '(暂无)'}
         await db.updateConversationTitle(input.conversationId, ctx.user.id, input.title);
         return { success: true };
       }),
+    // 获取日语文本的假名读音
+    getReading: publicProcedure
+      .input(z.object({
+        text: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        // 检查是否包含汉字
+        const hasKanji = /[\u4e00-\u9faf\u3400-\u4dbf]/.test(input.text);
+        if (!hasKanji) {
+          return { reading: input.text };
+        }
+        
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: "你是一个日语读音转换器。请将输入的日语文本转换为纯假名读音。只返回假名，不要包含任何其他内容。"
+            },
+            {
+              role: "user",
+              content: input.text
+            }
+          ]
+        });
+        
+        const content = response.choices[0]?.message?.content;
+        const reading = typeof content === 'string' ? content.trim() : input.text;
+        return { reading };
+      }),
   }),
 
   /**
