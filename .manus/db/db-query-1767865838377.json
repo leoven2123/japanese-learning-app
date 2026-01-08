@@ -1,0 +1,40 @@
+{
+  "query": "SELECT expression, reading, meaning, jlptLevel FROM vocabulary WHERE jlptLevel = 'N3' LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user vYSQoPEMjLoro3N.root --database W7xsTD72zLTLxKgC6bEdsv --execute SELECT expression, reading, meaning, jlptLevel FROM vocabulary WHERE jlptLevel = 'N3' LIMIT 5",
+  "rows": [
+    {
+      "expression": "作法",
+      "reading": "さほう",
+      "meaning": "manners, etiquette, propriety",
+      "jlptLevel": "N3"
+    },
+    {
+      "expression": "様々",
+      "reading": "さまざま",
+      "meaning": "varied, various",
+      "jlptLevel": "N3"
+    },
+    {
+      "expression": "冷ます",
+      "reading": "さます",
+      "meaning": "to cool, to let cool",
+      "jlptLevel": "N3"
+    },
+    {
+      "expression": "覚ます",
+      "reading": "さます",
+      "meaning": "to awaken",
+      "jlptLevel": "N3"
+    },
+    {
+      "expression": "冷める",
+      "reading": "さめる",
+      "meaning": "to become cool, to wear off",
+      "jlptLevel": "N3"
+    }
+  ],
+  "messages": [],
+  "stdout": "expression\treading\tmeaning\tjlptLevel\n作法\tさほう\tmanners, etiquette, propriety\tN3\n様々\tさまざま\tvaried, various\tN3\n冷ます\tさます\tto cool, to let cool\tN3\n覚ます\tさます\tto awaken\tN3\n冷める\tさめる\tto become cool, to wear off\tN3\n",
+  "stderr": "",
+  "execution_time_ms": 69
+}
