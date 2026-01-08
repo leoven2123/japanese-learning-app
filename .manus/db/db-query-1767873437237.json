@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as count FROM grammar",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user vYSQoPEMjLoro3N.root --database W7xsTD72zLTLxKgC6bEdsv --execute SELECT COUNT(*) as count FROM grammar",
+  "rows": [
+    {
+      "count": "8"
+    }
+  ],
+  "messages": [],
+  "stdout": "count\n8\n",
+  "stderr": "",
+  "execution_time_ms": 117
+}

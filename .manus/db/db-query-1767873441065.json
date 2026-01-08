@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, pattern, meaning, jlptLevel FROM grammar LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user vYSQoPEMjLoro3N.root --database W7xsTD72zLTLxKgC6bEdsv --execute SELECT id, pattern, meaning, jlptLevel FROM grammar LIMIT 5",
+  "rows": [
+    {
+      "id": "1",
+      "pattern": "は",
+      "meaning": "提示主题",
+      "jlptLevel": "N5"
+    },
+    {
+      "id": "2",
+      "pattern": "です/だ",
+      "meaning": "判断句",
+      "jlptLevel": "N5"
+    },
+    {
+      "id": "3",
+      "pattern": "を",
+      "meaning": "宾语标记",
+      "jlptLevel": "N5"
+    },
+    {
+      "id": "4",
+      "pattern": "に",
+      "meaning": "时间/地点/方向",
+      "jlptLevel": "N5"
+    },
+    {
+      "id": "5",
+      "pattern": "で",
+      "meaning": "地点/方法/材料",
+      "jlptLevel": "N5"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tpattern\tmeaning\tjlptLevel\n1\tは\t提示主题\tN5\n2\tです/だ\t判断句\tN5\n3\tを\t宾语标记\tN5\n4\tに\t时间/地点/方向\tN5\n5\tで\t地点/方法/材料\tN5\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

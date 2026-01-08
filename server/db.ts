@@ -229,6 +229,8 @@ export async function getVocabularyWithExamples(id: number) {
 export async function getGrammarList(params: {
   jlptLevel?: string;
   search?: string;
+  firstLetter?: string;
+  sortBy?: string;
   limit?: number;
   offset?: number;
 }) {
@@ -247,13 +249,29 @@ export async function getGrammarList(params: {
       )
     );
   }
+  if (params.firstLetter && KANA_RANGES[params.firstLetter]) {
+    const range = KANA_RANGES[params.firstLetter];
+    conditions.push(
+      and(
+        gte(grammar.pattern, range.start),
+        lte(grammar.pattern, range.end + "ん")
+      )
+    );
+  }
 
-  const query = db
+  let query = db
     .select()
     .from(grammar)
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .limit(params.limit || 50)
-    .offset(params.offset || 0);
+    .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+  // 添加排序
+  if (params.sortBy === "kana") {
+    query = query.orderBy(grammar.pattern) as any;
+  } else {
+    query = query.orderBy(grammar.id) as any;
+  }
+
+  query = query.limit(params.limit || 50).offset(params.offset || 0) as any;
 
   return await query;
 }

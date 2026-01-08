@@ -75,6 +75,8 @@ export const appRouter = router({
       .input(z.object({
         jlptLevel: z.enum(["N5", "N4", "N3", "N2", "N1"]).optional(),
         search: z.string().optional(),
+        firstLetter: z.enum(["a", "ka", "sa", "ta", "na", "ha", "ma", "ya", "ra", "wa"]).optional(),
+        sortBy: z.enum(["default", "kana"]).optional(),
         limit: z.number().optional(),
         offset: z.number().optional(),
       }))
