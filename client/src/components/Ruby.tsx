@@ -156,18 +156,23 @@ function isKatakana(char: string): boolean {
   return code >= 0x30a0 && code <= 0x30ff;
 }
 
+// 检查字符是否是英文字母或数字
+function isAlphanumeric(char: string): boolean {
+  return /[a-zA-Z0-9Ａ-Ｚａ-ｚ０-９]/.test(char);
+}
+
 /**
  * 改进的汉字-假名对齐算法
- * 核心思路：只对汉字添加注音，平假名和片假名都不加注音
+ * 核心思路：只有平假名和片假名不加注音，其他内容（汉字、英文、数字等）都加注音
  */
 function buildRubyText(original: string, reading: string): string {
-  // 如果原文没有汉字，直接返回
-  if (!hasKanji(original)) {
+  // 如果原文没有汉字且没有英文数字，直接返回
+  if (!hasKanji(original) && !/[a-zA-Z0-9Ａ-Ｚａ-ｚ０-９]/.test(original)) {
     return original;
   }
 
-  // 将原文分割为四类：汉字块、平假名块、片假名块、标点块
-  type PartType = 'kanji' | 'hiragana' | 'katakana' | 'punct';
+  // 将原文分割为五类：汉字块、平假名块、片假名块、英数字块、标点块
+  type PartType = 'kanji' | 'hiragana' | 'katakana' | 'alphanumeric' | 'punct';
   interface Part {
     text: string;
     type: PartType;
@@ -185,6 +190,8 @@ function buildRubyText(original: string, reading: string): string {
       charType = 'hiragana';
     } else if (isKatakana(char)) {
       charType = 'katakana';
+    } else if (isAlphanumeric(char)) {
+      charType = 'alphanumeric';
     } else {
       charType = 'punct';
     }
@@ -229,7 +236,7 @@ function buildRubyText(original: string, reading: string): string {
       }
       result += part.text;
     } else {
-      // 汉字部分：找到下一个假名部分作为边界
+      // 汉字或英数字部分：找到下一个假名部分作为边界
       let nextKanaPart: Part | null = null;
       for (let j = i + 1; j < parts.length; j++) {
         if (parts[j].type === 'hiragana' || parts[j].type === 'katakana') {
@@ -238,24 +245,24 @@ function buildRubyText(original: string, reading: string): string {
         }
       }
       
-      let kanjiReading = '';
+      let partReading = '';
       
       if (nextKanaPart) {
         // 在reading中查找下一个假名部分的位置
         const nextPos = findKanaInReading(reading, nextKanaPart.text, readingPos);
         if (nextPos !== -1 && nextPos > readingPos) {
-          kanjiReading = reading.substring(readingPos, nextPos);
+          partReading = reading.substring(readingPos, nextPos);
           readingPos = nextPos;
         }
       } else {
         // 没有后续假名，取剩余的reading
-        kanjiReading = reading.substring(readingPos);
+        partReading = reading.substring(readingPos);
         readingPos = reading.length;
       }
       
       // 验证读音是否有效
-      if (kanjiReading && isValidReading(kanjiReading)) {
-        result += `${part.text}(${kanjiReading})`;
+      if (partReading && isValidReading(partReading)) {
+        result += `${part.text}(${partReading})`;
       } else {
         result += part.text;
       }
