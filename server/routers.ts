@@ -1216,6 +1216,248 @@ ${recommendedUnits.slice(0, 10).map(u => `- ID:${u.id} 「${u.titleJa}」 难度
         
         return { success: true };
       }),
+
+    // 获取单元知识扩展内容
+    getKnowledgeExpansion: publicProcedure
+      .input(z.object({
+        unitId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const unit = await db.getLearningUnitById(input.unitId);
+        if (!unit) {
+          throw new Error("学习单元不存在");
+        }
+        
+        // 检查是否已缓存
+        const cached = await db.getKnowledgeExpansion(input.unitId);
+        if (cached) {
+          return cached;
+        }
+        
+        return null;
+      }),
+
+    // AI生成知识扩展内容
+    generateKnowledgeExpansion: publicProcedure
+      .input(z.object({
+        unitId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const unit = await db.getLearningUnitById(input.unitId);
+        if (!unit) {
+          throw new Error("学习单元不存在");
+        }
+        
+        // 使用AI生成知识扩展内容
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `你是一位精通日语语言和文化的专家。请根据给定的学习单元内容，生成详细的知识扩展内容。
+
+要求：
+1. 场景应用：详细说明这些表达在什么场景下使用，以及在其他场景下会有什么变体
+2. 语言起源：这些表达的历史渊源和演变过程
+3. 古今对比：古代日语和现代日语的差异，语言是如何演变的
+4. 文化背景：相关的日本文化知识和社会习俗
+5. 学习建议：如何更好地掌握和使用这些表达
+
+请用中文回答，并在适当的地方包含日语原文和注音。
+返回JSON格式。`
+            },
+            {
+              role: "user",
+              content: `学习单元：${unit.titleJa} (${unit.titleZh})
+JLPT等级：${unit.jlptLevel}
+描述：${unit.descriptionJa || ''}
+目标表达：${JSON.stringify(unit.targetExpressions || [])}
+对话内容：${JSON.stringify(unit.content?.dialogues || [])}
+
+请生成详细的知识扩展内容。`
+            }
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "knowledge_expansion",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  sceneApplications: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string" },
+                      mainScenes: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            scene: { type: "string" },
+                            description: { type: "string" },
+                            example: { type: "string" },
+                            exampleReading: { type: "string" }
+                          },
+                          required: ["scene", "description", "example", "exampleReading"],
+                          additionalProperties: false
+                        }
+                      },
+                      variations: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            context: { type: "string" },
+                            expression: { type: "string" },
+                            expressionReading: { type: "string" },
+                            explanation: { type: "string" }
+                          },
+                          required: ["context", "expression", "expressionReading", "explanation"],
+                          additionalProperties: false
+                        }
+                      }
+                    },
+                    required: ["title", "mainScenes", "variations"],
+                    additionalProperties: false
+                  },
+                  languageOrigin: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string" },
+                      etymology: { type: "string" },
+                      historicalDevelopment: { type: "string" },
+                      keyMilestones: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            period: { type: "string" },
+                            event: { type: "string" }
+                          },
+                          required: ["period", "event"],
+                          additionalProperties: false
+                        }
+                      }
+                    },
+                    required: ["title", "etymology", "historicalDevelopment", "keyMilestones"],
+                    additionalProperties: false
+                  },
+                  ancientVsModern: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string" },
+                      introduction: { type: "string" },
+                      comparisons: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            aspect: { type: "string" },
+                            ancient: { type: "string" },
+                            modern: { type: "string" },
+                            explanation: { type: "string" }
+                          },
+                          required: ["aspect", "ancient", "modern", "explanation"],
+                          additionalProperties: false
+                        }
+                      }
+                    },
+                    required: ["title", "introduction", "comparisons"],
+                    additionalProperties: false
+                  },
+                  culturalBackground: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string" },
+                      content: { type: "string" },
+                      customs: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            name: { type: "string" },
+                            description: { type: "string" }
+                          },
+                          required: ["name", "description"],
+                          additionalProperties: false
+                        }
+                      }
+                    },
+                    required: ["title", "content", "customs"],
+                    additionalProperties: false
+                  },
+                  learningTips: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string" },
+                      tips: {
+                        type: "array",
+                        items: { type: "string" }
+                      },
+                      commonMistakes: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            mistake: { type: "string" },
+                            correction: { type: "string" }
+                          },
+                          required: ["mistake", "correction"],
+                          additionalProperties: false
+                        }
+                      }
+                    },
+                    required: ["title", "tips", "commonMistakes"],
+                    additionalProperties: false
+                  }
+                },
+                required: ["sceneApplications", "languageOrigin", "ancientVsModern", "culturalBackground", "learningTips"],
+                additionalProperties: false
+              }
+            }
+          }
+        });
+        
+        const content = response.choices[0]?.message?.content;
+        let expansion = null;
+        
+        try {
+          expansion = JSON.parse(typeof content === 'string' ? content : '{}');
+        } catch (e) {
+          console.error('Failed to parse AI response:', e);
+          throw new Error('生成知识扩展内容失败');
+        }
+        
+        // 添加参考来源
+        const references = [
+          {
+            title: "Reddit r/LearnJapanese - Japanese Greetings Etymology",
+            url: "https://www.reddit.com/r/LearnJapanese/comments/ulcd0m/breakdown_of_japanese_greetingsset_phrases/",
+            description: "日语问候语词源详细分析"
+          },
+          {
+            title: "Coto Academy - Japanese Study",
+            url: "https://cotoacademy.com/cn/category/japanese-study/",
+            description: "日语学习资源"
+          },
+          {
+            title: "日语敬语史研究",
+            url: "https://web.dhu.edu.cn/2015/1208/c5973a138424/page.htm",
+            description: "敬语史的史的变化的方向性"
+          }
+        ];
+        
+        const result = {
+          ...expansion,
+          references,
+          generatedAt: new Date().toISOString()
+        };
+        
+        // 缓存结果
+        await db.saveKnowledgeExpansion(input.unitId, result);
+        
+        return result;
+      }),
   }),
 
   review: router({

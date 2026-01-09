@@ -679,3 +679,81 @@ export const expressionBank = mysqlTable("expression_bank", {
 
 export type ExpressionBank = typeof expressionBank.$inferSelect;
 export type InsertExpressionBank = typeof expressionBank.$inferInsert;
+
+
+/**
+ * knowledge_expansions - 知识扩展缓存表
+ * 存储AI生成的学习单元知识扩展内容
+ */
+export const knowledgeExpansions = mysqlTable("knowledge_expansions", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // 关联学习单元
+  unitId: int("unitId").notNull().unique(),
+  
+  // 知识扩展内容(JSON格式)
+  content: json("content").$type<{
+    sceneApplications?: {
+      title: string;
+      mainScenes: Array<{
+        scene: string;
+        description: string;
+        example: string;
+        exampleReading: string;
+      }>;
+      variations: Array<{
+        context: string;
+        expression: string;
+        expressionReading: string;
+        explanation: string;
+      }>;
+    };
+    languageOrigin?: {
+      title: string;
+      etymology: string;
+      historicalDevelopment: string;
+      keyMilestones: Array<{
+        period: string;
+        event: string;
+      }>;
+    };
+    ancientVsModern?: {
+      title: string;
+      introduction: string;
+      comparisons: Array<{
+        aspect: string;
+        ancient: string;
+        modern: string;
+        explanation: string;
+      }>;
+    };
+    culturalBackground?: {
+      title: string;
+      content: string;
+      customs: Array<{
+        name: string;
+        description: string;
+      }>;
+    };
+    learningTips?: {
+      title: string;
+      tips: string[];
+      commonMistakes: Array<{
+        mistake: string;
+        correction: string;
+      }>;
+    };
+    references?: Array<{
+      title: string;
+      url: string;
+      description: string;
+    }>;
+    generatedAt?: string;
+  }>(),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type KnowledgeExpansion = typeof knowledgeExpansions.$inferSelect;
+export type InsertKnowledgeExpansion = typeof knowledgeExpansions.$inferInsert;

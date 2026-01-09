@@ -36,7 +36,9 @@ import {
   dailyLearningPlans,
   InsertDailyLearningPlan,
   expressionBank,
-  InsertExpressionBank
+  InsertExpressionBank,
+  knowledgeExpansions,
+  InsertKnowledgeExpansion
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1674,4 +1676,48 @@ export async function getRecommendedUnits(userId: number, limit: number = 10) {
     .limit(limit);
 
   return recommendedUnits;
+}
+
+
+// 获取知识扩展内容
+export async function getKnowledgeExpansion(unitId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(knowledgeExpansions)
+    .where(eq(knowledgeExpansions.unitId, unitId))
+    .limit(1);
+
+  return result[0]?.content || null;
+}
+
+// 保存知识扩展内容
+export async function saveKnowledgeExpansion(unitId: number, content: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // 检查是否已存在
+  const existing = await db
+    .select()
+    .from(knowledgeExpansions)
+    .where(eq(knowledgeExpansions.unitId, unitId))
+    .limit(1);
+
+  if (existing.length > 0) {
+    // 更新现有记录
+    await db
+      .update(knowledgeExpansions)
+      .set({ content, updatedAt: new Date() })
+      .where(eq(knowledgeExpansions.unitId, unitId));
+  } else {
+    // 插入新记录
+    await db.insert(knowledgeExpansions).values({
+      unitId,
+      content,
+    });
+  }
+
+  return content;
 }

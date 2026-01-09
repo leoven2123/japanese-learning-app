@@ -35,6 +35,7 @@ import { StaticJapaneseText, JapaneseText } from "@/components/JapaneseText";
 import { useSpeech } from "@/hooks/useSpeech";
 import { SentenceAnalysisPopover } from "@/components/SentenceAnalysisPopover";
 import { TranslatableText } from "@/components/TranslatableText";
+import { KnowledgeExpansion } from "@/components/KnowledgeExpansion";
 
 // 场景类型图标映射
 const unitTypeIcons: Record<string, typeof BookOpen> = {
@@ -937,6 +938,11 @@ export default function ImmersiveDetail() {
             </CardContent>
           </Card>
         )}
+
+        {/* 知识扩展 */}
+        <div className="mb-6">
+          <KnowledgeExpansion unitId={unitId} />
+        </div>
 
         {/* 返回按钮 */}
         <div className="flex justify-center mt-8">

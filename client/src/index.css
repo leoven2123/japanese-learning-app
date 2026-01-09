@@ -134,8 +134,8 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* 中文优先使用 Noto Sans SC，日文使用 Noto Sans JP，确保跨平台兼容性 */
-    font-family: "Noto Sans SC", "Noto Sans JP", "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Heiti SC", sans-serif;
+    /* 日语学习应用：日文字体优先，确保汉字和假名视觉统一 */
+    font-family: "Noto Sans JP", "Noto Sans SC", "Hiragino Sans", "Yu Gothic", "PingFang SC", "Microsoft YaHei", sans-serif;
     /* 确保字体宽度一致 */
     font-feature-settings: "palt" 0;
     -webkit-font-smoothing: antialiased;
@@ -144,8 +144,14 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight;
   }
-  /* Japanese text specific styles */
+  /* Japanese text specific styles - 日语文本使用统一的日语字体 */
   .japanese-text {
+    font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+    line-height: 1.8;
+    letter-spacing: 0.02em;
+  }
+  /* 日语衬线体样式 - 用于正式文本 */
+  .japanese-serif {
     font-family: "Noto Serif JP", "Yu Mincho", "Hiragino Mincho ProN", serif;
     line-height: 1.8;
     letter-spacing: 0.05em;
@@ -176,20 +182,20 @@
   .dark rt {
     color: oklch(0.70 0.08 250);
   }
-  /* Ruby组件特定样式 - 日文使用日文字体 */
+  /* Ruby组件特定样式 - 日文使用日文字体，确保汉字和假名视觉统一 */
   .japanese-ruby, .kanji-ruby {
-    font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+    font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
   }
   .japanese-ruby-group {
     display: inline;
-    font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+    font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
   }
   .japanese-ruby-group .kana {
     display: inline;
-    margin: 0 0.05em;
+    margin: 0 0.02em;
   }
   .japanese-ruby-group .kanji-ruby {
-    margin: 0 0.1em;
+    margin: 0 0.05em;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
