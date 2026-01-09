@@ -455,12 +455,28 @@ function isValidReading(reading: string): boolean {
 }
 
 /**
- * 从注音中移除标点符号，只保留假名
+ * 从注音中移除断句标点，保留对发音有影响的符号
+ * 
+ * 对发音有影响的符号（保留）：
+ * - ー 长音符号（如コーヒー、ラーメン）
+ * - ・ 中点（用于外来语分隔，如コカ・コーラ）
+ * - っ 促音（小假名）
+ * - ッ 促音（片假名）
+ * 
+ * 断句标点（过滤）：
+ * - 。、！？「」『』（）()【】〈〉《》…―～〜 等
  */
 function cleanReading(reading: string): string {
+  // 断句标点列表（不影响发音，需要过滤）
+  const sentencePunctuations = '。、！？!?「」『』（）()【】〈〉《》…―～〜　 ';
+  
   let result = '';
   for (const char of reading) {
-    // 只保留假名和长音符号
+    // 过滤断句标点
+    if (sentencePunctuations.includes(char)) {
+      continue;
+    }
+    // 保留假名和对发音有影响的符号
     if (isKana(char) || char === 'ー' || char === '・') {
       result += char;
     }
