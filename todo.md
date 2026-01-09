@@ -307,3 +307,10 @@
 - [x] 为每个说话人分配不同颜色（对话框背景、名字、头像） - 使用speakerColors配置6种颜色
 - [x] 修复播放全部按钮，确保上一句念完后再播放下一句 - speak返回Promise，使用isPlayingRef控制
 - [x] 对话中的注释默认收起，点击展开 - 使用expandedNotes状态和toggleNote函数
+
+
+## 中文字体优化 (已完成)
+- [x] 分析当前字体配置问题（字符宽度不一致、手机端大小不一）
+- [x] 选择兼容性更好的中文字体方案 - 使用Noto Sans SC作为中文主字体
+- [x] 更新CSS字体配置 - 优化字体堆栈，添加font-feature-settings
+- [x] 测试桌面端和移动端显示效果

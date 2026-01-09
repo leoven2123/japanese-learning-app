@@ -120,7 +120,12 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+    /* 中文优先使用 Noto Sans SC，日文使用 Noto Sans JP，确保跨平台兼容性 */
+    font-family: "Noto Sans SC", "Noto Sans JP", "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Heiti SC", sans-serif;
+    /* 确保字体宽度一致 */
+    font-feature-settings: "palt" 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight;
@@ -130,6 +135,10 @@
     font-family: "Noto Serif JP", "Yu Mincho", "Hiragino Mincho ProN", serif;
     line-height: 1.8;
     letter-spacing: 0.05em;
+  }
+  /* 中文文本样式 - 确保宽度一致 */
+  .chinese-text {
+    font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
   }
   .furigana {
     font-size: 0.5em;
@@ -153,7 +162,7 @@
   .dark rt {
     color: oklch(0.70 0.08 250);
   }
-  /* Ruby组件特定样式 */
+  /* Ruby组件特定样式 - 日文使用日文字体 */
   .japanese-ruby, .kanji-ruby {
     font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
   }
