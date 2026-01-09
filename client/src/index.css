@@ -1,6 +1,20 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* 字体加载状态样式 */
+:root.fonts-loading {
+  /* 加载中时使用系统字体作为占位 */
+  --font-loading: true;
+}
+
+:root.fonts-loaded {
+  --font-loading: false;
+}
+
+:root.fonts-timeout {
+  --font-loading: false;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
