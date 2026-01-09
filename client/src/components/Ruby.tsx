@@ -101,21 +101,21 @@ function parseRubyText(text: string): React.ReactNode[] {
 
 export function AutoRuby({ text, className = "" }: AutoRubyProps) {
   const [rubyText, setRubyText] = useState<string>(text);
-  const [isLoading, setIsLoading] = useState(false);
   
   // 获取读音的mutation
   const getReadingMutation = trpc.ai.getReading.useMutation();
 
   useEffect(() => {
+    // 重置状态
+    setRubyText(text);
+    
     // 如果文本已有注音标记，直接使用
     if (hasRubyMarkers(text)) {
-      setRubyText(text);
       return;
     }
     
     // 如果文本包含汉字但没有注音标记，调用API获取
-    if (hasKanji(text) && !isLoading) {
-      setIsLoading(true);
+    if (hasKanji(text)) {
       getReadingMutation.mutate(
         { text },
         {
@@ -125,10 +125,9 @@ export function AutoRuby({ text, className = "" }: AutoRubyProps) {
               const annotatedText = buildRubyText(text, data.reading);
               setRubyText(annotatedText);
             }
-            setIsLoading(false);
           },
-          onError: () => {
-            setIsLoading(false);
+          onError: (error) => {
+            console.error('Failed to get reading:', error);
           }
         }
       );

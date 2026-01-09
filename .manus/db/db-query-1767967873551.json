@@ -1,0 +1,9 @@
+{
+  "query": "SELECT id, titleJa, descriptionJa, content FROM learning_units WHERE titleJa LIKE '%謙虚%' OR descriptionJa LIKE '%謙虚%' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user vYSQoPEMjLoro3N.root --database W7xsTD72zLTLxKgC6bEdsv --execute SELECT id, titleJa, descriptionJa, content FROM learning_units WHERE titleJa LIKE '%謙虚%' OR descriptionJa LIKE '%謙虚%' LIMIT 1;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 199
+}

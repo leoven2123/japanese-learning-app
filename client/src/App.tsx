@@ -10,7 +10,8 @@ import VocabularyList from "./pages/VocabularyList";
 import VocabularyDetail from "./pages/VocabularyDetail";
 import GrammarList from "@/pages/GrammarList";
 import DataImport from "@/pages/DataImport";
-import GrammarDetail from "./pages/GrammarDetail";
+import GrammarDetail from "@/pages/GrammarDetail";
+import TestAutoRuby from "@/pages/TestAutoRuby";
 import SceneList from "./pages/SceneList";
 import SceneDetail from "./pages/SceneDetail";
 import Review from "./pages/Review";
@@ -32,7 +33,8 @@ function Router() {
       <Route path={"/scenes"} component={SceneList} />
       <Route path={"/scenes/:id"} component={SceneDetail} />
       <Route path={"/immersive"} component={ImmersiveLearning} />
-      <Route path={"/immersive/:id"} component={ImmersiveDetail} />
+        <Route path="/immersive/:id" component={ImmersiveDetail} />
+        <Route path="/test-auto-ruby" component={TestAutoRuby} />
       <Route path={"/review"} component={Review} />
       <Route path={"/ai-assistant"} component={AIAssistant} />
       <Route path={"/test-switch"} component={TestSwitch} />

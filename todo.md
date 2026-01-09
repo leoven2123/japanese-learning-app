@@ -490,3 +490,9 @@
 - [x] 修复词汇卡片宽度超出屏幕问题 - 添加overflow-hidden和break-words
 - [x] 修复JLPT等级标签移动端显示 - 使用overflow-x-auto实现横向滚动
 - [x] 测试移动端显示效果 - AI助手和词汇库页面布局正常
+
+## Bug修复 - 部分汉字没有振假名 (已完成)
+- [x] 检查「謙虚な姿勢を示す表現」的reading数据 - API返回完整，算法也正确
+- [x] 分析问题原因 - AutoRuby组件的useEffect依赖项和isLoading状态管理有问题
+- [x] 修复AutoRuby组件 - 移除isLoading状态，简化useEffect逻辑
+- [x] 测试修复效果 - AutoRuby组件现在正常工作，所有汉字都有注音

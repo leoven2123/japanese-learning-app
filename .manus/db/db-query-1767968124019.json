@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, titleJa, content FROM learning_units WHERE id = 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user vYSQoPEMjLoro3N.root --database W7xsTD72zLTLxKgC6bEdsv --execute SELECT id, titleJa, content FROM learning_units WHERE id = 5;",
+  "rows": [
+    {
+      "id": "5",
+      "titleJa": "部活の先輩後輩",
+      "content": "{\"culturalNotes\": \"日本の部活動では先輩後輩の関係がとても大切です。\", \"dialogues\": [{\"notes\": \"「お疲れ様です」は労いの挨拶\", \"reading\": \"せんぱい、おつかれさまです！\", \"speaker\": \"後輩\", \"speakerRole\": \"junior\", \"text\": \"先輩、お疲れ様です！\"}, {\"notes\": \"先輩はカジュアルに話すことが多い\", \"reading\": \"おつかれ。きょうのれんしゅう、どうだった？\", \"speaker\": \"先輩\", \"speakerRole\": \"senior\", \"text\": \"お疲れ。今日の練習、どうだった？\"}, {\"notes\": \"謙虚な姿勢を示す表現\", \"reading\": \"まだまだですけど、もっとがんばります！\", \"speaker\": \"後輩\", \"speakerRole\": \"junior\", \"text\": \"まだまだですけど、もっと頑張ります！\"}, {\"notes\": \"「心がけ」は態度や姿勢のこと\", \"reading\": \"いいこころがけだね。なにかわからないことがあったらきいてね。\", \"speaker\": \"先輩\", \"speakerRole\": \"senior\", \"text\": \"いい心がけだね。何か分からないことがあったら聞いてね。\"}, {\"notes\": \"感謝を伝える基本表現\", \"reading\": \"はい！ありがとうございます！\", \"speaker\": \"後輩\", \"speakerRole\": \"junior\", \"text\": \"はい！ありがとうございます！\"}], \"keyPoints\": [\"先輩には敬語を使う\", \"「お疲れ様です」は挨拶の定番\", \"謙虚な姿勢を示す表現を覚える\"], \"situationDescription\": \"部活動の練習後、後輩が先輩に話しかける場面です。\"}"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitleJa\tcontent\n5\t部活の先輩後輩\t{\"culturalNotes\": \"日本の部活動では先輩後輩の関係がとても大切です。\", \"dialogues\": [{\"notes\": \"「お疲れ様です」は労いの挨拶\", \"reading\": \"せんぱい、おつかれさまです！\", \"speaker\": \"後輩\", \"speakerRole\": \"junior\", \"text\": \"先輩、お疲れ様です！\"}, {\"notes\": \"先輩はカジュアルに話すことが多い\", \"reading\": \"おつかれ。きょうのれんしゅう、どうだった？\", \"speaker\": \"先輩\", \"speakerRole\": \"senior\", \"text\": \"お疲れ。今日の練習、どうだった？\"}, {\"notes\": \"謙虚な姿勢を示す表現\", \"reading\": \"まだまだですけど、もっとがんばります！\", \"speaker\": \"後輩\", \"speakerRole\": \"junior\", \"text\": \"まだまだですけど、もっと頑張ります！\"}, {\"notes\": \"「心がけ」は態度や姿勢のこと\", \"reading\": \"いいこころがけだね。なにかわからないことがあったらきいてね。\", \"speaker\": \"先輩\", \"speakerRole\": \"senior\", \"text\": \"いい心がけだね。何か分からないことがあったら聞いてね。\"}, {\"notes\": \"感謝を伝える基本表現\", \"reading\": \"はい！ありがとうございます！\", \"speaker\": \"後輩\", \"speakerRole\": \"junior\", \"text\": \"はい！ありがとうございます！\"}], \"keyPoints\": [\"先輩には敬語を使う\", \"「お疲れ様です」は挨拶の定番\", \"謙虚な姿勢を示す表現を覚える\"], \"situationDescription\": \"部活動の練習後、後輩が先輩に話しかける場面です。\"}\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}
