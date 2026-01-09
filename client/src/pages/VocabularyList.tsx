@@ -112,8 +112,8 @@ export default function VocabularyList() {
         <div className="max-w-6xl mx-auto space-y-6">
           {/* 标题区域 */}
           <div>
-            <h1 className="text-4xl font-bold mb-2">词汇库</h1>
-            <p className="text-lg text-muted-foreground">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2">词汇库</h1>
+            <p className="text-base sm:text-lg text-muted-foreground">
               按JLPT等级浏览和搜索日语词汇
             </p>
           </div>
@@ -248,9 +248,9 @@ export default function VocabularyList() {
           </div>
 
           {/* JLPT等级标签页 */}
-          <div className="flex items-center justify-between gap-4">
-            <Tabs value={selectedLevel} onValueChange={(v) => setSelectedLevel(v as any)} className="flex-1">
-              <TabsList className="h-auto p-1 bg-muted/50 rounded-xl">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+            <Tabs value={selectedLevel} onValueChange={(v) => setSelectedLevel(v as any)} className="w-full sm:flex-1 overflow-x-auto">
+              <TabsList className="h-auto p-1 bg-muted/50 rounded-xl inline-flex w-full sm:w-auto">
                 <TabsTrigger 
                   value="N5" 
                   className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2"
@@ -298,7 +298,7 @@ export default function VocabularyList() {
             </Tabs>
             
             {selectedLevel === "slang" && (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 shrink-0">
                 {slangStatus && slangStatus.lastUpdateTime && (
                   <span className="text-sm text-muted-foreground hidden md:inline">
                     更新于 {new Date(slangStatus.lastUpdateTime).toLocaleDateString()}
@@ -309,7 +309,7 @@ export default function VocabularyList() {
                   disabled={updateSlangMutation.isPending}
                   size="sm"
                   variant="outline"
-                  className="gap-2"
+                  className="gap-2 shrink-0"
                 >
                   {updateSlangMutation.isPending ? (
                     <>
@@ -373,10 +373,10 @@ export default function VocabularyList() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {vocabularyList?.items.map((vocab) => (
                     <Link key={vocab.id} href={`/vocabulary/${vocab.id}`}>
-                      <Card className="h-full card-hover cursor-pointer">
+                      <Card className="h-full card-hover cursor-pointer overflow-hidden">
                         <CardHeader>
                           <CardTitle className="flex items-start justify-between gap-2">
-                            <span className="japanese-text text-2xl">
+                            <span className="japanese-text text-2xl break-words min-w-0 flex-1">
                               <VocabRuby 
                                 expression={vocab.expression} 
                                 reading={vocab.reading} 
@@ -387,14 +387,14 @@ export default function VocabularyList() {
                             </Badge>
                           </CardTitle>
                           <CardDescription className="space-y-1">
-                            <div className="text-base">{vocab.reading}</div>
+                            <div className="text-base break-words">{vocab.reading}</div>
                             {vocab.romaji && (
-                              <div className="text-sm text-muted-foreground">{vocab.romaji}</div>
+                              <div className="text-sm text-muted-foreground break-words">{vocab.romaji}</div>
                             )}
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-sm">{vocab.meaning}</p>
+                          <p className="text-sm break-words">{vocab.meaning}</p>
                           {vocab.partOfSpeech && (
                             <Badge variant="outline" className="mt-2">
                               {vocab.partOfSpeech}

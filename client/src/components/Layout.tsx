@@ -53,9 +53,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-6">
             <Link href="/">
-              <span className="flex items-center gap-2 font-semibold text-xl cursor-pointer">
-                <span className="japanese-text text-primary">日本語</span>
-                <span className="text-muted-foreground text-sm">学习应用</span>
+              <span className="flex items-center gap-2 font-semibold text-lg sm:text-xl cursor-pointer">
+                <span className="japanese-text text-primary whitespace-nowrap">日本語</span>
+                <span className="text-muted-foreground text-sm whitespace-nowrap">学习应用</span>
               </span>
             </Link>
 

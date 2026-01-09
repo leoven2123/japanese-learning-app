@@ -230,35 +230,35 @@ export default function AIAssistant() {
           {/* 主对话区域 */}
           <div className="flex-1 space-y-6">
             {/* 页面标题 */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
-                <div>
-                  <h1 className="text-3xl font-bold">AI学习助手</h1>
-                  <p className="text-sm text-muted-foreground">
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-2xl sm:text-3xl font-bold truncate">AI学习助手</h1>
+                  <p className="text-sm text-muted-foreground hidden sm:block">
                     个性化学习建议、语法解释和例句生成
                   </p>
                 </div>
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex gap-2 shrink-0">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setShowHistory(!showHistory)}
                 >
-                  <History className="w-4 h-4 mr-2" />
-                  历史
+                  <History className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">历史</span>
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={startNewConversation}
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  新对话
+                  <Plus className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">新对话</span>
                 </Button>
               </div>
             </div>
