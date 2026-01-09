@@ -104,7 +104,7 @@ export function TranslatableText({
         <button
           onClick={handleTranslateClick}
           className={cn(
-            "absolute -right-7 top-1/2 -translate-y-1/2",
+            "absolute -right-1 -bottom-1",
             "inline-flex items-center justify-center",
             "w-5 h-5 rounded-full",
             "bg-white dark:bg-gray-800",
