@@ -88,10 +88,10 @@ export function TranslatableText({
   } | undefined;
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative inline", className)}>
       {/* 原文容器 */}
-      <div
-        className="relative inline-flex items-center gap-1 group"
+      <span
+        className="relative inline group"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -100,34 +100,36 @@ export function TranslatableText({
           {children || (showRuby ? <AutoRuby text={text} /> : text)}
         </span>
 
-        {/* 悬浮翻译按钮 - 在句末显示 */}
+        {/* 悬浮翻译按钮 - 绝对定位，不占用文档流 */}
         <button
           onClick={handleTranslateClick}
           className={cn(
-            "inline-flex items-center justify-center flex-shrink-0",
-            "w-6 h-6 rounded-full",
+            "absolute -right-7 top-1/2 -translate-y-1/2",
+            "inline-flex items-center justify-center",
+            "w-5 h-5 rounded-full",
             "bg-gradient-to-br from-blue-500/10 to-purple-500/10",
             "hover:from-blue-500/20 hover:to-purple-500/20",
             "text-blue-600 dark:text-blue-400",
             "border border-blue-200/50 dark:border-blue-700/50",
             "shadow-sm hover:shadow",
             "transition-all duration-300 ease-out",
-            "opacity-0 scale-75 translate-x-1",
-            (isHovered || showTranslation) && "opacity-100 scale-100 translate-x-0",
+            "opacity-0 scale-75",
+            (isHovered || showTranslation) && "opacity-100 scale-100",
             showTranslation && "bg-gradient-to-br from-blue-500/20 to-purple-500/20 border-blue-300 dark:border-blue-600",
-            "focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+            "focus:outline-none focus:ring-2 focus:ring-blue-500/30",
+            "z-10"
           )}
           title={showTranslation ? "隐藏翻译" : "显示翻译和知识点"}
         >
           {analyzeSentenceMutation.isPending ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            <Loader2 className="w-3 h-3 animate-spin" />
           ) : showTranslation ? (
-            <X className="w-3.5 h-3.5" />
+            <X className="w-3 h-3" />
           ) : (
-            <Languages className="w-3.5 h-3.5" />
+            <Languages className="w-3 h-3" />
           )}
         </button>
-      </div>
+      </span>
 
       {/* 翻译和知识点内容 */}
       {showTranslation && (
