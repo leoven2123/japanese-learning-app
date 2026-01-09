@@ -838,18 +838,22 @@ export default function ImmersiveDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 {unit.targetExpressions.map((expr, index) => (
-                  <div key={index} className="flex items-center gap-1">
+                  <TranslatableText
+                    key={index}
+                    text={expr}
+                    className="inline-block"
+                    showRuby={true}
+                  >
                     <Badge
                       variant="secondary"
-                      className="text-base py-1 px-3 japanese-text cursor-pointer hover:bg-primary/20"
+                      className="text-base py-2 px-4 japanese-text cursor-pointer hover:bg-primary/20 transition-colors"
                       onClick={() => speak(expr)}
                     >
                       <AutoRuby text={expr} />
                     </Badge>
-                    <SentenceAnalysisPopover sentence={expr} buttonSize="sm" />
-                  </div>
+                  </TranslatableText>
                 ))}
               </div>
             </CardContent>
