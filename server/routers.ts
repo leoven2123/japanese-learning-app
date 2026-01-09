@@ -662,6 +662,82 @@ ${existingItems || '(暂无)'}
         await db.updateConversationTitle(input.conversationId, ctx.user.id, input.title);
         return { success: true };
       }),
+    // 分析词汇/语法点
+    analyzeWord: publicProcedure
+      .input(z.object({
+        text: z.string().min(1).max(50),
+      }))
+      .mutation(async ({ input }) => {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `你是一位专业的日语教师。请分析给定的日语词汇或语法点，提供详细的解释。
+
+请以JSON格式返回，包含以下字段:
+- word: 原词
+- reading: 假名读音
+- meaning: 中文释义
+- partOfSpeech: 词性(如"名词", "动词", "形容词", "副词", "语法点"等)
+- usage: 用法说明
+- isGrammar: 是否为语法点(boolean)
+- grammarLevel: 如果是语法点，标注JLPT级别(N5-N1)
+- grammarPattern: 如果是语法点，提供语法模式
+- examples: 例句数组，每个包含{japanese: "带注音的日文", meaning: "中文翻译"}
+
+注意: japanese字段中的汉字必须用括号标注假名，例如: "私(わたし)は日本語(にほんご)を勉強(べんきょう)しています。"`
+            },
+            {
+              role: "user",
+              content: `请分析这个日语词汇/语法: "${input.text}"`
+            }
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "word_analysis",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  word: { type: "string" },
+                  reading: { type: "string" },
+                  meaning: { type: "string" },
+                  partOfSpeech: { type: "string" },
+                  usage: { type: "string" },
+                  isGrammar: { type: "boolean" },
+                  grammarLevel: { type: "string" },
+                  grammarPattern: { type: "string" },
+                  examples: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        japanese: { type: "string" },
+                        meaning: { type: "string" }
+                      },
+                      required: ["japanese", "meaning"],
+                      additionalProperties: false
+                    }
+                  }
+                },
+                required: ["word", "reading", "meaning", "partOfSpeech", "usage", "isGrammar", "grammarLevel", "grammarPattern", "examples"],
+                additionalProperties: false
+              }
+            }
+          }
+        });
+        
+        const content = response.choices[0]?.message?.content;
+        if (!content || typeof content !== 'string') return null;
+        
+        try {
+          return JSON.parse(content);
+        } catch {
+          return null;
+        }
+      }),
+
     // 获取日语文本的假名读音
     getReading: publicProcedure
       .input(z.object({

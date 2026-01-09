@@ -5,13 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useRoute, Link } from "wouter";
 import { 
   ArrowLeft,
   Play,
   Pause,
   Volume2,
-  VolumeX,
   RotateCcw,
   ChevronRight,
   ChevronLeft,
@@ -20,8 +22,7 @@ import {
   Sparkles,
   Check,
   Loader2,
-  Eye,
-  EyeOff,
+  Languages,
   Lightbulb,
   Target,
   Film,
@@ -58,6 +59,373 @@ const sourceTypeNames: Record<string, string> = {
   novel: "小说",
 };
 
+// 智能词汇弹窗组件
+function WordPopover({ 
+  word, 
+  children 
+}: { 
+  word: string; 
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const { speak, isSpeaking } = useSpeech();
+  
+  const analyzeWordMutation = trpc.ai.analyzeWord.useMutation();
+
+  const handleOpen = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (isOpen && !analyzeWordMutation.data && !analyzeWordMutation.isPending) {
+      analyzeWordMutation.mutate({ text: word });
+    }
+  };
+
+  const wordInfo = analyzeWordMutation.data;
+
+  return (
+    <Popover open={open} onOpenChange={handleOpen}>
+      <PopoverTrigger asChild>
+        <span className="cursor-pointer hover:bg-primary/10 rounded px-0.5 transition-colors">
+          {children}
+        </span>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-0" align="start" side="bottom">
+        {/* 词汇标题 */}
+        <div className="p-3 bg-primary/5 border-b">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {wordInfo?.isGrammar ? (
+                <BookOpen className="w-4 h-4 text-primary" />
+              ) : (
+                <MessageCircle className="w-4 h-4 text-primary" />
+              )}
+              <span className="font-bold japanese-text text-lg">
+                <AutoRuby text={word} />
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => speak(word)}
+              disabled={isSpeaking}
+            >
+              <Volume2 className="w-4 h-4" />
+            </Button>
+          </div>
+          {wordInfo?.reading && wordInfo.reading !== word && (
+            <p className="text-sm text-muted-foreground mt-1">
+              {wordInfo.reading}
+            </p>
+          )}
+        </div>
+
+        {/* 加载状态 */}
+        {analyzeWordMutation.isPending && (
+          <div className="p-6 flex items-center justify-center">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <span className="ml-2 text-sm text-muted-foreground">分析中...</span>
+          </div>
+        )}
+
+        {/* 词汇信息 */}
+        {wordInfo && !analyzeWordMutation.isPending && (
+          <div className="p-3 space-y-3">
+            {/* 词性/语法类型 */}
+            <div className="flex flex-wrap gap-1">
+              <Badge variant="secondary" className="text-xs">
+                {wordInfo.partOfSpeech}
+              </Badge>
+              {wordInfo.isGrammar && wordInfo.grammarLevel && (
+                <Badge variant="outline" className="text-xs">
+                  {wordInfo.grammarLevel}
+                </Badge>
+              )}
+            </div>
+
+            {/* 含义 */}
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-1">释义</p>
+              <p className="text-sm">{wordInfo.meaning}</p>
+            </div>
+
+            {/* 语法模式 */}
+            {wordInfo.grammarPattern && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">语法模式</p>
+                <p className="text-sm font-mono bg-muted/50 px-2 py-1 rounded">
+                  {wordInfo.grammarPattern}
+                </p>
+              </div>
+            )}
+
+            {/* 用法说明 */}
+            {wordInfo.usage && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">用法</p>
+                <p className="text-sm text-muted-foreground">{wordInfo.usage}</p>
+              </div>
+            )}
+
+            {/* 例句 */}
+            {wordInfo.examples && wordInfo.examples.length > 0 && (
+              <div>
+                <Separator className="my-2" />
+                <p className="text-sm font-medium text-muted-foreground mb-2">例句</p>
+                <div className="space-y-2">
+                  {wordInfo.examples.slice(0, 2).map((example: { japanese: string; meaning: string }, index: number) => (
+                    <div 
+                      key={index} 
+                      className="p-2 bg-muted/30 rounded text-sm"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <p className="japanese-text">
+                            <AutoRuby text={example.japanese} />
+                          </p>
+                          <p className="text-muted-foreground text-xs mt-1">
+                            {example.meaning}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 flex-shrink-0"
+                          onClick={() => speak(example.japanese)}
+                        >
+                          <Volume2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 错误状态 */}
+        {analyzeWordMutation.isError && (
+          <div className="p-4 text-center text-sm text-muted-foreground">
+            <p>无法获取词汇信息</p>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-2"
+              onClick={() => analyzeWordMutation.mutate({ text: word })}
+            >
+              重试
+            </Button>
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// 可点击的日语文本组件
+function ClickableJapaneseText({ 
+  text, 
+  showTranslation = false,
+  translation 
+}: { 
+  text: string; 
+  showTranslation?: boolean;
+  translation?: string;
+}) {
+  const [selectedText, setSelectedText] = useState<string | null>(null);
+  const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
+  const [showPopover, setShowPopover] = useState(false);
+  const { speak, isSpeaking } = useSpeech();
+  
+  const analyzeWordMutation = trpc.ai.analyzeWord.useMutation();
+
+  const handleTextSelection = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed) {
+      setShowPopover(false);
+      return;
+    }
+
+    const selectedStr = selection.toString().trim();
+    if (!selectedStr || selectedStr.length > 30) {
+      setShowPopover(false);
+      return;
+    }
+
+    // 检查是否包含日语字符
+    const hasJapanese = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(selectedStr);
+    if (!hasJapanese) {
+      setShowPopover(false);
+      return;
+    }
+
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+    
+    setSelectedText(selectedStr);
+    setPopoverPosition({ x: rect.left, y: rect.bottom + window.scrollY });
+    setShowPopover(true);
+    analyzeWordMutation.mutate({ text: selectedStr });
+  };
+
+  const wordInfo = analyzeWordMutation.data;
+
+  return (
+    <div className="relative">
+      <div
+        className="japanese-text text-lg leading-relaxed cursor-text select-text"
+        onMouseUp={handleTextSelection}
+        onTouchEnd={handleTextSelection}
+      >
+        <AutoRuby text={text} />
+      </div>
+
+      {/* 中文翻译 */}
+      {showTranslation && translation && (
+        <p className="text-sm text-muted-foreground mt-2 pl-3 border-l-2 border-primary/30">
+          {translation}
+        </p>
+      )}
+
+      {/* 弹出词汇信息 */}
+      {showPopover && selectedText && (
+        <div 
+          className="fixed z-50 bg-background border rounded-lg shadow-lg w-80 max-h-96 overflow-y-auto"
+          style={{ 
+            left: Math.min(popoverPosition.x, window.innerWidth - 340),
+            top: popoverPosition.y + 8
+          }}
+        >
+          {/* 词汇标题 */}
+          <div className="p-3 bg-primary/5 border-b sticky top-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {wordInfo?.isGrammar ? (
+                  <BookOpen className="w-4 h-4 text-primary" />
+                ) : (
+                  <MessageCircle className="w-4 h-4 text-primary" />
+                )}
+                <span className="font-bold japanese-text text-lg">
+                  <AutoRuby text={selectedText} />
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => speak(selectedText)}
+                  disabled={isSpeaking}
+                >
+                  <Volume2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setShowPopover(false)}
+                >
+                  ×
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* 加载状态 */}
+          {analyzeWordMutation.isPending && (
+            <div className="p-6 flex items-center justify-center">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              <span className="ml-2 text-sm text-muted-foreground">分析中...</span>
+            </div>
+          )}
+
+          {/* 词汇信息 */}
+          {wordInfo && !analyzeWordMutation.isPending && (
+            <div className="p-3 space-y-3">
+              <div className="flex flex-wrap gap-1">
+                <Badge variant="secondary" className="text-xs">
+                  {wordInfo.partOfSpeech}
+                </Badge>
+                {wordInfo.isGrammar && wordInfo.grammarLevel && (
+                  <Badge variant="outline" className="text-xs">
+                    {wordInfo.grammarLevel}
+                  </Badge>
+                )}
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">释义</p>
+                <p className="text-sm">{wordInfo.meaning}</p>
+              </div>
+
+              {wordInfo.grammarPattern && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">语法模式</p>
+                  <p className="text-sm font-mono bg-muted/50 px-2 py-1 rounded">
+                    {wordInfo.grammarPattern}
+                  </p>
+                </div>
+              )}
+
+              {wordInfo.usage && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">用法</p>
+                  <p className="text-sm text-muted-foreground">{wordInfo.usage}</p>
+                </div>
+              )}
+
+              {wordInfo.examples && wordInfo.examples.length > 0 && (
+                <div>
+                  <Separator className="my-2" />
+                  <p className="text-sm font-medium text-muted-foreground mb-2">例句</p>
+                  <div className="space-y-2">
+                    {wordInfo.examples.slice(0, 2).map((example: { japanese: string; meaning: string }, index: number) => (
+                      <div key={index} className="p-2 bg-muted/30 rounded text-sm">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <p className="japanese-text">
+                              <AutoRuby text={example.japanese} />
+                            </p>
+                            <p className="text-muted-foreground text-xs mt-1">
+                              {example.meaning}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 flex-shrink-0"
+                            onClick={() => speak(example.japanese)}
+                          >
+                            <Volume2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {analyzeWordMutation.isError && (
+            <div className="p-4 text-center text-sm text-muted-foreground">
+              <p>无法获取词汇信息</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-2"
+                onClick={() => analyzeWordMutation.mutate({ text: selectedText })}
+              >
+                重试
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ImmersiveDetail() {
   const [, params] = useRoute("/immersive/:id");
   const unitId = params?.id ? parseInt(params.id) : 0;
@@ -66,11 +434,10 @@ export default function ImmersiveDetail() {
   const { speak, stop, isSpeaking } = useSpeech();
   
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
-  const [showReading, setShowReading] = useState(true);
   const [showNotes, setShowNotes] = useState(true);
+  const [showTranslation, setShowTranslation] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [completedDialogues, setCompletedDialogues] = useState<Set<number>>(new Set());
-  const [showTranslation, setShowTranslation] = useState(false);
 
   // 获取学习单元详情
   const { data: unit, isLoading } = trpc.immersive.getUnitById.useQuery(
@@ -278,9 +645,7 @@ export default function ImmersiveDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="japanese-text text-lg leading-relaxed">
-                <AutoRuby text={unit.content.situationDescription} />
-              </p>
+              <ClickableJapaneseText text={unit.content.situationDescription} />
             </CardContent>
           </Card>
         )}
@@ -291,28 +656,39 @@ export default function ImmersiveDetail() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">对话内容</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowReading(!showReading)}
-                  >
-                    {showReading ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                    <span className="ml-1 text-xs">注音</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowNotes(!showNotes)}
-                  >
-                    <Lightbulb className="w-4 h-4" />
-                    <span className="ml-1 text-xs">注释</span>
-                  </Button>
+                <div className="flex items-center gap-4">
+                  {/* 显示中文翻译开关 */}
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="show-translation"
+                      checked={showTranslation}
+                      onCheckedChange={setShowTranslation}
+                    />
+                    <Label htmlFor="show-translation" className="text-sm flex items-center gap-1 cursor-pointer">
+                      <Languages className="w-4 h-4" />
+                      中文
+                    </Label>
+                  </div>
+                  {/* 显示注释开关 */}
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="show-notes"
+                      checked={showNotes}
+                      onCheckedChange={setShowNotes}
+                    />
+                    <Label htmlFor="show-notes" className="text-sm flex items-center gap-1 cursor-pointer">
+                      <Lightbulb className="w-4 h-4" />
+                      注释
+                    </Label>
+                  </div>
                 </div>
               </div>
+              <CardDescription className="text-xs mt-2">
+                💡 提示：选中日语文本可查看词汇/语法详解
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* 当前对话 */}
+              {/* 对话列表 */}
               <div className="space-y-4">
                 {dialogues.map((dialogue, index) => (
                   <div
@@ -348,14 +724,14 @@ export default function ImmersiveDetail() {
                             <Check className="w-4 h-4 text-green-500" />
                           )}
                         </div>
-                        <p className="japanese-text text-lg leading-relaxed">
-                          {showReading ? (
-                            <AutoRuby text={dialogue.reading || dialogue.text} />
-                          ) : (
-                            dialogue.text
-                          )}
-                        </p>
-                        {showNotes && dialogue.notes && (
+                        {/* 日语原文（始终显示注音） */}
+                        <ClickableJapaneseText 
+                          text={dialogue.reading || dialogue.text}
+                          showTranslation={showTranslation}
+                          translation={dialogue.notes}
+                        />
+                        {/* 注释 */}
+                        {showNotes && dialogue.notes && !showTranslation && (
                           <p className="text-sm text-muted-foreground mt-2 pl-3 border-l-2 border-muted">
                             {dialogue.notes}
                           </p>
@@ -490,9 +866,7 @@ export default function ImmersiveDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="japanese-text leading-relaxed">
-                <AutoRuby text={unit.content.culturalNotes} />
-              </p>
+              <ClickableJapaneseText text={unit.content.culturalNotes} />
             </CardContent>
           </Card>
         )}
