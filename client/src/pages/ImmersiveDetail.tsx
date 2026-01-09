@@ -36,6 +36,7 @@ import { useSpeech } from "@/hooks/useSpeech";
 import { SentenceAnalysisPopover } from "@/components/SentenceAnalysisPopover";
 import { TranslatableText } from "@/components/TranslatableText";
 import { KnowledgeExpansion } from "@/components/KnowledgeExpansion";
+import { cn } from "@/lib/utils";
 
 // 场景类型图标映射
 const unitTypeIcons: Record<string, typeof BookOpen> = {
@@ -275,7 +276,13 @@ function ClickableJapaneseText({
   return (
     <div className="relative">
       <div
-        className="japanese-text text-lg leading-relaxed cursor-text select-text"
+        className={cn(
+          "japanese-text text-lg leading-relaxed cursor-text select-text",
+          "border-b border-dashed border-blue-400/60 dark:border-blue-500/60",
+          "hover:border-blue-500 dark:hover:border-blue-400",
+          "hover:bg-blue-50/50 dark:hover:bg-blue-900/20",
+          "transition-colors duration-200"
+        )}
         onMouseUp={handleTextSelection}
         onTouchEnd={handleTextSelection}
       >
