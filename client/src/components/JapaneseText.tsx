@@ -39,18 +39,41 @@ function isKana(char: string): boolean {
 
 // 检测是否是标点符号或特殊字符
 function isPunctuation(char: string): boolean {
-  return /[。、！？「」『』（）・…ー～\s.,!?()[\]{}:;'"〜]/.test(char);
+  return /[。、！？「」『』（）・…～\s.,!?()[\]{}:;'"〜]/.test(char);
+}
+
+// 检测是否是平假名
+function isHiragana(char: string): boolean {
+  const code = char.charCodeAt(0);
+  return code >= 0x3040 && code <= 0x309f;
+}
+
+// 检测是否是片假名
+function isKatakana(char: string): boolean {
+  const code = char.charCodeAt(0);
+  return code >= 0x30a0 && code <= 0x30ff;
+}
+
+// 检测是否是英数字
+function isAlphanumeric(char: string): boolean {
+  return /[a-zA-Z0-9Ａ-Ｚａ-ｚ０-９]/.test(char);
+}
+
+// 检测是否是连字符（用于合并英文单词如J-POP）
+function isHyphen(char: string): boolean {
+  return /[-ー]/.test(char);
 }
 
 /**
  * 改进的汉字-假名对齐算法
- * 使用双指针方法，逐字符匹配
+ * 核心思路：只有平假名和片假名不加注音，其他内容（汉字、英文、数字等）都加注音
+ * 每个需要注音的部分单独显示对应的注音
  */
 function alignKanjiWithReading(text: string, reading: string): React.ReactNode[] {
   const result: React.ReactNode[] = [];
   
-  // 如果没有汉字,直接返回原文本
-  if (!hasKanji(text)) {
+  // 如果没有汉字且没有英文数字,直接返回原文本
+  if (!hasKanji(text) && !/[a-zA-Z0-9Ａ-Ｚａ-ｚ０-９]/.test(text)) {
     return [<span key="0">{text}</span>];
   }
   
@@ -59,121 +82,156 @@ function alignKanjiWithReading(text: string, reading: string): React.ReactNode[]
     return [<span key="0">{text}</span>];
   }
   
+  // 第一步：将文本分割为不同类型的块
+  type PartType = 'kanji' | 'hiragana' | 'katakana' | 'alphanumeric' | 'punct';
+  interface Part {
+    text: string;
+    type: PartType;
+  }
+  
+  // 基础分割
+  const rawParts: Part[] = [];
+  let currentText = '';
+  let currentType: PartType | null = null;
+  
+  for (const char of text) {
+    let charType: PartType;
+    if (isKanjiChar(char)) {
+      charType = 'kanji';
+    } else if (isHiragana(char)) {
+      charType = 'hiragana';
+    } else if (isKatakana(char)) {
+      charType = 'katakana';
+    } else if (isAlphanumeric(char)) {
+      charType = 'alphanumeric';
+    } else {
+      charType = 'punct';
+    }
+    
+    if (currentType === null) {
+      currentText = char;
+      currentType = charType;
+    } else if (charType === currentType) {
+      currentText += char;
+    } else {
+      rawParts.push({ text: currentText, type: currentType });
+      currentText = char;
+      currentType = charType;
+    }
+  }
+  if (currentText && currentType) {
+    rawParts.push({ text: currentText, type: currentType });
+  }
+  
+  // 第二步：合并被连字符分割的英数字块（如 J-POP → 合并为一个块）
+  const parts: Part[] = [];
+  for (let i = 0; i < rawParts.length; i++) {
+    const part = rawParts[i];
+    
+    // 检查是否是 "alphanumeric + hyphen + alphanumeric" 模式
+    if (part.type === 'alphanumeric' && 
+        i + 2 < rawParts.length &&
+        rawParts[i + 1].type === 'punct' &&
+        isHyphen(rawParts[i + 1].text) &&
+        rawParts[i + 2].type === 'alphanumeric') {
+      // 合并三个部分
+      parts.push({
+        text: part.text + rawParts[i + 1].text + rawParts[i + 2].text,
+        type: 'alphanumeric'
+      });
+      i += 2; // 跳过已处理的部分
+    } else {
+      parts.push(part);
+    }
+  }
+  
+  // 第三步：构建结果
   let keyIndex = 0;
-  let textPos = 0;
   let readingPos = 0;
   
-  while (textPos < text.length) {
-    const char = text[textPos];
+  // 辅助函数：在reading中查找假名位置
+  function findKanaInReading(kana: string, startPos: number): number {
+    // 将片假名转换为平假名进行比较
+    const hiraganaKana = katakanaToHiragana(kana);
     
-    // 如果是标点符号或空格,直接添加
-    if (isPunctuation(char)) {
-      result.push(<span key={keyIndex++}>{char}</span>);
-      textPos++;
-      // 跳过reading中对应的标点
-      while (readingPos < reading.length && isPunctuation(reading[readingPos])) {
-        readingPos++;
+    for (let i = startPos; i <= reading.length - hiraganaKana.length; i++) {
+      const segment = reading.substring(i, i + hiraganaKana.length);
+      if (segment === hiraganaKana || segment === kana) {
+        return i;
       }
-      continue;
     }
+    return -1;
+  }
+  
+  // 辅助函数：片假名转平假名
+  function katakanaToHiragana(str: string): string {
+    return str.replace(/[\u30a1-\u30f6]/g, (match) => {
+      return String.fromCharCode(match.charCodeAt(0) - 0x60);
+    });
+  }
+  
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
     
-    // 如果是假名
-    if (isKana(char)) {
-      // 收集连续的假名
-      let kanaBlock = "";
-      while (textPos < text.length && isKana(text[textPos])) {
-        kanaBlock += text[textPos];
-        textPos++;
+    if (part.type === 'punct') {
+      // 标点符号直接添加
+      result.push(<span key={keyIndex++}>{part.text}</span>);
+    } else if (part.type === 'hiragana') {
+      // 平假名部分：在reading中找到对应位置并跳过，不加注音
+      const kanaInReading = findKanaInReading(part.text, readingPos);
+      if (kanaInReading !== -1) {
+        readingPos = kanaInReading + part.text.length;
       }
-      result.push(<span key={keyIndex++}>{kanaBlock}</span>);
-      
-      // 在reading中跳过对应的假名
-      for (let i = 0; i < kanaBlock.length && readingPos < reading.length; i++) {
-        if (reading[readingPos] === kanaBlock[i]) {
-          readingPos++;
+      result.push(<span key={keyIndex++}>{part.text}</span>);
+    } else if (part.type === 'katakana') {
+      // 片假名部分：在reading中找到对应位置并跳过，不加注音
+      const kanaInReading = findKanaInReading(part.text, readingPos);
+      if (kanaInReading !== -1) {
+        readingPos = kanaInReading + part.text.length;
+      }
+      result.push(<span key={keyIndex++}>{part.text}</span>);
+    } else {
+      // 汉字或英数字部分：需要添加注音
+      // 查找下一个假名部分作为边界
+      let nextKanaPart: Part | null = null;
+      for (let j = i + 1; j < parts.length; j++) {
+        if (parts[j].type === 'hiragana' || parts[j].type === 'katakana') {
+          nextKanaPart = parts[j];
+          break;
+        }
+        // 如果遇到另一个需要注音的部分，停止查找
+        if (parts[j].type === 'kanji' || parts[j].type === 'alphanumeric') {
+          break;
         }
       }
-      continue;
-    }
-    
-    // 如果是汉字
-    if (isKanjiChar(char)) {
-      // 收集连续的汉字
-      let kanjiBlock = "";
-      while (textPos < text.length && isKanjiChar(text[textPos])) {
-        kanjiBlock += text[textPos];
-        textPos++;
-      }
       
-      // 找到下一个非汉字字符在原文中的位置
-      let nextChar = textPos < text.length ? text[textPos] : null;
+      let partReading = '';
       
-      // 从reading中提取对应的读音
-      let kanjiReading = "";
-      
-      if (nextChar && isKana(nextChar)) {
-        // 找到reading中下一个匹配假名的位置
-        let foundPos = -1;
-        for (let i = readingPos; i < reading.length; i++) {
-          if (reading[i] === nextChar) {
-            foundPos = i;
-            break;
-          }
+      if (nextKanaPart) {
+        // 有后续假名，在reading中查找这个假名的位置
+        const nextPos = findKanaInReading(nextKanaPart.text, readingPos);
+        if (nextPos !== -1 && nextPos > readingPos) {
+          partReading = reading.substring(readingPos, nextPos);
+          readingPos = nextPos;
         }
-        
-        if (foundPos > readingPos) {
-          kanjiReading = reading.substring(readingPos, foundPos);
-          readingPos = foundPos;
-        } else {
-          // 找不到匹配，使用剩余的reading直到遇到原文中的假名
-          kanjiReading = "";
-          let tempPos = readingPos;
-          while (tempPos < reading.length && !isPunctuation(reading[tempPos])) {
-            // 检查是否是原文中后续的假名
-            let isInOriginal = false;
-            for (let j = textPos; j < text.length; j++) {
-              if (text[j] === reading[tempPos]) {
-                isInOriginal = true;
-                break;
-              }
-            }
-            if (isInOriginal) break;
-            kanjiReading += reading[tempPos];
-            tempPos++;
-          }
-          readingPos = tempPos;
-        }
-      } else if (nextChar && isPunctuation(nextChar)) {
-        // 下一个是标点，提取到标点前的所有假名作为读音
-        let tempPos = readingPos;
-        while (tempPos < reading.length && !isPunctuation(reading[tempPos])) {
-          kanjiReading += reading[tempPos];
-          tempPos++;
-        }
-        readingPos = tempPos;
       } else {
-        // 没有下一个字符或是其他情况,使用剩余的reading
-        kanjiReading = reading.substring(readingPos).replace(/[。、！？「」『』（）・…ー～\s.,!?()[\]{}:;'"〜]/g, '');
+        // 没有后续假名，取剩余的reading
+        partReading = reading.substring(readingPos);
         readingPos = reading.length;
       }
       
       // 渲染ruby元素
-      if (kanjiReading) {
+      if (partReading) {
         result.push(
           <ruby key={keyIndex++} className="japanese-ruby">
-            {kanjiBlock}
-            <rt>{kanjiReading}</rt>
+            {part.text}
+            <rt>{partReading}</rt>
           </ruby>
         );
       } else {
-        result.push(<span key={keyIndex++}>{kanjiBlock}</span>);
+        result.push(<span key={keyIndex++}>{part.text}</span>);
       }
-      continue;
     }
-    
-    // 其他字符（如数字、英文等）直接添加
-    result.push(<span key={keyIndex++}>{char}</span>);
-    textPos++;
   }
   
   return result;
