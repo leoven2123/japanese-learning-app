@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -457,9 +457,10 @@ export default function ImmersiveDetail() {
 
   // 状态
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
-  const [showNotes, setShowNotes] = useState(true);
+  const [expandedNotes, setExpandedNotes] = useState<Set<number>>(new Set()); // 注释默认收起
   const [isPlaying, setIsPlaying] = useState(false);
   const [completedDialogues, setCompletedDialogues] = useState<Set<number>>(new Set());
+  const isPlayingRef = useRef(false); // 用于在异步循环中检查播放状态
 
   // 获取学习单元详情
   const { data: unit, isLoading } = trpc.immersive.getUnitById.useQuery(
@@ -477,30 +478,90 @@ export default function ImmersiveDetail() {
   const dialogues = unit?.content?.dialogues || [];
   const totalDialogues = dialogues.length;
 
+  // 说话人颜色配置 - 为每个说话人分配不同颜色
+  const speakerColors = useMemo(() => {
+    const colors = [
+      { bg: 'bg-blue-100 dark:bg-blue-900/50', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-200 dark:border-blue-700', accent: 'bg-blue-500' },
+      { bg: 'bg-purple-100 dark:bg-purple-900/50', text: 'text-purple-700 dark:text-purple-300', border: 'border-purple-200 dark:border-purple-700', accent: 'bg-purple-500' },
+      { bg: 'bg-emerald-100 dark:bg-emerald-900/50', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-700', accent: 'bg-emerald-500' },
+      { bg: 'bg-amber-100 dark:bg-amber-900/50', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-700', accent: 'bg-amber-500' },
+      { bg: 'bg-rose-100 dark:bg-rose-900/50', text: 'text-rose-700 dark:text-rose-300', border: 'border-rose-200 dark:border-rose-700', accent: 'bg-rose-500' },
+      { bg: 'bg-cyan-100 dark:bg-cyan-900/50', text: 'text-cyan-700 dark:text-cyan-300', border: 'border-cyan-200 dark:border-cyan-700', accent: 'bg-cyan-500' },
+    ];
+    
+    const speakerMap = new Map<string, typeof colors[0]>();
+    let colorIndex = 0;
+    
+    dialogues.forEach(d => {
+      const speaker = d.speaker || '话者';
+      if (!speakerMap.has(speaker)) {
+        speakerMap.set(speaker, colors[colorIndex % colors.length]);
+        colorIndex++;
+      }
+    });
+    
+    return speakerMap;
+  }, [dialogues]);
+
+  // 获取说话人颜色
+  const getSpeakerColor = useCallback((speaker: string | undefined) => {
+    const key = speaker || '话者';
+    return speakerColors.get(key) || {
+      bg: 'bg-gray-100 dark:bg-gray-800',
+      text: 'text-gray-700 dark:text-gray-300',
+      border: 'border-gray-200 dark:border-gray-700',
+      accent: 'bg-gray-500'
+    };
+  }, [speakerColors]);
+
+  // 切换注释展开/收起
+  const toggleNote = useCallback((index: number) => {
+    setExpandedNotes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  }, []);
+
   // 计算学习进度
   const progress = totalDialogues > 0 
     ? Math.round((completedDialogues.size / totalDialogues) * 100) 
     : 0;
 
   // 播放所有对话
-  const playAllDialogues = async () => {
+  const playAllDialogues = useCallback(async () => {
     setIsPlaying(true);
+    isPlayingRef.current = true;
+    
     for (let i = currentDialogueIndex; i < dialogues.length; i++) {
-      if (!isPlaying) break;
+      // 使用ref检查播放状态，因为state在异步循环中不会更新
+      if (!isPlayingRef.current) break;
+      
       setCurrentDialogueIndex(i);
+      // speak现在返回Promise，等待播放完成后再继续
       await speak(dialogues[i].text);
+      
+      if (!isPlayingRef.current) break;
+      
       setCompletedDialogues(prev => new Set(Array.from(prev).concat(i)));
       // 等待一小段时间再播放下一句
       await new Promise(resolve => setTimeout(resolve, 500));
     }
+    
     setIsPlaying(false);
-  };
+    isPlayingRef.current = false;
+  }, [currentDialogueIndex, dialogues, speak]);
 
   // 停止播放
-  const stopPlaying = () => {
+  const stopPlaying = useCallback(() => {
     setIsPlaying(false);
+    isPlayingRef.current = false;
     stopSpeaking();
-  };
+  }, [stopSpeaking]);
 
   // 下一句
   const nextDialogue = () => {
@@ -667,20 +728,6 @@ export default function ImmersiveDetail() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">对话内容</CardTitle>
-                <div className="flex items-center gap-4">
-                  {/* 显示注释开关 */}
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      id="show-notes"
-                      checked={showNotes}
-                      onCheckedChange={setShowNotes}
-                    />
-                    <Label htmlFor="show-notes" className="text-sm flex items-center gap-1 cursor-pointer">
-                      <Lightbulb className="w-4 h-4" />
-                      注释
-                    </Label>
-                  </div>
-                </div>
               </div>
               <CardDescription className="text-xs mt-2">
                 💡 提示：选中日语文本可查看词汇/语法详解，点击句末按钮查看翻译和知识点
@@ -688,69 +735,85 @@ export default function ImmersiveDetail() {
             </CardHeader>
             <CardContent>
               {/* 对话列表 */}
-              <div className="space-y-4">
-                {dialogues.map((dialogue, index) => (
-                  <div
-                    key={index}
-                    className={`p-4 rounded-lg transition-all cursor-pointer ${
-                      index === currentDialogueIndex
-                        ? "bg-primary/10 border-2 border-primary"
-                        : completedDialogues.has(index)
-                        ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
-                        : "bg-muted/30 hover:bg-muted/50"
-                    }`}
-                    onClick={() => setCurrentDialogueIndex(index)}
-                  >
-                    <div className="flex items-start gap-3">
-                      {/* 说话者头像 */}
-                      <div className="flex-shrink-0">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
-                          dialogue.speakerRole === "customer" || dialogue.speaker?.includes("客")
-                            ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-                            : "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
-                        }`}>
-                          {dialogue.speaker?.charAt(0) || "A"}
+              <div className="space-y-3">
+                {dialogues.map((dialogue, index) => {
+                  const speakerColor = getSpeakerColor(dialogue.speaker);
+                  const isCurrentDialogue = index === currentDialogueIndex;
+                  const isCompleted = completedDialogues.has(index);
+                  
+                  return (
+                    <div
+                      key={index}
+                      className={`p-4 rounded-lg transition-all cursor-pointer border-2 ${
+                        isCurrentDialogue
+                          ? `${speakerColor.bg} ${speakerColor.border} ring-2 ring-primary/30`
+                          : isCompleted
+                          ? "bg-green-50/50 dark:bg-green-900/10 border-green-200 dark:border-green-800"
+                          : `${speakerColor.bg} ${speakerColor.border} opacity-80 hover:opacity-100`
+                      }`}
+                      onClick={() => setCurrentDialogueIndex(index)}
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* 说话者头像 - 使用说话人颜色 */}
+                        <div className="flex-shrink-0">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white ${speakerColor.accent}`}>
+                            {dialogue.speaker?.charAt(0) || "A"}
+                          </div>
                         </div>
-                      </div>
-                      
-                      {/* 对话内容 */}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-sm">
-                            {dialogue.speaker || `話者${index + 1}`}
-                          </span>
-                          {completedDialogues.has(index) && (
-                            <Check className="w-4 h-4 text-green-500" />
+                        
+                        {/* 对话内容 */}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`font-semibold text-sm ${speakerColor.text}`}>
+                              {dialogue.speaker || `話者${index + 1}`}
+                            </span>
+                            {isCompleted && (
+                              <Check className="w-4 h-4 text-green-500" />
+                            )}
+                          </div>
+                          {/* 日语原文（始终显示注音）+ 分析按钮 */}
+                          <JapaneseSentenceWithAnalysis 
+                            text={dialogue.text}
+                            reading={dialogue.reading}
+                          />
+                          {/* 注释 - 默认收起，点击展开 */}
+                          {dialogue.notes && (
+                            <div className="mt-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleNote(index);
+                                }}
+                                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                              >
+                                <Lightbulb className="w-3 h-3" />
+                                {expandedNotes.has(index) ? "收起注释" : "查看注释"}
+                              </button>
+                              {expandedNotes.has(index) && (
+                                <div className="text-sm text-muted-foreground mt-2 pl-3 border-l-2 border-muted animate-in fade-in slide-in-from-top-2 duration-200">
+                                  <TranslatableText text={dialogue.notes} />
+                                </div>
+                              )}
+                            </div>
                           )}
                         </div>
-                        {/* 日语原文（始终显示注音）+ 分析按钮 */}
-                        <JapaneseSentenceWithAnalysis 
-                          text={dialogue.text}
-                          reading={dialogue.reading}
-                        />
-                        {/* 注释 - 也支持翻译按钮 */}
-                        {showNotes && dialogue.notes && (
-                          <div className="text-sm text-muted-foreground mt-2 pl-3 border-l-2 border-muted">
-                            <TranslatableText text={dialogue.notes} />
-                          </div>
-                        )}
+                        
+                        {/* 播放按钮 */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="flex-shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            speak(dialogue.text);
+                          }}
+                        >
+                          <Volume2 className="w-4 h-4" />
+                        </Button>
                       </div>
-                      
-                      {/* 播放按钮 */}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="flex-shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          speak(dialogue.text);
-                        }}
-                      >
-                        <Volume2 className="w-4 h-4" />
-                      </Button>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* 控制按钮 */}
