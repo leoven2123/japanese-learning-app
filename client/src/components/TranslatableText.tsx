@@ -88,48 +88,42 @@ export function TranslatableText({
   } | undefined;
 
   return (
-    <div className={cn("relative inline", className)}>
-      {/* 原文容器 */}
-      <span
-        className="relative inline group"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        {/* 原文内容 */}
-        <span className="japanese-text">
-          {children || (showRuby ? <AutoRuby text={text} /> : text)}
-        </span>
-
-        {/* 悬浮翻译按钮 - 绝对定位，不占用文档流 */}
-        <button
-          onClick={handleTranslateClick}
-          className={cn(
-            "absolute -right-1 -bottom-1",
-            "inline-flex items-center justify-center",
-            "w-5 h-5 rounded-full",
-            "bg-white dark:bg-gray-800",
-            "text-blue-600 dark:text-blue-400",
-            "border border-blue-300 dark:border-blue-600",
-            "shadow-md hover:shadow-lg",
-            "hover:bg-blue-50 dark:hover:bg-blue-900/30",
-            "transition-all duration-300 ease-out",
-            "opacity-0 scale-75",
-            (isHovered || showTranslation) && "opacity-100 scale-100",
-            showTranslation && "bg-blue-100 dark:bg-blue-900/50 border-blue-400 dark:border-blue-500",
-            "focus:outline-none focus:ring-2 focus:ring-blue-500/30",
-            "z-10"
-          )}
-          title={showTranslation ? "隐藏翻译" : "显示翻译和知识点"}
-        >
-          {analyzeSentenceMutation.isPending ? (
-            <Loader2 className="w-3 h-3 animate-spin" />
-          ) : showTranslation ? (
-            <X className="w-3 h-3" />
-          ) : (
-            <Languages className="w-3 h-3" />
-          )}
-        </button>
+    <span
+      className={cn("inline group", className)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* 原文内容 */}
+      <span className="japanese-text">
+        {children || (showRuby ? <AutoRuby text={text} /> : text)}
       </span>
+      {/* 悬浮翻译按钮 - inline-block紧跟文字后面 */}
+      <button
+        onClick={handleTranslateClick}
+        className={cn(
+          "inline-flex items-center justify-center align-text-bottom ml-1",
+          "w-5 h-5 rounded-full",
+          "bg-white dark:bg-gray-800",
+          "text-blue-600 dark:text-blue-400",
+          "border border-blue-300 dark:border-blue-600",
+          "shadow-md hover:shadow-lg",
+          "hover:bg-blue-50 dark:hover:bg-blue-900/30",
+          "transition-all duration-300 ease-out",
+          "opacity-0 scale-75",
+          (isHovered || showTranslation) && "opacity-100 scale-100",
+          showTranslation && "bg-blue-100 dark:bg-blue-900/50 border-blue-400 dark:border-blue-500",
+          "focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+        )}
+        title={showTranslation ? "隐藏翻译" : "显示翻译和知识点"}
+      >
+        {analyzeSentenceMutation.isPending ? (
+          <Loader2 className="w-3 h-3 animate-spin" />
+        ) : showTranslation ? (
+          <X className="w-3 h-3" />
+        ) : (
+          <Languages className="w-3 h-3" />
+        )}
+      </button>
 
       {/* 翻译和知识点内容 */}
       {showTranslation && (
@@ -281,7 +275,7 @@ export function TranslatableText({
           </div>
         </div>
       )}
-    </div>
+    </span>
   );
 }
 
