@@ -286,24 +286,55 @@ function buildRubyText(original: string, reading: string): string {
           readingPos = nextPos;
         }
       } else if (nextPart && nextPart.type === 'punct') {
-        // 下一个部分是标点，继续查找下一个假名部分
+        // 下一个部分是标点，需要查找标点后面的内容来确定当前部分的注音
+        // 关键：在标点后面查找下一个假名或汉字部分
         let nextKanaPart: Part | null = null;
+        let nextKanjiPart: Part | null = null;
         for (let j = i + 1; j < parts.length; j++) {
           if (parts[j].type === 'hiragana' || parts[j].type === 'katakana') {
             nextKanaPart = parts[j];
             break;
           }
-          // 如果遇到另一个需要注音的部分（汉字或英数字），停止查找
-          if (parts[j].type === 'kanji' || parts[j].type === 'alphanumeric') {
-            break;
+          // 如果遇到另一个需要注音的部分（汉字或英数字），记录但继续查找假名
+          if ((parts[j].type === 'kanji' || parts[j].type === 'alphanumeric') && !nextKanjiPart) {
+            nextKanjiPart = parts[j];
           }
         }
         
         if (nextKanaPart) {
+          // 找到了后续假名，使用它作为边界
           const nextPos = findKanaInReading(reading, nextKanaPart.text, readingPos);
           if (nextPos !== -1 && nextPos > readingPos) {
-            partReading = reading.substring(readingPos, nextPos);
-            readingPos = nextPos;
+            // 如果标点后面还有汉字，需要分配注音
+            if (nextKanjiPart) {
+              // 计算当前部分应该占用的注音长度
+              const totalReading = reading.substring(readingPos, nextPos);
+              // 统计标点前后需要注音的汉字数
+              let beforePunctChars = part.text.length;
+              let afterPunctChars = 0;
+              for (let j = i + 1; j < parts.length; j++) {
+                if (parts[j].type === 'hiragana' || parts[j].type === 'katakana') {
+                  break;
+                }
+                if (parts[j].type === 'kanji' || parts[j].type === 'alphanumeric') {
+                  afterPunctChars += parts[j].text.length;
+                }
+              }
+              
+              if (beforePunctChars + afterPunctChars > 0 && totalReading.length > 0) {
+                // 按字符数比例分配注音
+                const myReadingLength = Math.round(totalReading.length * beforePunctChars / (beforePunctChars + afterPunctChars));
+                partReading = totalReading.substring(0, myReadingLength);
+                readingPos += myReadingLength;
+              } else {
+                partReading = totalReading;
+                readingPos = nextPos;
+              }
+            } else {
+              // 标点后面没有汉字，当前部分占用全部注音
+              partReading = reading.substring(readingPos, nextPos);
+              readingPos = nextPos;
+            }
           }
         } else {
           // 没有后续假名，取剩余的reading
@@ -360,9 +391,12 @@ function buildRubyText(original: string, reading: string): string {
         readingPos = reading.length;
       }
       
+      // 清理注音中的标点符号，只保留假名
+      const cleanedReading = cleanReading(partReading);
+      
       // 验证读音是否有效
-      if (partReading && isValidReading(partReading)) {
-        result += `${part.text}(${partReading})`;
+      if (cleanedReading && isValidReading(cleanedReading)) {
+        result += `${part.text}(${cleanedReading})`;
       } else {
         result += part.text;
       }
@@ -418,6 +452,20 @@ function isValidReading(reading: string): boolean {
     }
   }
   return reading.length > 0;
+}
+
+/**
+ * 从注音中移除标点符号，只保留假名
+ */
+function cleanReading(reading: string): string {
+  let result = '';
+  for (const char of reading) {
+    // 只保留假名和长音符号
+    if (isKana(char) || char === 'ー' || char === '・') {
+      result += char;
+    }
+  }
+  return result;
 }
 
 /**
