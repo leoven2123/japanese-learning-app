@@ -31,6 +31,7 @@ import {
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { AutoRuby } from "@/components/Ruby";
+import { StaticJapaneseText, JapaneseText } from "@/components/JapaneseText";
 import { useSpeech } from "@/hooks/useSpeech";
 
 // 场景类型图标映射
@@ -225,10 +226,12 @@ function WordPopover({
 // 可点击的日语文本组件
 function ClickableJapaneseText({ 
   text, 
+  reading,
   showTranslation = false,
   translation 
 }: { 
   text: string; 
+  reading?: string;
   showTranslation?: boolean;
   translation?: string;
 }) {
@@ -277,7 +280,12 @@ function ClickableJapaneseText({
         onMouseUp={handleTextSelection}
         onTouchEnd={handleTextSelection}
       >
-        <AutoRuby text={text} />
+        {/* 使用StaticJapaneseText显示带注音的文本 */}
+        {reading ? (
+          <StaticJapaneseText text={text} reading={reading} />
+        ) : (
+          <JapaneseText>{text}</JapaneseText>
+        )}
       </div>
 
       {/* 中文翻译 */}
@@ -726,7 +734,8 @@ export default function ImmersiveDetail() {
                         </div>
                         {/* 日语原文（始终显示注音） */}
                         <ClickableJapaneseText 
-                          text={dialogue.reading || dialogue.text}
+                          text={dialogue.text}
+                          reading={dialogue.reading}
                           showTranslation={showTranslation}
                           translation={dialogue.notes}
                         />
