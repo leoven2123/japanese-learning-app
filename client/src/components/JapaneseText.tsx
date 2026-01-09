@@ -27,17 +27,25 @@ function hasKanji(text: string): boolean {
   return /[\u4e00-\u9faf\u3400-\u4dbf]/.test(text);
 }
 
+// 检测单个字符是否是汉字
+function isKanjiChar(char: string): boolean {
+  return /[\u4e00-\u9faf\u3400-\u4dbf]/.test(char);
+}
+
 // 检测是否是假名
 function isKana(char: string): boolean {
   return /[\u3040-\u309F\u30A0-\u30FF]/.test(char);
 }
 
-// 检测是否是标点符号
+// 检测是否是标点符号或特殊字符
 function isPunctuation(char: string): boolean {
-  return /[。、！？「」『』（）・…ー～\s.,!?()[\]{}:;'"]/.test(char);
+  return /[。、！？「」『』（）・…ー～\s.,!?()[\]{}:;'"〜]/.test(char);
 }
 
-// 改进的汉字-假名对齐算法
+/**
+ * 改进的汉字-假名对齐算法
+ * 使用双指针方法，逐字符匹配
+ */
 function alignKanjiWithReading(text: string, reading: string): React.ReactNode[] {
   const result: React.ReactNode[] = [];
   
@@ -51,93 +59,105 @@ function alignKanjiWithReading(text: string, reading: string): React.ReactNode[]
     return [<span key="0">{text}</span>];
   }
   
-  let textIndex = 0;
-  let readingIndex = 0;
   let keyIndex = 0;
+  let textPos = 0;
+  let readingPos = 0;
   
-  while (textIndex < text.length) {
-    const char = text[textIndex];
+  while (textPos < text.length) {
+    const char = text[textPos];
     
-    // 如果是标点符号,直接添加并同步reading位置
+    // 如果是标点符号或空格,直接添加
     if (isPunctuation(char)) {
       result.push(<span key={keyIndex++}>{char}</span>);
-      textIndex++;
+      textPos++;
       // 跳过reading中对应的标点
-      if (readingIndex < reading.length && isPunctuation(reading[readingIndex])) {
-        readingIndex++;
+      while (readingPos < reading.length && isPunctuation(reading[readingPos])) {
+        readingPos++;
       }
       continue;
     }
     
-    // 如果是假名,直接添加
+    // 如果是假名
     if (isKana(char)) {
-      result.push(<span key={keyIndex++}>{char}</span>);
-      textIndex++;
-      // 跳过reading中对应的假名
-      if (readingIndex < reading.length && reading[readingIndex] === char) {
-        readingIndex++;
+      // 收集连续的假名
+      let kanaBlock = "";
+      while (textPos < text.length && isKana(text[textPos])) {
+        kanaBlock += text[textPos];
+        textPos++;
+      }
+      result.push(<span key={keyIndex++}>{kanaBlock}</span>);
+      
+      // 在reading中跳过对应的假名
+      for (let i = 0; i < kanaBlock.length && readingPos < reading.length; i++) {
+        if (reading[readingPos] === kanaBlock[i]) {
+          readingPos++;
+        }
       }
       continue;
     }
     
-    // 如果是汉字,找到连续的汉字块
-    let kanjiBlock = "";
-    while (textIndex < text.length && hasKanji(text[textIndex])) {
-      kanjiBlock += text[textIndex];
-      textIndex++;
-    }
-    
-    if (kanjiBlock) {
-      // 找到下一个非汉字字符在原文中
-      let nextNonKanji = "";
-      if (textIndex < text.length) {
-        nextNonKanji = text[textIndex];
+    // 如果是汉字
+    if (isKanjiChar(char)) {
+      // 收集连续的汉字
+      let kanjiBlock = "";
+      while (textPos < text.length && isKanjiChar(text[textPos])) {
+        kanjiBlock += text[textPos];
+        textPos++;
       }
+      
+      // 找到下一个非汉字字符在原文中的位置
+      let nextChar = textPos < text.length ? text[textPos] : null;
       
       // 从reading中提取对应的读音
       let kanjiReading = "";
       
-      if (nextNonKanji && (isKana(nextNonKanji) || isPunctuation(nextNonKanji))) {
-        // 找到reading中下一个匹配字符的位置
-        let searchChar = nextNonKanji;
-        // 对于标点符号，需要在reading中找到对应的标点
-        const nextPos = reading.indexOf(searchChar, readingIndex);
-        
-        if (nextPos > readingIndex) {
-          kanjiReading = reading.substring(readingIndex, nextPos);
-          readingIndex = nextPos;
-        } else {
-          // 尝试找假名
-          if (isKana(nextNonKanji)) {
-            // 无法直接找到，尝试向后搜索
-            kanjiReading = "";
-            let tempReadingIndex = readingIndex;
-            while (tempReadingIndex < reading.length) {
-              if (reading[tempReadingIndex] === nextNonKanji) {
-                kanjiReading = reading.substring(readingIndex, tempReadingIndex);
-                readingIndex = tempReadingIndex;
-                break;
-              }
-              tempReadingIndex++;
-            }
-            if (!kanjiReading) {
-              kanjiReading = reading.substring(readingIndex);
-              readingIndex = reading.length;
-            }
-          } else {
-            kanjiReading = reading.substring(readingIndex);
-            readingIndex = reading.length;
+      if (nextChar && isKana(nextChar)) {
+        // 找到reading中下一个匹配假名的位置
+        let foundPos = -1;
+        for (let i = readingPos; i < reading.length; i++) {
+          if (reading[i] === nextChar) {
+            foundPos = i;
+            break;
           }
         }
+        
+        if (foundPos > readingPos) {
+          kanjiReading = reading.substring(readingPos, foundPos);
+          readingPos = foundPos;
+        } else {
+          // 找不到匹配，使用剩余的reading直到遇到原文中的假名
+          kanjiReading = "";
+          let tempPos = readingPos;
+          while (tempPos < reading.length && !isPunctuation(reading[tempPos])) {
+            // 检查是否是原文中后续的假名
+            let isInOriginal = false;
+            for (let j = textPos; j < text.length; j++) {
+              if (text[j] === reading[tempPos]) {
+                isInOriginal = true;
+                break;
+              }
+            }
+            if (isInOriginal) break;
+            kanjiReading += reading[tempPos];
+            tempPos++;
+          }
+          readingPos = tempPos;
+        }
+      } else if (nextChar && isPunctuation(nextChar)) {
+        // 下一个是标点，提取到标点前的所有假名作为读音
+        let tempPos = readingPos;
+        while (tempPos < reading.length && !isPunctuation(reading[tempPos])) {
+          kanjiReading += reading[tempPos];
+          tempPos++;
+        }
+        readingPos = tempPos;
       } else {
-        // 没有下一个字符,使用剩余的reading
-        kanjiReading = reading.substring(readingIndex);
-        readingIndex = reading.length;
+        // 没有下一个字符或是其他情况,使用剩余的reading
+        kanjiReading = reading.substring(readingPos).replace(/[。、！？「」『』（）・…ー～\s.,!?()[\]{}:;'"〜]/g, '');
+        readingPos = reading.length;
       }
       
-      // 清理读音中的标点符号
-      kanjiReading = kanjiReading.replace(/[。、！？「」『』（）・…ー～\s.,!?()[\]{}:;'"]/g, '');
-      
+      // 渲染ruby元素
       if (kanjiReading) {
         result.push(
           <ruby key={keyIndex++} className="japanese-ruby">
@@ -148,7 +168,12 @@ function alignKanjiWithReading(text: string, reading: string): React.ReactNode[]
       } else {
         result.push(<span key={keyIndex++}>{kanjiBlock}</span>);
       }
+      continue;
     }
+    
+    // 其他字符（如数字、英文等）直接添加
+    result.push(<span key={keyIndex++}>{char}</span>);
+    textPos++;
   }
   
   return result;

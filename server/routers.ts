@@ -738,6 +738,33 @@ ${existingItems || '(暂无)'}
         }
       }),
 
+    // 翻译日语文本
+    translate: publicProcedure
+      .input(z.object({
+        text: z.string(),
+        targetLang: z.enum(['zh', 'en']).default('zh'),
+      }))
+      .mutation(async ({ input }) => {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: input.targetLang === 'zh' 
+                ? "你是一个日语翻译器。请将输入的日语文本翻译成自然流畅的中文。只返回翻译结果，不要包含任何其他内容。"
+                : "You are a Japanese translator. Please translate the input Japanese text into natural English. Only return the translation, nothing else."
+            },
+            {
+              role: "user",
+              content: input.text
+            }
+          ]
+        });
+        
+        const content = response.choices[0]?.message?.content;
+        const translation = typeof content === 'string' ? content.trim() : '';
+        return { translation };
+      }),
+
     // 获取日语文本的假名读音
     getReading: publicProcedure
       .input(z.object({
@@ -766,6 +793,82 @@ ${existingItems || '(暂无)'}
         const content = response.choices[0]?.message?.content;
         const reading = typeof content === 'string' ? content.trim() : input.text;
         return { reading };
+      }),
+
+    // 分析句子 - 返回翻译、重要词汇和语法知识点
+    analyzeSentence: publicProcedure
+      .input(z.object({
+        sentence: z.string().min(1).max(500),
+      }))
+      .mutation(async ({ input }) => {
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: `你是一个日语教学助手。请分析输入的日语句子，返回以下信息：
+1. 中文翻译
+2. 重要词汇（最多5个）
+3. 语法知识点（最多3个）
+
+请以JSON格式返回，格式如下：
+{
+  "translation": "中文翻译",
+  "vocabulary": [
+    {
+      "word": "日语单词",
+      "reading": "假名读音",
+      "meaning": "中文意思",
+      "partOfSpeech": "词性"
+    }
+  ],
+  "grammar": [
+    {
+      "pattern": "语法模式",
+      "meaning": "语法含义",
+      "level": "JLPT级别",
+      "usage": "用法说明"
+    }
+  ]
+}
+
+只返回JSON，不要包含任何其他内容。`
+            },
+            {
+              role: "user",
+              content: input.sentence
+            }
+          ]
+        });
+        
+        const content = response.choices[0]?.message?.content;
+        if (typeof content !== 'string') {
+          return {
+            translation: "无法分析",
+            vocabulary: [],
+            grammar: []
+          };
+        }
+        
+        try {
+          // 尝试解析JSON
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            return {
+              translation: parsed.translation || "无法翻译",
+              vocabulary: Array.isArray(parsed.vocabulary) ? parsed.vocabulary : [],
+              grammar: Array.isArray(parsed.grammar) ? parsed.grammar : []
+            };
+          }
+        } catch (e) {
+          console.error('Failed to parse sentence analysis:', e);
+        }
+        
+        return {
+          translation: content.trim(),
+          vocabulary: [],
+          grammar: []
+        };
       }),
   }),
 

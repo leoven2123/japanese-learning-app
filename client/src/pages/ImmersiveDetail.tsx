@@ -33,6 +33,7 @@ import { trpc } from "@/lib/trpc";
 import { AutoRuby } from "@/components/Ruby";
 import { StaticJapaneseText, JapaneseText } from "@/components/JapaneseText";
 import { useSpeech } from "@/hooks/useSpeech";
+import { SentenceAnalysisPopover } from "@/components/SentenceAnalysisPopover";
 
 // 场景类型图标映射
 const unitTypeIcons: Record<string, typeof BookOpen> = {
@@ -223,17 +224,13 @@ function WordPopover({
   );
 }
 
-// 可点击的日语文本组件
+// 可点击的日语文本组件 - 支持选中查看词汇详解
 function ClickableJapaneseText({ 
   text, 
   reading,
-  showTranslation = false,
-  translation 
 }: { 
   text: string; 
   reading?: string;
-  showTranslation?: boolean;
-  translation?: string;
 }) {
   const [selectedText, setSelectedText] = useState<string | null>(null);
   const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
@@ -287,13 +284,6 @@ function ClickableJapaneseText({
           <JapaneseText>{text}</JapaneseText>
         )}
       </div>
-
-      {/* 中文翻译 */}
-      {showTranslation && translation && (
-        <p className="text-sm text-muted-foreground mt-2 pl-3 border-l-2 border-primary/30">
-          {translation}
-        </p>
-      )}
 
       {/* 弹出词汇信息 */}
       {showPopover && selectedText && (
@@ -350,6 +340,12 @@ function ClickableJapaneseText({
           {/* 词汇信息 */}
           {wordInfo && !analyzeWordMutation.isPending && (
             <div className="p-3 space-y-3">
+              {wordInfo.reading && wordInfo.reading !== selectedText && (
+                <p className="text-sm text-muted-foreground">
+                  {wordInfo.reading}
+                </p>
+              )}
+              
               <div className="flex flex-wrap gap-1">
                 <Badge variant="secondary" className="text-xs">
                   {wordInfo.partOfSpeech}
@@ -388,7 +384,10 @@ function ClickableJapaneseText({
                   <p className="text-sm font-medium text-muted-foreground mb-2">例句</p>
                   <div className="space-y-2">
                     {wordInfo.examples.slice(0, 2).map((example: { japanese: string; meaning: string }, index: number) => (
-                      <div key={index} className="p-2 bg-muted/30 rounded text-sm">
+                      <div 
+                        key={index} 
+                        className="p-2 bg-muted/30 rounded text-sm"
+                      >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1">
                             <p className="japanese-text">
@@ -434,16 +433,37 @@ function ClickableJapaneseText({
   );
 }
 
+// 带分析按钮的日语句子组件
+function JapaneseSentenceWithAnalysis({ 
+  text, 
+  reading,
+  showAnalysisButton = true
+}: { 
+  text: string; 
+  reading?: string;
+  showAnalysisButton?: boolean;
+}) {
+  return (
+    <div className="flex items-start gap-2">
+      <div className="flex-1">
+        <ClickableJapaneseText text={text} reading={reading} />
+      </div>
+      {showAnalysisButton && (
+        <SentenceAnalysisPopover sentence={text} />
+      )}
+    </div>
+  );
+}
+
 export default function ImmersiveDetail() {
   const [, params] = useRoute("/immersive/:id");
-  const unitId = params?.id ? parseInt(params.id) : 0;
-  
-  const { isAuthenticated } = useAuth();
-  const { speak, stop, isSpeaking } = useSpeech();
-  
+  const unitId = parseInt(params?.id || "0");
+  const { user, isAuthenticated } = useAuth();
+  const { speak, isSpeaking, stop: stopSpeaking } = useSpeech();
+
+  // 状态
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
   const [showNotes, setShowNotes] = useState(true);
-  const [showTranslation, setShowTranslation] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [completedDialogues, setCompletedDialogues] = useState<Set<number>>(new Set());
 
@@ -453,74 +473,59 @@ export default function ImmersiveDetail() {
     { enabled: unitId > 0 }
   );
 
-  // 获取用户进度
-  const { data: userProgress } = trpc.immersive.getUserProgress.useQuery(
-    { unitId },
-    { enabled: isAuthenticated && unitId > 0 }
-  );
-
-  // 更新进度
+  // 更新学习进度
   const updateProgressMutation = trpc.immersive.updateProgress.useMutation();
-
-  // 完成单元
+  
+  // 完成学习单元
   const completeUnitMutation = trpc.immersive.completeUnit.useMutation();
 
-  // 生成对话变体
-  const generateVariantMutation = trpc.immersive.generateDialogueVariant.useMutation();
-
+  // 解析对话内容
   const dialogues = unit?.content?.dialogues || [];
-  const currentDialogue = dialogues[currentDialogueIndex];
   const totalDialogues = dialogues.length;
-  const progress = totalDialogues > 0 ? (completedDialogues.size / totalDialogues) * 100 : 0;
 
-  // 播放当前对话
-  const playCurrentDialogue = () => {
-    if (currentDialogue) {
-      speak(currentDialogue.text);
-    }
-  };
+  // 计算学习进度
+  const progress = totalDialogues > 0 
+    ? Math.round((completedDialogues.size / totalDialogues) * 100) 
+    : 0;
 
-  // 播放全部对话
+  // 播放所有对话
   const playAllDialogues = async () => {
     setIsPlaying(true);
-    for (let i = 0; i < dialogues.length; i++) {
+    for (let i = currentDialogueIndex; i < dialogues.length; i++) {
+      if (!isPlaying) break;
       setCurrentDialogueIndex(i);
-      await new Promise<void>((resolve) => {
-        speak(dialogues[i].text);
-        // 等待语音播放完成(估算时间)
-        const duration = dialogues[i].text.length * 150 + 500;
-        setTimeout(resolve, duration);
-      });
+      await speak(dialogues[i].text);
+      setCompletedDialogues(prev => new Set(Array.from(prev).concat(i)));
+      // 等待一小段时间再播放下一句
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
     setIsPlaying(false);
   };
 
   // 停止播放
   const stopPlaying = () => {
-    stop();
     setIsPlaying(false);
+    stopSpeaking();
+  };
+
+  // 下一句
+  const nextDialogue = () => {
+    if (currentDialogueIndex < totalDialogues - 1) {
+      setCurrentDialogueIndex(currentDialogueIndex + 1);
+    }
+  };
+
+  // 上一句
+  const prevDialogue = () => {
+    if (currentDialogueIndex > 0) {
+      setCurrentDialogueIndex(currentDialogueIndex - 1);
+    }
   };
 
   // 标记当前对话为已完成
   const markCurrentAsCompleted = () => {
-    setCompletedDialogues(prev => new Set(prev).add(currentDialogueIndex));
-    if (currentDialogueIndex < totalDialogues - 1) {
-      setCurrentDialogueIndex(prev => prev + 1);
-    }
-  };
-
-  // 下一个对话
-  const nextDialogue = () => {
-    if (currentDialogueIndex < totalDialogues - 1) {
-      setCurrentDialogueIndex(prev => prev + 1);
-    }
-  };
-
-  // 上一个对话
-  const prevDialogue = () => {
-    if (currentDialogueIndex > 0) {
-      setCurrentDialogueIndex(prev => prev - 1);
-    }
+    setCompletedDialogues(prev => new Set(Array.from(prev).concat(currentDialogueIndex)));
+    nextDialogue();
   };
 
   // 完成学习
@@ -592,54 +597,58 @@ export default function ImmersiveDetail() {
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Icon className="w-5 h-5 text-primary" />
                 </div>
-                <Badge variant="outline">
-                  {unitTypeNames[unit.unitType] || unit.unitType}
-                </Badge>
-                {unit.jlptLevel && (
-                  <Badge variant="secondary">{unit.jlptLevel}</Badge>
-                )}
-                <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                  Lv.{unit.difficulty}
-                </Badge>
+                <div>
+                  <h1 className="text-2xl font-bold japanese-text">
+                    <AutoRuby text={unit.titleJa} />
+                  </h1>
+                  <p className="text-muted-foreground">{unit.titleZh}</p>
+                </div>
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold japanese-text">
-                <AutoRuby text={unit.titleJa} />
-              </h1>
-              {unit.titleZh && (
-                <p className="text-lg text-muted-foreground mt-1">{unit.titleZh}</p>
-              )}
+              
+              <div className="flex flex-wrap gap-2 mt-3">
+                <Badge variant="outline">{unit.jlptLevel}</Badge>
+                <Badge variant="secondary">{unitTypeNames[unit.unitType] || unit.unitType}</Badge>
+                {unit.sourceType && unit.sourceType !== "original" && (
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    {unit.sourceType === "anime" && <Film className="w-3 h-3" />}
+                    {unit.sourceType === "jpop" && <Music className="w-3 h-3" />}
+                    {sourceTypeNames[unit.sourceType] || unit.sourceType}
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* 来源标注 */}
-        {unit.sourceType && unit.sourceType !== "original" && (
-          <Card className="mb-6 bg-muted/30">
-            <CardContent className="py-3">
-              <div className="flex items-center gap-2 text-sm">
-                <Film className="w-4 h-4 text-muted-foreground" />
-                <span className="text-muted-foreground">素材来源：</span>
-                <span className="font-medium">
-                  {sourceTypeNames[unit.sourceType] || unit.sourceType}
-                  {unit.sourceTitle && ` - ${unit.sourceTitle}`}
-                  {unit.sourceYear && ` (${unit.sourceYear})`}
-                  {unit.sourceEpisode && ` ${unit.sourceEpisode}`}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* 学习进度 */}
         <Card className="mb-6">
-          <CardContent className="py-4">
+          <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">学习进度</span>
               <span className="text-sm text-muted-foreground">
-                {completedDialogues.size} / {totalDialogues}
+                {completedDialogues.size} / {totalDialogues} 句
               </span>
             </div>
             <Progress value={progress} className="h-2" />
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-xs text-muted-foreground">
+                {progress}% 完成
+              </span>
+              {progress >= 100 && (
+                <Button 
+                  size="sm" 
+                  onClick={handleComplete}
+                  disabled={completeUnitMutation.isPending}
+                >
+                  {completeUnitMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    <Check className="w-4 h-4 mr-2" />
+                  )}
+                  完成学习
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -653,7 +662,7 @@ export default function ImmersiveDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ClickableJapaneseText text={unit.content.situationDescription} />
+              <JapaneseSentenceWithAnalysis text={unit.content.situationDescription} />
             </CardContent>
           </Card>
         )}
@@ -665,18 +674,6 @@ export default function ImmersiveDetail() {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">对话内容</CardTitle>
                 <div className="flex items-center gap-4">
-                  {/* 显示中文翻译开关 */}
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      id="show-translation"
-                      checked={showTranslation}
-                      onCheckedChange={setShowTranslation}
-                    />
-                    <Label htmlFor="show-translation" className="text-sm flex items-center gap-1 cursor-pointer">
-                      <Languages className="w-4 h-4" />
-                      中文
-                    </Label>
-                  </div>
                   {/* 显示注释开关 */}
                   <div className="flex items-center gap-2">
                     <Switch
@@ -692,7 +689,7 @@ export default function ImmersiveDetail() {
                 </div>
               </div>
               <CardDescription className="text-xs mt-2">
-                💡 提示：选中日语文本可查看词汇/语法详解
+                💡 提示：选中日语文本可查看词汇/语法详解，点击句末按钮查看翻译和知识点
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -732,15 +729,13 @@ export default function ImmersiveDetail() {
                             <Check className="w-4 h-4 text-green-500" />
                           )}
                         </div>
-                        {/* 日语原文（始终显示注音） */}
-                        <ClickableJapaneseText 
+                        {/* 日语原文（始终显示注音）+ 分析按钮 */}
+                        <JapaneseSentenceWithAnalysis 
                           text={dialogue.text}
                           reading={dialogue.reading}
-                          showTranslation={showTranslation}
-                          translation={dialogue.notes}
                         />
                         {/* 注释 */}
-                        {showNotes && dialogue.notes && !showTranslation && (
+                        {showNotes && dialogue.notes && (
                           <p className="text-sm text-muted-foreground mt-2 pl-3 border-l-2 border-muted">
                             {dialogue.notes}
                           </p>
@@ -823,15 +818,15 @@ export default function ImmersiveDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {unit.content.keyPoints.map((point, index) => (
                   <li key={index} className="flex items-start gap-2">
                     <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary flex-shrink-0 mt-0.5">
                       {index + 1}
                     </span>
-                    <span className="japanese-text">
-                      <AutoRuby text={point} />
-                    </span>
+                    <div className="flex-1">
+                      <JapaneseSentenceWithAnalysis text={point} />
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -851,14 +846,16 @@ export default function ImmersiveDetail() {
             <CardContent>
               <div className="flex flex-wrap gap-2">
                 {unit.targetExpressions.map((expr, index) => (
-                  <Badge
-                    key={index}
-                    variant="secondary"
-                    className="text-base py-1 px-3 japanese-text cursor-pointer hover:bg-primary/20"
-                    onClick={() => speak(expr)}
-                  >
-                    <AutoRuby text={expr} />
-                  </Badge>
+                  <div key={index} className="flex items-center gap-1">
+                    <Badge
+                      variant="secondary"
+                      className="text-base py-1 px-3 japanese-text cursor-pointer hover:bg-primary/20"
+                      onClick={() => speak(expr)}
+                    >
+                      <AutoRuby text={expr} />
+                    </Badge>
+                    <SentenceAnalysisPopover sentence={expr} buttonSize="sm" />
+                  </div>
                 ))}
               </div>
             </CardContent>
@@ -867,86 +864,24 @@ export default function ImmersiveDetail() {
 
         {/* 文化背景 */}
         {unit.content?.culturalNotes && (
-          <Card className="mb-6 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-950/20 dark:to-yellow-950/20">
+          <Card className="mb-6">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Lightbulb className="w-5 h-5 text-orange-500" />
+                <Sparkles className="w-5 h-5 text-amber-500" />
                 文化背景
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ClickableJapaneseText text={unit.content.culturalNotes} />
+              <JapaneseSentenceWithAnalysis text={unit.content.culturalNotes} />
             </CardContent>
           </Card>
         )}
 
-        {/* AI生成变体 */}
-        {isAuthenticated && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" />
-                AI对话变体
-              </CardTitle>
-              <CardDescription>
-                生成不同风格的对话变体，练习多种表达方式
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {["casual", "polite", "formal", "slang"].map((style) => (
-                  <Button
-                    key={style}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => generateVariantMutation.mutate({ unitId, style: style as any })}
-                    disabled={generateVariantMutation.isPending}
-                  >
-                    {generateVariantMutation.isPending && generateVariantMutation.variables?.style === style ? (
-                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                    ) : null}
-                    {style === "casual" && "随意风格"}
-                    {style === "polite" && "礼貌风格"}
-                    {style === "formal" && "正式风格"}
-                    {style === "slang" && "网络用语"}
-                  </Button>
-                ))}
-              </div>
-              
-              {generateVariantMutation.data?.dialogue && (
-                <div className="mt-4 p-4 rounded-lg bg-gradient-to-r from-primary/5 to-secondary/5 border">
-                  <div className="prose prose-sm dark:prose-invert max-w-none japanese-text whitespace-pre-wrap">
-                    {typeof generateVariantMutation.data.dialogue === 'string' ? generateVariantMutation.data.dialogue : ''}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* 完成按钮 */}
-        <div className="flex justify-center gap-4">
-          <Button asChild variant="outline" size="lg">
-            <Link href="/immersive">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              返回列表
-            </Link>
+        {/* 返回按钮 */}
+        <div className="flex justify-center mt-8">
+          <Button variant="outline" asChild>
+            <Link href="/immersive">返回列表</Link>
           </Button>
-          
-          {isAuthenticated && progress >= 100 && (
-            <Button
-              size="lg"
-              onClick={handleComplete}
-              disabled={completeUnitMutation.isPending}
-            >
-              {completeUnitMutation.isPending ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Check className="w-4 h-4 mr-2" />
-              )}
-              完成学习
-            </Button>
-          )}
         </div>
       </div>
     </Layout>

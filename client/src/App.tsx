@@ -17,6 +17,7 @@ import Review from "./pages/Review";
 import AIAssistant from "./pages/AIAssistant";
 import ImmersiveLearning from "./pages/ImmersiveLearning";
 import ImmersiveDetail from "./pages/ImmersiveDetail";
+import TestSwitch from "./pages/TestSwitch";
 
 function Router() {
   return (
@@ -34,6 +35,7 @@ function Router() {
       <Route path={"/immersive/:id"} component={ImmersiveDetail} />
       <Route path={"/review"} component={Review} />
       <Route path={"/ai-assistant"} component={AIAssistant} />
+      <Route path={"/test-switch"} component={TestSwitch} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
