@@ -1262,6 +1262,7 @@ ${recommendedUnits.slice(0, 10).map(u => `- ID:${u.id} 「${u.titleJa}」 难度
 4. 文化背景：相关的日本文化知识和社会习俗
 5. 学习建议：如何更好地掌握和使用这些表达
 
+重要：所有日语例句都必须提供对应的中文翻译，帮助学习者理解句子含义。
 请用中文回答，并在适当的地方包含日语原文和注音。
 返回JSON格式。`
             },
@@ -1296,9 +1297,10 @@ JLPT等级：${unit.jlptLevel}
                             scene: { type: "string" },
                             description: { type: "string" },
                             example: { type: "string" },
-                            exampleReading: { type: "string" }
+                            exampleReading: { type: "string" },
+                            exampleTranslation: { type: "string" }
                           },
-                          required: ["scene", "description", "example", "exampleReading"],
+                          required: ["scene", "description", "example", "exampleReading", "exampleTranslation"],
                           additionalProperties: false
                         }
                       },
@@ -1310,9 +1312,10 @@ JLPT等级：${unit.jlptLevel}
                             context: { type: "string" },
                             expression: { type: "string" },
                             expressionReading: { type: "string" },
+                            expressionTranslation: { type: "string" },
                             explanation: { type: "string" }
                           },
-                          required: ["context", "expression", "expressionReading", "explanation"],
+                          required: ["context", "expression", "expressionReading", "expressionTranslation", "explanation"],
                           additionalProperties: false
                         }
                       }

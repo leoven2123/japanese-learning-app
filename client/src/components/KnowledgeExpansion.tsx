@@ -32,11 +32,13 @@ interface KnowledgeContent {
       description: string;
       example: string;
       exampleReading: string;
+      exampleTranslation?: string;
     }>;
     variations: Array<{
       context: string;
       expression: string;
       expressionReading: string;
+      expressionTranslation?: string;
       explanation: string;
     }>;
   };
@@ -288,6 +290,11 @@ export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
                         {scene.exampleReading && (
                           <p className="text-xs text-muted-foreground mt-1">{scene.exampleReading}</p>
                         )}
+                        {scene.exampleTranslation && (
+                          <p className="text-sm text-primary/80 mt-1 pt-1 border-t border-dashed">
+                            🇨🇳 {scene.exampleTranslation}
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -309,6 +316,11 @@ export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
                       <p className="font-medium japanese-text mb-1">
                         <AutoRuby text={variation.expression} />
                       </p>
+                      {variation.expressionTranslation && (
+                        <p className="text-sm text-primary/80 mb-1">
+                          🇨🇳 {variation.expressionTranslation}
+                        </p>
+                      )}
                       <p className="text-sm text-muted-foreground">{variation.explanation}</p>
                     </div>
                   ))}
