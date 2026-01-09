@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { AutoRuby } from "@/components/Ruby";
+import { RichTextWithJapanese } from "@/components/RichTextWithJapanese";
 
 interface KnowledgeExpansionProps {
   unitId: number;
@@ -343,7 +344,7 @@ export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
             {content.languageOrigin.etymology && (
               <div>
                 <h4 className="font-medium mb-2 text-sm text-muted-foreground">词源解析</h4>
-                <p className="text-sm leading-relaxed">{content.languageOrigin.etymology}</p>
+                <RichTextWithJapanese text={content.languageOrigin.etymology} className="text-sm leading-relaxed" />
               </div>
             )}
             
@@ -352,7 +353,7 @@ export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
               <div>
                 <Separator className="my-4" />
                 <h4 className="font-medium mb-2 text-sm text-muted-foreground">历史发展</h4>
-                <p className="text-sm leading-relaxed">{content.languageOrigin.historicalDevelopment}</p>
+                <RichTextWithJapanese text={content.languageOrigin.historicalDevelopment} className="text-sm leading-relaxed" />
               </div>
             )}
             
@@ -367,7 +368,7 @@ export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
                       <div className="absolute -left-[21px] w-3 h-3 rounded-full bg-amber-500" />
                       <div className="pl-4">
                         <span className="font-medium text-amber-600 dark:text-amber-400">{milestone.period}</span>
-                        <p className="text-sm text-muted-foreground mt-1">{milestone.event}</p>
+                        <RichTextWithJapanese text={milestone.event} className="text-sm text-muted-foreground mt-1" />
                       </div>
                     </div>
                   ))}
@@ -387,7 +388,7 @@ export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
         >
           <div className="space-y-4">
             {content.ancientVsModern.introduction && (
-              <p className="text-sm leading-relaxed">{content.ancientVsModern.introduction}</p>
+              <RichTextWithJapanese text={content.ancientVsModern.introduction} className="text-sm leading-relaxed" />
             )}
             
             {content.ancientVsModern.comparisons?.length > 0 && (
@@ -400,16 +401,16 @@ export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
                     <div className="p-3 grid grid-cols-2 gap-3">
                       <div>
                         <span className="text-xs text-muted-foreground block mb-1">古代日语</span>
-                        <p className="text-sm japanese-text">{comparison.ancient}</p>
+                        <RichTextWithJapanese text={comparison.ancient} className="text-sm japanese-text" />
                       </div>
                       <div>
                         <span className="text-xs text-muted-foreground block mb-1">现代日语</span>
-                        <p className="text-sm japanese-text">{comparison.modern}</p>
+                        <RichTextWithJapanese text={comparison.modern} className="text-sm japanese-text" />
                       </div>
                     </div>
                     {comparison.explanation && (
                       <div className="px-3 pb-3">
-                        <p className="text-xs text-muted-foreground">{comparison.explanation}</p>
+                        <RichTextWithJapanese text={comparison.explanation} className="text-xs text-muted-foreground" />
                       </div>
                     )}
                   </div>
@@ -429,7 +430,7 @@ export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
         >
           <div className="space-y-4">
             {content.culturalBackground.content && (
-              <p className="text-sm leading-relaxed">{content.culturalBackground.content}</p>
+              <RichTextWithJapanese text={content.culturalBackground.content} className="text-sm leading-relaxed" />
             )}
             
             {content.culturalBackground.customs?.length > 0 && (
@@ -440,7 +441,7 @@ export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
                   {content.culturalBackground.customs.map((custom, index) => (
                     <div key={index} className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
                       <span className="font-medium text-emerald-700 dark:text-emerald-300">{custom.name}</span>
-                      <p className="text-sm text-muted-foreground mt-1">{custom.description}</p>
+                      <RichTextWithJapanese text={custom.description} className="text-sm text-muted-foreground mt-1" />
                     </div>
                   ))}
                 </div>
@@ -468,7 +469,7 @@ export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
                       <span className="w-5 h-5 rounded-full bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center text-xs font-medium text-rose-600 dark:text-rose-400 shrink-0 mt-0.5">
                         {index + 1}
                       </span>
-                      <span>{tip}</span>
+                      <RichTextWithJapanese text={tip} />
                     </li>
                   ))}
                 </ul>
@@ -485,11 +486,11 @@ export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
                     <div key={index} className="p-3 rounded-lg border">
                       <div className="flex items-start gap-2 mb-2">
                         <Badge variant="destructive" className="shrink-0">错误</Badge>
-                        <span className="text-sm">{item.mistake}</span>
+                        <RichTextWithJapanese text={item.mistake} className="text-sm" />
                       </div>
                       <div className="flex items-start gap-2">
                         <Badge variant="default" className="shrink-0 bg-green-600">正确</Badge>
-                        <span className="text-sm">{item.correction}</span>
+                        <RichTextWithJapanese text={item.correction} className="text-sm" />
                       </div>
                     </div>
                   ))}

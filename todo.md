@@ -379,3 +379,11 @@
 - [x] 修改知识扩展的prompt，要求AI生成例句时同时输出中文翻译
 - [x] 确保所有日语例句下方都有对应的中文翻译 - 添加exampleTranslation和expressionTranslation字段
 - [x] 测试知识扩展生成效果 - 8个测试通过
+
+
+## 知识扩展日语hover翻译 (已完成)
+- [x] 修改AI prompt，让日语部分用特殊标记包裹（{{JP}}...{{/JP}}）
+- [x] 创建解析函数parseJapaneseMarkers，识别并提取标记中的日语部分
+- [x] 创建RichTextWithJapanese组件，将日语部分套用TranslatableText组件
+- [x] 在KnowledgeExpansion组件中使用RichTextWithJapanese渲染知识扩展内容
+- [x] 测试hover翻译功能 - 11个解析器测试通过
