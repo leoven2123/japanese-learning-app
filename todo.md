@@ -436,3 +436,8 @@
 ## UI优化 - 翻译图标更换 (已完成)
 - [x] 将中文翻译前的国旗图标换成Languages图标
 - [x] 测试修复效果
+
+## Bug修复 - 中日文字体显示问题 (已完成)
+- [x] 添加中文字体（Noto Sans SC） - 已在index.html中配置
+- [x] 配置中文内容使用中文字体，日语内容使用日语字体 - body默认使用Noto Sans SC，.japanese-text使用Noto Sans JP
+- [x] 测试修复效果

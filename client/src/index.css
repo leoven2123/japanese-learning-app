@@ -134,8 +134,8 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* 日语学习应用：日文字体优先，确保汉字和假名视觉统一 */
-    font-family: "Noto Sans JP", "Noto Sans SC", "Hiragino Sans", "Yu Gothic", "PingFang SC", "Microsoft YaHei", sans-serif;
+    /* 日语学习应用：默认使用中文字体，日语内容通过.japanese-text类使用日语字体 */
+    font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
     /* 确保字体宽度一致 */
     font-feature-settings: "palt" 0;
     -webkit-font-smoothing: antialiased;
