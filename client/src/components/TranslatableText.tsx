@@ -183,7 +183,16 @@ export function TranslatableText({
                               "border border-emerald-200/50 dark:border-emerald-700/50"
                             )}
                           >
-                            <span className="font-medium text-sm japanese-text">{vocab.word}</span>
+                            <span className="font-medium text-sm japanese-text">
+                              {vocab.reading && vocab.reading !== vocab.word ? (
+                                <ruby>
+                                  {vocab.word}
+                                  <rt className="text-[0.6em] text-muted-foreground">{vocab.reading}</rt>
+                                </ruby>
+                              ) : (
+                                <AutoRuby text={vocab.word} />
+                              )}
+                            </span>
                             <span className="text-xs text-muted-foreground">{vocab.meaning}</span>
                             <Button
                               variant="ghost"
@@ -220,7 +229,9 @@ export function TranslatableText({
                             )}
                           >
                             <div className="flex items-center justify-between mb-1">
-                              <span className="font-mono text-sm font-medium">{gram.pattern}</span>
+                              <span className="font-mono text-sm font-medium">
+                                <AutoRuby text={gram.pattern} />
+                              </span>
                               <Badge variant="secondary" className="text-xs">{gram.level}</Badge>
                             </div>
                             <p className="text-xs text-muted-foreground">{gram.meaning}</p>
