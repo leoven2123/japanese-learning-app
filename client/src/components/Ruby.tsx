@@ -165,6 +165,7 @@ function isAlphanumeric(char: string): boolean {
  * 改进的汉字-假名对齐算法
  * 核心思路：只有平假名和片假名不加注音，其他内容（汉字、英文、数字等）都加注音
  * 每个需要注音的部分单独显示对应的注音
+ * 标点符号作为分割点，确保注音不会跨越标点
  */
 function buildRubyText(original: string, reading: string): string {
   // 如果原文没有汉字且没有英文数字，直接返回
@@ -179,7 +180,7 @@ function buildRubyText(original: string, reading: string): string {
     type: PartType;
   }
   
-  // 第一步：基础分割
+  // 第一步：基础分割 - 标点符号始终单独分割
   const rawParts: Part[] = [];
   let currentText = '';
   let currentType: PartType | null = null;
@@ -198,7 +199,17 @@ function buildRubyText(original: string, reading: string): string {
       charType = 'punct';
     }
     
-    if (currentType === null) {
+    // 标点符号始终单独分割，不与其他字符合并
+    if (charType === 'punct') {
+      // 先保存之前的内容
+      if (currentText && currentType) {
+        rawParts.push({ text: currentText, type: currentType });
+      }
+      // 标点单独作为一个部分
+      rawParts.push({ text: char, type: 'punct' });
+      currentText = '';
+      currentType = null;
+    } else if (currentType === null) {
       currentText = char;
       currentType = charType;
     } else if (charType === currentType) {
@@ -213,12 +224,13 @@ function buildRubyText(original: string, reading: string): string {
     rawParts.push({ text: currentText, type: currentType });
   }
   
-  // 第二步：合并被标点分割的英数字块（如 J-POP → 合并为一个块）
+  // 第二步：合并被连字符分割的英数字块（如 J-POP → 合并为一个块）
+  // 注意：只处理连字符，不处理顿号、句号等
   const parts: Part[] = [];
   for (let i = 0; i < rawParts.length; i++) {
     const part = rawParts[i];
     
-    // 检查是否是 "alphanumeric + punct + alphanumeric" 模式
+    // 检查是否是 "alphanumeric + hyphen + alphanumeric" 模式
     if (part.type === 'alphanumeric' && 
         i + 2 < rawParts.length &&
         rawParts[i + 1].type === 'punct' &&

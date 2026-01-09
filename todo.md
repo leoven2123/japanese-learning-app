@@ -441,3 +441,7 @@
 - [x] 添加中文字体（Noto Sans SC） - 已在index.html中配置
 - [x] 配置中文内容使用中文字体，日语内容使用日语字体 - body默认使用Noto Sans SC，.japanese-text使用Noto Sans JP
 - [x] 测试修复效果
+
+## Bug修复 - 标点符号导致注音错位 (已完成)
+- [x] 修复分词器在遇到标点符号时的分割逻辑 - 标点符号始终单独分割
+- [x] 测试修复效果
