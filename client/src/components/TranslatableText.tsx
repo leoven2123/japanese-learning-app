@@ -39,9 +39,9 @@ interface GrammarItem {
 
 /**
  * 全局翻译插件组件
- * - hover日语句子时，在句末显示悬浮翻译按钮
- * - 点击按钮显示翻译和知识点
- * - hover翻译时显示隐藏按钮，点击隐藏翻译
+ * - 日语句子显示虚线下划线，表示可点击翻译
+ * - 点击句子展开翻译弹窗
+ * - 再次点击句子或点击关闭按钮收起弹窗
  */
 export function TranslatableText({
   text,
@@ -51,16 +51,14 @@ export function TranslatableText({
   showRuby = true,
   children,
 }: TranslatableTextProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
-  const [isTranslationHovered, setIsTranslationHovered] = useState(false);
   const { speak, isSpeaking } = useSpeech();
 
   // AI分析句子mutation
   const analyzeSentenceMutation = trpc.ai.analyzeSentence.useMutation();
 
-  // 处理翻译按钮点击
-  const handleTranslateClick = (e: React.MouseEvent) => {
+  // 处理点击日语文本
+  const handleTextClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (showTranslation) {
       // 如果已经显示翻译，则隐藏
@@ -75,8 +73,8 @@ export function TranslatableText({
     }
   };
 
-  // 处理隐藏翻译按钮点击
-  const handleHideClick = (e: React.MouseEvent) => {
+  // 处理关闭按钮点击
+  const handleCloseClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowTranslation(false);
   };
@@ -88,50 +86,26 @@ export function TranslatableText({
   } | undefined;
 
   return (
-    <span
-      className={cn("inline group", className)}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* 原文内容 */}
-      <span className="japanese-text">
+    <span className={cn("inline", className)}>
+      {/* 可点击的日语文本 - 虚线下划线 */}
+      <span
+        onClick={handleTextClick}
+        className={cn(
+          "japanese-text cursor-pointer",
+          "border-b border-dashed border-blue-400/60 dark:border-blue-500/60",
+          "hover:border-blue-500 dark:hover:border-blue-400",
+          "hover:bg-blue-50/50 dark:hover:bg-blue-900/20",
+          "transition-colors duration-200",
+          showTranslation && "bg-blue-50/80 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400"
+        )}
+        title="点击查看翻译和知识点"
+      >
         {children || (showRuby ? <AutoRuby text={text} /> : text)}
       </span>
-      {/* 悬浮翻译按钮 - inline-block紧跟文字后面 */}
-      <button
-        onClick={handleTranslateClick}
-        className={cn(
-          "inline-flex items-center justify-center align-text-bottom ml-1",
-          "w-5 h-5 rounded-full",
-          "bg-white dark:bg-gray-800",
-          "text-blue-600 dark:text-blue-400",
-          "border border-blue-300 dark:border-blue-600",
-          "shadow-md hover:shadow-lg",
-          "hover:bg-blue-50 dark:hover:bg-blue-900/30",
-          "transition-all duration-300 ease-out",
-          "opacity-0 scale-75",
-          (isHovered || showTranslation) && "opacity-100 scale-100",
-          showTranslation && "bg-blue-100 dark:bg-blue-900/50 border-blue-400 dark:border-blue-500",
-          "focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-        )}
-        title={showTranslation ? "隐藏翻译" : "显示翻译和知识点"}
-      >
-        {analyzeSentenceMutation.isPending ? (
-          <Loader2 className="w-3 h-3 animate-spin" />
-        ) : showTranslation ? (
-          <X className="w-3 h-3" />
-        ) : (
-          <Languages className="w-3 h-3" />
-        )}
-      </button>
 
-      {/* 翻译和知识点内容 */}
+      {/* 翻译和知识点弹窗 */}
       {showTranslation && (
-        <div
-          className="mt-3 animate-in fade-in slide-in-from-top-2 duration-300"
-          onMouseEnter={() => setIsTranslationHovered(true)}
-          onMouseLeave={() => setIsTranslationHovered(false)}
-        >
+        <div className="block mt-3 animate-in fade-in slide-in-from-top-2 duration-300">
           <div className={cn(
             "relative rounded-xl overflow-hidden",
             "bg-gradient-to-br from-slate-50 to-blue-50/50",
@@ -139,6 +113,23 @@ export function TranslatableText({
             "border border-slate-200/80 dark:border-slate-700/80",
             "shadow-lg shadow-blue-500/5"
           )}>
+            {/* 关闭按钮 - 始终显示 */}
+            <button
+              onClick={handleCloseClick}
+              className={cn(
+                "absolute top-2 right-2 z-10",
+                "w-6 h-6 rounded-full",
+                "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700",
+                "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200",
+                "flex items-center justify-center",
+                "transition-all duration-200",
+                "focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+              )}
+              title="关闭"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+
             {/* 加载状态 */}
             {analyzeSentenceMutation.isPending && (
               <div className="p-6 flex flex-col items-center justify-center">
@@ -194,7 +185,10 @@ export function TranslatableText({
                               variant="ghost"
                               size="icon"
                               className="h-5 w-5 -mr-1"
-                              onClick={() => speak(vocab.word)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                speak(vocab.word);
+                              }}
                             >
                               <Volume2 className="w-3 h-3" />
                             </Button>
@@ -237,25 +231,6 @@ export function TranslatableText({
                     </div>
                   </>
                 )}
-
-                {/* 隐藏按钮 */}
-                <button
-                  onClick={handleHideClick}
-                  className={cn(
-                    "absolute top-2 right-2",
-                    "w-6 h-6 rounded-full",
-                    "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700",
-                    "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200",
-                    "flex items-center justify-center",
-                    "transition-all duration-200",
-                    "opacity-0 scale-90",
-                    isTranslationHovered && "opacity-100 scale-100",
-                    "focus:outline-none"
-                  )}
-                  title="隐藏翻译"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
               </div>
             )}
 
@@ -266,7 +241,10 @@ export function TranslatableText({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => analyzeSentenceMutation.mutate({ sentence: text })}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    analyzeSentenceMutation.mutate({ sentence: text });
+                  }}
                 >
                   重试
                 </Button>
