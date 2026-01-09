@@ -33,7 +33,7 @@ function parseJapaneseMarkers(text: string): TextSegment[] {
       }
     }
     
-    // 添加日语内容
+    // 添加日语内容（移除标记，只保留内容）
     const japaneseContent = match[1].trim();
     if (japaneseContent) {
       segments.push({ type: 'japanese', content: japaneseContent });
@@ -50,6 +50,11 @@ function parseJapaneseMarkers(text: string): TextSegment[] {
     }
   }
   
+  // 如果没有找到任何标记，返回原文作为普通文本
+  if (segments.length === 0 && text) {
+    segments.push({ type: 'text', content: text });
+  }
+  
   return segments;
 }
 
@@ -60,9 +65,10 @@ function parseJapaneseMarkers(text: string): TextSegment[] {
  * <RichTextWithJapanese text="这是「{{JP}}はじめまして{{/JP}}」的用法" />
  * 
  * 日语部分会被包裹在TranslatableText组件中，支持hover翻译
+ * {{JP}}和{{/JP}}标记不会显示在页面上，只用于识别日语部分
  */
 export function RichTextWithJapanese({ text, className }: RichTextWithJapaneseProps) {
-  const segments = useMemo(() => parseJapaneseMarkers(text), [text]);
+  const segments = useMemo(() => parseJapaneseMarkers(text || ''), [text]);
   
   // 如果没有日语标记，直接返回原文本
   if (segments.length === 1 && segments[0].type === 'text') {
@@ -73,6 +79,7 @@ export function RichTextWithJapanese({ text, className }: RichTextWithJapanesePr
     <span className={className}>
       {segments.map((segment, index) => {
         if (segment.type === 'japanese') {
+          // 日语部分使用TranslatableText组件，支持hover翻译
           return (
             <TranslatableText
               key={index}
@@ -82,6 +89,7 @@ export function RichTextWithJapanese({ text, className }: RichTextWithJapanesePr
             />
           );
         }
+        // 普通文本直接显示
         return <span key={index}>{segment.content}</span>;
       })}
     </span>

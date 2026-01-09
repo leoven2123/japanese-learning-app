@@ -285,9 +285,7 @@ export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
                       </div>
                       <p className="text-sm text-muted-foreground mb-2">{scene.description}</p>
                       <div className="p-2 rounded bg-background border">
-                        <p className="text-sm japanese-text">
-                          <AutoRuby text={scene.example} />
-                        </p>
+                        <RichTextWithJapanese text={scene.example} className="text-sm japanese-text" />
                         {scene.exampleReading && (
                           <p className="text-xs text-muted-foreground mt-1">{scene.exampleReading}</p>
                         )}
@@ -314,9 +312,7 @@ export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
                       <div className="flex items-center gap-2 mb-2">
                         <Badge variant="secondary">{variation.context}</Badge>
                       </div>
-                      <p className="font-medium japanese-text mb-1">
-                        <AutoRuby text={variation.expression} />
-                      </p>
+                      <RichTextWithJapanese text={variation.expression} className="font-medium japanese-text mb-1" />
                       {variation.expressionTranslation && (
                         <p className="text-sm text-primary/80 mb-1">
                           🇨🇳 {variation.expressionTranslation}
