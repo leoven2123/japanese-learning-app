@@ -179,7 +179,8 @@ function buildRubyText(original: string, reading: string): string {
     type: PartType;
   }
   
-  const parts: Part[] = [];
+  // 第一步：基础分割
+  const rawParts: Part[] = [];
   let currentText = '';
   let currentType: PartType | null = null;
   
@@ -203,13 +204,35 @@ function buildRubyText(original: string, reading: string): string {
     } else if (charType === currentType) {
       currentText += char;
     } else {
-      parts.push({ text: currentText, type: currentType });
+      rawParts.push({ text: currentText, type: currentType });
       currentText = char;
       currentType = charType;
     }
   }
   if (currentText && currentType) {
-    parts.push({ text: currentText, type: currentType });
+    rawParts.push({ text: currentText, type: currentType });
+  }
+  
+  // 第二步：合并被标点分割的英数字块（如 J-POP → 合并为一个块）
+  const parts: Part[] = [];
+  for (let i = 0; i < rawParts.length; i++) {
+    const part = rawParts[i];
+    
+    // 检查是否是 "alphanumeric + punct + alphanumeric" 模式
+    if (part.type === 'alphanumeric' && 
+        i + 2 < rawParts.length &&
+        rawParts[i + 1].type === 'punct' &&
+        /^[-ー]$/.test(rawParts[i + 1].text) && // 只处理连字符
+        rawParts[i + 2].type === 'alphanumeric') {
+      // 合并三个部分
+      parts.push({
+        text: part.text + rawParts[i + 1].text + rawParts[i + 2].text,
+        type: 'alphanumeric'
+      });
+      i += 2; // 跳过已处理的部分
+    } else {
+      parts.push(part);
+    }
   }
 
   // 构建结果
