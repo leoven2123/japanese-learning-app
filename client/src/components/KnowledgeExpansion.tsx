@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -143,12 +143,22 @@ function CollapsibleSection({
 
 export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [hasCheckedCache, setHasCheckedCache] = useState(false);
   
-  // 获取已缓存的知识扩展内容
+  // 始终查询缓存内容
   const { data: cachedContent, isLoading: isLoadingCache, refetch } = trpc.immersive.getKnowledgeExpansion.useQuery(
-    { unitId },
-    { enabled: isExpanded }
+    { unitId }
   );
+  
+  // 当缓存加载完成后，如果有内容则自动展开
+  useEffect(() => {
+    if (!isLoadingCache && !hasCheckedCache) {
+      if (cachedContent) {
+        setIsExpanded(true);
+      }
+      setHasCheckedCache(true);
+    }
+  }, [isLoadingCache, cachedContent, hasCheckedCache]);
   
   // 生成知识扩展内容
   const generateMutation = trpc.immersive.generateKnowledgeExpansion.useMutation({
@@ -283,7 +293,7 @@ export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
                       <div className="flex items-start gap-2 mb-2">
                         <Badge variant="outline" className="shrink-0">{scene.scene}</Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">{scene.description}</p>
+                      <RichTextWithJapanese text={scene.description} className="text-sm text-muted-foreground mb-2" />
                       <div className="p-2 rounded bg-background border">
                         <RichTextWithJapanese text={scene.example} className="text-sm japanese-text" />
                         {scene.exampleReading && (
@@ -318,7 +328,7 @@ export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
                           🇨🇳 {variation.expressionTranslation}
                         </p>
                       )}
-                      <p className="text-sm text-muted-foreground">{variation.explanation}</p>
+                      <RichTextWithJapanese text={variation.explanation} className="text-sm text-muted-foreground" />
                     </div>
                   ))}
                 </div>
@@ -523,7 +533,7 @@ export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
                     <ExternalLink className="w-3 h-3 text-muted-foreground" />
                   </div>
                   {ref.description && (
-                    <p className="text-xs text-muted-foreground mt-1">{ref.description}</p>
+                    <RichTextWithJapanese text={ref.description} className="text-xs text-muted-foreground mt-1" />
                   )}
                 </a>
               ))}

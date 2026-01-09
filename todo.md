@@ -393,3 +393,9 @@
 - [x] 修复{{JP}}和{{/JP}}标记直接显示在页面上的问题 - 重写RichTextWithJapanese组件
 - [x] 确保日语部分使用与场景描述相同的TranslatableText样式 - 场景应用的example和expression也使用RichTextWithJapanese
 - [x] 测试修复效果 - 19个测试通过
+
+
+## Bug修复 - 知识扩展显示问题 (已完成)
+- [x] 修复场景变体explanation中{{JP}}标签未被处理的问题 - 使用RichTextWithJapanese组件
+- [x] 修复已有知识扩展内容时默认展开显示 - 使用useEffect检查缓存并自动展开
+- [x] 测试修复效果 - 19个测试通过
