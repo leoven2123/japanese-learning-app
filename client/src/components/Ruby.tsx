@@ -164,6 +164,7 @@ function isAlphanumeric(char: string): boolean {
 /**
  * 改进的汉字-假名对齐算法
  * 核心思路：只有平假名和片假名不加注音，其他内容（汉字、英文、数字等）都加注音
+ * 每个需要注音的部分单独显示对应的注音
  */
 function buildRubyText(original: string, reading: string): string {
   // 如果原文没有汉字且没有英文数字，直接返回
@@ -236,26 +237,90 @@ function buildRubyText(original: string, reading: string): string {
       }
       result += part.text;
     } else {
-      // 汉字或英数字部分：找到下一个假名部分作为边界
-      let nextKanaPart: Part | null = null;
-      for (let j = i + 1; j < parts.length; j++) {
-        if (parts[j].type === 'hiragana' || parts[j].type === 'katakana') {
-          nextKanaPart = parts[j];
-          break;
-        }
-      }
+      // 汉字或英数字部分：找到紧接的下一个部分作为边界
+      // 关键改进：只查找紧接的下一个部分，而不是跳过所有非假名部分
+      const nextPart = parts[i + 1];
       
       let partReading = '';
       
-      if (nextKanaPart) {
-        // 在reading中查找下一个假名部分的位置
-        const nextPos = findKanaInReading(reading, nextKanaPart.text, readingPos);
+      if (nextPart && (nextPart.type === 'hiragana' || nextPart.type === 'katakana')) {
+        // 下一个部分是假名，在reading中查找这个假名的位置
+        const nextPos = findKanaInReading(reading, nextPart.text, readingPos);
         if (nextPos !== -1 && nextPos > readingPos) {
           partReading = reading.substring(readingPos, nextPos);
           readingPos = nextPos;
         }
+      } else if (nextPart && nextPart.type === 'punct') {
+        // 下一个部分是标点，继续查找下一个假名部分
+        let nextKanaPart: Part | null = null;
+        for (let j = i + 1; j < parts.length; j++) {
+          if (parts[j].type === 'hiragana' || parts[j].type === 'katakana') {
+            nextKanaPart = parts[j];
+            break;
+          }
+          // 如果遇到另一个需要注音的部分（汉字或英数字），停止查找
+          if (parts[j].type === 'kanji' || parts[j].type === 'alphanumeric') {
+            break;
+          }
+        }
+        
+        if (nextKanaPart) {
+          const nextPos = findKanaInReading(reading, nextKanaPart.text, readingPos);
+          if (nextPos !== -1 && nextPos > readingPos) {
+            partReading = reading.substring(readingPos, nextPos);
+            readingPos = nextPos;
+          }
+        } else {
+          // 没有后续假名，取剩余的reading
+          partReading = reading.substring(readingPos);
+          readingPos = reading.length;
+        }
+      } else if (nextPart && (nextPart.type === 'kanji' || nextPart.type === 'alphanumeric')) {
+        // 下一个部分也是需要注音的部分，需要找到分割点
+        // 查找后面最近的假名部分作为参考
+        let nextKanaPart: Part | null = null;
+        for (let j = i + 1; j < parts.length; j++) {
+          if (parts[j].type === 'hiragana' || parts[j].type === 'katakana') {
+            nextKanaPart = parts[j];
+            break;
+          }
+        }
+        
+        if (nextKanaPart) {
+          // 有后续假名，需要估算当前部分的读音长度
+          // 简化处理：根据字符数估算读音长度
+          const nextPos = findKanaInReading(reading, nextKanaPart.text, readingPos);
+          if (nextPos !== -1) {
+            // 计算从当前位置到下一个假名之间的读音
+            const totalReading = reading.substring(readingPos, nextPos);
+            // 计算需要注音的部分总数
+            let needRubyCount = 0;
+            let needRubyChars = 0;
+            for (let j = i; j < parts.length; j++) {
+              if (parts[j].type === 'hiragana' || parts[j].type === 'katakana') {
+                break;
+              }
+              if (parts[j].type === 'kanji' || parts[j].type === 'alphanumeric') {
+                needRubyCount++;
+                needRubyChars += parts[j].text.length;
+              }
+            }
+            
+            if (needRubyCount > 0 && totalReading.length > 0) {
+              // 按字符数比例分配读音
+              const charsPerReading = totalReading.length / needRubyChars;
+              const myReadingLength = Math.round(part.text.length * charsPerReading);
+              partReading = totalReading.substring(0, myReadingLength);
+              readingPos += myReadingLength;
+            }
+          }
+        } else {
+          // 没有后续假名，取剩余的reading
+          partReading = reading.substring(readingPos);
+          readingPos = reading.length;
+        }
       } else {
-        // 没有后续假名，取剩余的reading
+        // 没有下一个部分，取剩余的reading
         partReading = reading.substring(readingPos);
         readingPos = reading.length;
       }
