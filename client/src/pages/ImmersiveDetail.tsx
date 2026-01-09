@@ -34,6 +34,7 @@ import { AutoRuby } from "@/components/Ruby";
 import { StaticJapaneseText, JapaneseText } from "@/components/JapaneseText";
 import { useSpeech } from "@/hooks/useSpeech";
 import { SentenceAnalysisPopover } from "@/components/SentenceAnalysisPopover";
+import { TranslatableText } from "@/components/TranslatableText";
 
 // 场景类型图标映射
 const unitTypeIcons: Record<string, typeof BookOpen> = {
@@ -433,25 +434,18 @@ function ClickableJapaneseText({
   );
 }
 
-// 带分析按钮的日语句子组件
+// 带分析按钮的日语句子组件 - 使用TranslatableText实现hover显示翻译按钮
 function JapaneseSentenceWithAnalysis({ 
   text, 
   reading,
-  showAnalysisButton = true
 }: { 
   text: string; 
   reading?: string;
-  showAnalysisButton?: boolean;
 }) {
   return (
-    <div className="flex items-start gap-2">
-      <div className="flex-1">
-        <ClickableJapaneseText text={text} reading={reading} />
-      </div>
-      {showAnalysisButton && (
-        <SentenceAnalysisPopover sentence={text} />
-      )}
-    </div>
+    <TranslatableText text={text}>
+      <ClickableJapaneseText text={text} reading={reading} />
+    </TranslatableText>
   );
 }
 
@@ -734,11 +728,11 @@ export default function ImmersiveDetail() {
                           text={dialogue.text}
                           reading={dialogue.reading}
                         />
-                        {/* 注释 */}
+                        {/* 注释 - 也支持翻译按钮 */}
                         {showNotes && dialogue.notes && (
-                          <p className="text-sm text-muted-foreground mt-2 pl-3 border-l-2 border-muted">
-                            {dialogue.notes}
-                          </p>
+                          <div className="text-sm text-muted-foreground mt-2 pl-3 border-l-2 border-muted">
+                            <TranslatableText text={dialogue.notes} />
+                          </div>
                         )}
                       </div>
                       
