@@ -144,9 +144,21 @@ export function AutoRuby({ text, className = "" }: AutoRubyProps) {
   return <span className={`auto-ruby ${className}`}>{rubyText}</span>;
 }
 
+// 检查字符是否是平假名
+function isHiragana(char: string): boolean {
+  const code = char.charCodeAt(0);
+  return code >= 0x3040 && code <= 0x309f;
+}
+
+// 检查字符是否是片假名
+function isKatakana(char: string): boolean {
+  const code = char.charCodeAt(0);
+  return code >= 0x30a0 && code <= 0x30ff;
+}
+
 /**
  * 改进的汉字-假名对齐算法
- * 核心思路：只对比假名部分，忽略标点符号
+ * 核心思路：只对汉字添加注音，平假名和片假名都不加注音
  */
 function buildRubyText(original: string, reading: string): string {
   // 如果原文没有汉字，直接返回
@@ -154,8 +166,8 @@ function buildRubyText(original: string, reading: string): string {
     return original;
   }
 
-  // 将原文分割为三类：汉字块、假名块、标点块
-  type PartType = 'kanji' | 'kana' | 'punct';
+  // 将原文分割为四类：汉字块、平假名块、片假名块、标点块
+  type PartType = 'kanji' | 'hiragana' | 'katakana' | 'punct';
   interface Part {
     text: string;
     type: PartType;
@@ -169,8 +181,10 @@ function buildRubyText(original: string, reading: string): string {
     let charType: PartType;
     if (isKanjiChar(char)) {
       charType = 'kanji';
-    } else if (isKana(char)) {
-      charType = 'kana';
+    } else if (isHiragana(char)) {
+      charType = 'hiragana';
+    } else if (isKatakana(char)) {
+      charType = 'katakana';
     } else {
       charType = 'punct';
     }
@@ -200,8 +214,15 @@ function buildRubyText(original: string, reading: string): string {
     if (part.type === 'punct') {
       // 标点符号直接添加，不影响reading位置
       result += part.text;
-    } else if (part.type === 'kana') {
-      // 假名部分：在reading中找到对应位置并跳过
+    } else if (part.type === 'hiragana') {
+      // 平假名部分：在reading中找到对应位置并跳过，不加注音
+      const kanaInReading = findKanaInReading(reading, part.text, readingPos);
+      if (kanaInReading !== -1) {
+        readingPos = kanaInReading + part.text.length;
+      }
+      result += part.text;
+    } else if (part.type === 'katakana') {
+      // 片假名部分：在reading中找到对应位置并跳过，不加注音
       const kanaInReading = findKanaInReading(reading, part.text, readingPos);
       if (kanaInReading !== -1) {
         readingPos = kanaInReading + part.text.length;
@@ -211,7 +232,7 @@ function buildRubyText(original: string, reading: string): string {
       // 汉字部分：找到下一个假名部分作为边界
       let nextKanaPart: Part | null = null;
       for (let j = i + 1; j < parts.length; j++) {
-        if (parts[j].type === 'kana') {
+        if (parts[j].type === 'hiragana' || parts[j].type === 'katakana') {
           nextKanaPart = parts[j];
           break;
         }
