@@ -470,3 +470,9 @@
 - [x] 修改后端API，让LLM返回的reading保留标点符号
 - [x] 修改前竭buildRubyText，按标点分词后数组一一对应处理
 - [x] 测试修复效果
+
+## Bug修复 - StaticJapaneseText组件振假名显示 (已完成)
+- [x] 更新JapaneseText.tsx中的alignKanjiWithReading函数，使用按标点分词的新算法
+- [x] 创建脚本重新生成数据库中所有对话的reading数据（包含标点符号）
+- [x] 运行脚本更新数据库
+- [x] 测试修复效果
