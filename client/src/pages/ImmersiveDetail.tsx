@@ -275,9 +275,9 @@ function ClickableJapaneseText({
 
   return (
     <div className="relative">
-      <div
+      <span
         className={cn(
-          "japanese-text text-lg leading-relaxed cursor-text select-text",
+          "japanese-text text-lg leading-relaxed cursor-text select-text inline",
           "border-b border-dashed border-blue-400/60 dark:border-blue-500/60",
           "hover:border-blue-500 dark:hover:border-blue-400",
           "hover:bg-blue-50/50 dark:hover:bg-blue-900/20",
@@ -292,7 +292,7 @@ function ClickableJapaneseText({
         ) : (
           <JapaneseText>{text}</JapaneseText>
         )}
-      </div>
+      </span>
 
       {/* 弹出词汇信息 */}
       {showPopover && selectedText && (

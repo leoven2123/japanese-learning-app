@@ -14,7 +14,8 @@ import {
   ExternalLink,
   Loader2,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  Languages
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { AutoRuby } from "@/components/Ruby";
@@ -300,8 +301,9 @@ export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
                           <p className="text-xs text-muted-foreground mt-1">{scene.exampleReading}</p>
                         )}
                         {scene.exampleTranslation && (
-                          <p className="text-sm text-primary/80 mt-1 pt-1 border-t border-dashed">
-                            🇨🇳 {scene.exampleTranslation}
+                          <p className="text-sm text-primary/80 mt-1 pt-1 border-t border-dashed flex items-start gap-1.5">
+                            <Languages className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 opacity-70" />
+                            <span>{scene.exampleTranslation}</span>
                           </p>
                         )}
                       </div>
@@ -324,8 +326,9 @@ export function KnowledgeExpansion({ unitId }: KnowledgeExpansionProps) {
                       </div>
                       <RichTextWithJapanese text={variation.expression} className="font-medium japanese-text mb-1" />
                       {variation.expressionTranslation && (
-                        <p className="text-sm text-primary/80 mb-1">
-                          🇨🇳 {variation.expressionTranslation}
+                        <p className="text-sm text-primary/80 mb-1 flex items-start gap-1.5">
+                          <Languages className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 opacity-70" />
+                          <span>{variation.expressionTranslation}</span>
                         </p>
                       )}
                       <RichTextWithJapanese text={variation.explanation} className="text-sm text-muted-foreground" />
