@@ -12,10 +12,9 @@ import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, json, de
  */
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
-  openId: varchar("openId", { length: 64 }).unique(), // 改为可选，支持OAuth和密码登录
+  openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
-  email: varchar("email", { length: 320 }).unique(), // 添加unique约束
-  password: varchar("password", { length: 255 }), // 新增密码字段，存储bcrypt加密后的密码
+  email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

@@ -57,13 +57,6 @@
       "when": 1767941713873,
       "tag": "0007_last_namora",
       "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "5",
-      "when": 1768187726528,
-      "tag": "0008_unusual_manta",
-      "breakpoints": true
     }
   ]
 }

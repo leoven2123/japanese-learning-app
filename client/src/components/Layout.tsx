@@ -1,5 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-
+import { getLoginUrl } from "@/const";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { 
@@ -106,10 +106,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 asChild
                 className="hidden md:flex"
               >
-                <Link href="/login">
+                <a href={getLoginUrl()}>
                   <LogIn className="w-4 h-4 mr-2" />
                   登录
-                </Link>
+                </a>
               </Button>
             )}
 
@@ -174,10 +174,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     className="w-full"
                     asChild
                   >
-                    <Link href="/login">
+                    <a href={getLoginUrl()}>
                       <LogIn className="w-4 h-4 mr-2" />
                       登录
-                    </Link>
+                    </a>
                   </Button>
                 )}
               </div>
