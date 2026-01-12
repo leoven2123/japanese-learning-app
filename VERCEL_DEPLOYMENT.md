@@ -5,25 +5,33 @@
 ## 前提条件
 
 1. 一个 [Vercel](https://vercel.com) 账号
-2. 一个 MySQL 数据库（推荐以下服务之一）
-3. Manus Forge API Key（用于AI功能）
+2. 一个 PostgreSQL 数据库（推荐以下服务之一）
+3. Anthropic Claude API Key（用于AI功能）
 
 ## 步骤 1: 准备数据库
 
 ### 推荐的数据库服务
 
-#### 选项 A: PlanetScale (推荐)
-1. 访问 [PlanetScale](https://planetscale.com/)
+#### 选项 A: Neon (强烈推荐)
+1. 访问 [Neon](https://neon.tech/)
 2. 创建免费账号并新建数据库
-3. 获取连接字符串（格式：`mysql://user:password@host/database?sslaccept=strict`）
+3. 获取连接字符串（格式：`postgresql://user:password@host/database?sslmode=require`）
+4. Neon提供免费的serverless PostgreSQL，非常适合Vercel部署
 
-#### 选项 B: Railway
+#### 选项 B: Vercel Postgres
+1. 在Vercel Dashboard中添加Postgres存储
+2. 自动集成到你的项目
+3. 获取连接字符串
+
+#### 选项 C: Railway
 1. 访问 [Railway](https://railway.app/)
-2. 创建新项目并添加 MySQL 数据库
+2. 创建新项目并添加 PostgreSQL 数据库
 3. 复制连接字符串
 
-#### 选项 C: Vercel Postgres (需转换)
-注意：本应用使用 MySQL，如果使用 Vercel Postgres 需要修改 Drizzle 配置。
+#### 选项 D: Supabase
+1. 访问 [Supabase](https://supabase.com/)
+2. 创建项目并获取数据库连接字符串
+3. 免费套餐包含500MB数据库
 
 ### 初始化数据库
 
@@ -44,10 +52,11 @@ pnpm run db:push
 
 ## 步骤 2: 获取 API Keys
 
-### Manus Forge API Key
-1. 访问 [Manus Forge](https://forge.manus.im)
-2. 注册并获取 API Key
-3. 记录下你的 API Key
+### Anthropic Claude API Key
+1. 访问 [Anthropic Console](https://console.anthropic.com/)
+2. 注册并创建API Key
+3. 记录下你的 API Key（格式：`sk-ant-api03-...`）
+4. 确保账户有足够的余额（Claude API按使用量付费）
 
 ### JWT Secret
 生成一个随机的强密码用于 JWT 加密：
@@ -120,14 +129,14 @@ vercel --prod
 
 | 变量名 | 必需 | 说明 |
 |--------|------|------|
-| `DATABASE_URL` | ✅ | MySQL 数据库连接字符串 |
+| `DATABASE_URL` | ✅ | PostgreSQL 数据库连接字符串（格式：`postgresql://...`） |
 | `JWT_SECRET` | ✅ | JWT 加密密钥（使用强随机字符串） |
-| `BUILT_IN_FORGE_API_KEY` | ✅ | Manus Forge API 密钥 |
+| `BUILT_IN_FORGE_API_KEY` | ✅ | Anthropic Claude API 密钥（格式：`sk-ant-api03-...`） |
 | `NODE_ENV` | ✅ | 设置为 `production` |
 | `VITE_APP_ID` | ⚠️ | 应用 ID（可选，用于识别） |
 | `OAUTH_SERVER_URL` | ⚠️ | OAuth 服务器地址（如需OAuth登录） |
 | `OWNER_OPEN_ID` | ⚠️ | 管理员 OpenID（设置后该用户为管理员） |
-| `BUILT_IN_FORGE_API_URL` | ❌ | Forge API 地址（可选，默认为 https://forge.manus.im） |
+| `BUILT_IN_FORGE_API_URL` | ❌ | API地址（可选，默认为 https://api.anthropic.com） |
 | `PORT` | ❌ | 端口号（Vercel 会自动设置，无需配置） |
 
 ## 常见问题
@@ -137,9 +146,10 @@ vercel --prod
 **问题**: `Error: connect ETIMEDOUT` 或 `Error: Access denied`
 
 **解决方案**:
-- 检查 `DATABASE_URL` 是否正确
+- 检查 `DATABASE_URL` 是否正确（必须是PostgreSQL连接字符串）
 - 确保数据库允许来自 Vercel 的连接
-- 对于 PlanetScale，确保使用了 `?sslaccept=strict` 参数
+- 对于 Neon，确保使用了 `?sslmode=require` 参数
+- 检查连接字符串格式：`postgresql://user:password@host/database?sslmode=require`
 
 ### 2. 构建失败
 
