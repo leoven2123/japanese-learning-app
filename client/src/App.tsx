@@ -19,6 +19,8 @@ import AIAssistant from "./pages/AIAssistant";
 import ImmersiveLearning from "./pages/ImmersiveLearning";
 import ImmersiveDetail from "./pages/ImmersiveDetail";
 import TestSwitch from "./pages/TestSwitch";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 function Router() {
   return (
@@ -38,6 +40,8 @@ function Router() {
       <Route path={"/review"} component={Review} />
       <Route path={"/ai-assistant"} component={AIAssistant} />
       <Route path={"/test-switch"} component={TestSwitch} />
+      <Route path={"/login"} component={Login} />
+      <Route path={"/register"} component={Register} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

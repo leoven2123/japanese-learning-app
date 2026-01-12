@@ -2,9 +2,12 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { router, publicProcedure, protectedProcedure } from "./_core/trpc";
+import bcrypt from "bcryptjs";
+import { sdk } from "./_core/sdk";
 import { adminRouter } from "./routers/admin";
 import { z } from "zod";
 import * as db from "./db";
+import * as dbAuth from "./db-auth";
 import { invokeLLM } from "./_core/llm";
 import { transcribeAudio } from "./_core/voiceTranscription";
 import { updateSlangWords, getSlangUpdateStatus } from "./slangUpdater";
@@ -15,6 +18,99 @@ export const appRouter = router({
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
+    
+    // 注册
+    register: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string().min(6),
+        name: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // 检查邮箱是否已存在
+        const existingUser = await dbAuth.getUserByEmail(input.email);
+        if (existingUser) {
+          throw new Error("该邮箱已被注册");
+        }
+
+        // 加密密码
+        const hashedPassword = await bcrypt.hash(input.password, 10);
+
+        // 创建用户
+        const user = await dbAuth.createUser({
+          email: input.email,
+          password: hashedPassword,
+          name: input.name || input.email.split("@")[0],
+          loginMethod: "password",
+        });
+
+        // 生成session token
+        const token = await sdk.createSessionToken(user.id.toString(), {
+          name: user.name || "",
+          expiresInMs: 365 * 24 * 60 * 60 * 1000, // 1年
+        });
+
+        // 设置session cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, token, cookieOptions);
+
+        return {
+          success: true,
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          },
+        };
+      }),
+
+    // 登录
+    login: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // 查找用户
+        const user = await dbAuth.getUserByEmail(input.email);
+        if (!user) {
+          throw new Error("邮箱或密码错误");
+        }
+
+        // 验证密码
+        if (!user.password) {
+          throw new Error("该账号使用OAuth登录，请使用其他登录方式");
+        }
+        const isValid = await bcrypt.compare(input.password, user.password);
+        if (!isValid) {
+          throw new Error("邮箱或密码错误");
+        }
+
+        // 更新最后登录时间
+        await dbAuth.updateUserLastSignedIn(user.id);
+
+        // 生成session token
+        const token = await sdk.createSessionToken(user.id.toString(), {
+          name: user.name || "",
+          expiresInMs: 365 * 24 * 60 * 60 * 1000, // 1年
+        });
+
+        // 设置session cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, token, cookieOptions);
+
+        return {
+          success: true,
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          },
+        };
+      }),
+
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
