@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(pnpm dev)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm install)",
+      "Bash(pnpm run dev)",
+      "Bash(pnpm add:*)",
+      "Bash(npx tsx:*)",
+      "Bash(grep:*)",
+      "Bash(pnpm run db:push:*)"
+    ]
+  }
+}
