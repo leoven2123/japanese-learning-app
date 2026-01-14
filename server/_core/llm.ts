@@ -288,7 +288,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     : undefined;
 
   const payload: Record<string, unknown> = {
-    model: "claude-3-5-sonnet-20241022",
+    model: "claude-sonnet-4-20250514",
     messages: nonSystemMessages.map(normalizeMessage),
     max_tokens: 8192,
   };
@@ -309,16 +309,8 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     payload.tool_choice = normalizedToolChoice;
   }
 
-  const normalizedResponseFormat = normalizeResponseFormat({
-    responseFormat,
-    response_format,
-    outputSchema,
-    output_schema,
-  });
-
-  if (normalizedResponseFormat) {
-    payload.response_format = normalizedResponseFormat;
-  }
+  // Note: Anthropic API does not support response_format parameter
+  // JSON output should be requested in the prompt instead
 
   const response = await fetch(resolveApiUrl(), {
     method: "POST",

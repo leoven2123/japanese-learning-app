@@ -19,11 +19,13 @@ import AIAssistant from "./pages/AIAssistant";
 import ImmersiveLearning from "./pages/ImmersiveLearning";
 import ImmersiveDetail from "./pages/ImmersiveDetail";
 import TestSwitch from "./pages/TestSwitch";
+import Login from "./pages/Login";
 
 function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Home} />
+      <Route path={"/login"} component={Login} />
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/vocabulary"} component={VocabularyList} />
       <Route path={"/vocabulary/:id"} component={VocabularyDetail} />
