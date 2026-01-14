@@ -20,14 +20,15 @@
       "dest": "/api/index.js"
     },
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1.js"
+      "src": "/api/ping",
+      "dest": "/api/ping.js"
     },
     {
-      "handle": "filesystem"
+      "src": "/public/(.*)",
+      "dest": "/public/$1"
     },
     {
-      "src": "/(.*)",
+      "src": "/((?!api).*)",
       "dest": "/public/$1"
     }
   ],
