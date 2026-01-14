@@ -1,7 +1,41 @@
+"use strict";
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc2) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc2 = __getOwnPropDesc(from, key)) || desc2.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
 // api/index.ts
-import "dotenv/config";
-import express from "express";
-import { createExpressMiddleware } from "@trpc/server/adapters/express";
+var index_exports = {};
+__export(index_exports, {
+  default: () => handler
+});
+module.exports = __toCommonJS(index_exports);
+var import_config = require("dotenv/config");
+var import_express = __toESM(require("express"), 1);
+var import_express2 = require("@trpc/server/adapters/express");
 
 // server/_core/oauth.ts
 function registerOAuthRoutes(_app) {
@@ -34,10 +68,10 @@ function getSessionCookieOptions(req) {
 }
 
 // server/_core/systemRouter.ts
-import { z } from "zod";
+var import_zod = require("zod");
 
 // server/_core/notification.ts
-import { TRPCError } from "@trpc/server";
+var import_server = require("@trpc/server");
 
 // server/_core/env.ts
 var ENV = {
@@ -65,13 +99,13 @@ var buildEndpointUrl = (baseUrl) => {
 };
 var validatePayload = (input) => {
   if (!isNonEmptyString(input.title)) {
-    throw new TRPCError({
+    throw new import_server.TRPCError({
       code: "BAD_REQUEST",
       message: "Notification title is required."
     });
   }
   if (!isNonEmptyString(input.content)) {
-    throw new TRPCError({
+    throw new import_server.TRPCError({
       code: "BAD_REQUEST",
       message: "Notification content is required."
     });
@@ -79,13 +113,13 @@ var validatePayload = (input) => {
   const title = trimValue(input.title);
   const content = trimValue(input.content);
   if (title.length > TITLE_MAX_LENGTH) {
-    throw new TRPCError({
+    throw new import_server.TRPCError({
       code: "BAD_REQUEST",
       message: `Notification title must be at most ${TITLE_MAX_LENGTH} characters.`
     });
   }
   if (content.length > CONTENT_MAX_LENGTH) {
-    throw new TRPCError({
+    throw new import_server.TRPCError({
       code: "BAD_REQUEST",
       message: `Notification content must be at most ${CONTENT_MAX_LENGTH} characters.`
     });
@@ -95,13 +129,13 @@ var validatePayload = (input) => {
 async function notifyOwner(payload) {
   const { title, content } = validatePayload(payload);
   if (!ENV.forgeApiUrl) {
-    throw new TRPCError({
+    throw new import_server.TRPCError({
       code: "INTERNAL_SERVER_ERROR",
       message: "Notification service URL is not configured."
     });
   }
   if (!ENV.forgeApiKey) {
-    throw new TRPCError({
+    throw new import_server.TRPCError({
       code: "INTERNAL_SERVER_ERROR",
       message: "Notification service API key is not configured."
     });
@@ -133,17 +167,17 @@ async function notifyOwner(payload) {
 }
 
 // server/_core/trpc.ts
-import { initTRPC, TRPCError as TRPCError2 } from "@trpc/server";
-import superjson from "superjson";
-var t = initTRPC.context().create({
-  transformer: superjson
+var import_server2 = require("@trpc/server");
+var import_superjson = __toESM(require("superjson"), 1);
+var t = import_server2.initTRPC.context().create({
+  transformer: import_superjson.default
 });
 var router = t.router;
 var publicProcedure = t.procedure;
 var requireUser = t.middleware(async (opts) => {
   const { ctx, next } = opts;
   if (!ctx.user) {
-    throw new TRPCError2({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
+    throw new import_server2.TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
   }
   return next({
     ctx: {
@@ -157,7 +191,7 @@ var adminProcedure = t.procedure.use(
   t.middleware(async (opts) => {
     const { ctx, next } = opts;
     if (!ctx.user || ctx.user.role !== "admin") {
-      throw new TRPCError2({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
+      throw new import_server2.TRPCError({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
     }
     return next({
       ctx: {
@@ -171,16 +205,16 @@ var adminProcedure = t.procedure.use(
 // server/_core/systemRouter.ts
 var systemRouter = router({
   health: publicProcedure.input(
-    z.object({
-      timestamp: z.number().min(0, "timestamp cannot be negative")
+    import_zod.z.object({
+      timestamp: import_zod.z.number().min(0, "timestamp cannot be negative")
     })
   ).query(() => ({
     ok: true
   })),
   notifyOwner: adminProcedure.input(
-    z.object({
-      title: z.string().min(1, "title is required"),
-      content: z.string().min(1, "content is required")
+    import_zod.z.object({
+      title: import_zod.z.string().min(1, "title is required"),
+      content: import_zod.z.string().min(1, "content is required")
     })
   ).mutation(async ({ input }) => {
     const delivered = await notifyOwner(input);
@@ -191,346 +225,346 @@ var systemRouter = router({
 });
 
 // server/routers/admin.ts
-import { z as z2 } from "zod";
+var import_zod2 = require("zod");
 
 // server/db.ts
-import { eq, and, or, like, inArray, notInArray, sql, desc, asc, gte, lte } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+var import_drizzle_orm = require("drizzle-orm");
+var import_postgres_js = require("drizzle-orm/postgres-js");
+var import_postgres = __toESM(require("postgres"), 1);
 
 // drizzle/schema.ts
-import { serial, pgEnum, pgTable, text, timestamp, varchar, boolean, json, integer, numeric } from "drizzle-orm/pg-core";
-var userRoleEnum = pgEnum("user_role", ["user", "admin"]);
-var conversationRoleEnum = pgEnum("conversation_role", ["user", "assistant"]);
-var itemTypeEnum = pgEnum("item_type", ["vocabulary", "grammar", "scene"]);
-var itemTypeVGEnum = pgEnum("item_type_vg", ["vocabulary", "grammar"]);
-var masteryLevelEnum = pgEnum("mastery_level", ["learning", "familiar", "mastered"]);
-var jlptLevelEnum = pgEnum("jlpt_level", ["N5", "N4", "N3", "N2", "N1"]);
-var sourceTypeEnum = pgEnum("source_type", ["web", "ai", "textbook", "anime", "drama", "other"]);
-var difficultyEnum = pgEnum("difficulty_level", ["beginner", "intermediate", "advanced"]);
-var resourceTypeEnum = pgEnum("resource_type", ["website", "api", "dataset", "dictionary"]);
-var resourceCategoryEnum = pgEnum("resource_category", ["vocabulary", "grammar", "listening", "reading", "comprehensive"]);
-var contentTypeEnum = pgEnum("content_type", ["vocabulary", "grammar", "exercise", "explanation", "dialogue"]);
-var unitTypeEnum = pgEnum("unit_type", ["scene", "expression", "media", "dialogue"]);
-var mediaTypeEnum = pgEnum("media_type", ["anime", "jpop", "movie", "drama", "novel", "manga"]);
-var unitSourceTypeEnum = pgEnum("unit_source_type", ["original", "anime", "jpop", "movie", "drama", "novel"]);
-var expressionSourceTypeEnum = pgEnum("expression_source_type", ["original", "anime", "jpop", "movie", "drama"]);
-var progressStatusEnum = pgEnum("progress_status", ["not_started", "in_progress", "completed", "mastered"]);
-var users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: varchar("username", { length: 64 }).unique(),
-  email: varchar("email", { length: 320 }).unique(),
-  passwordHash: varchar("password_hash", { length: 255 }),
-  name: text("name"),
+var import_pg_core = require("drizzle-orm/pg-core");
+var userRoleEnum = (0, import_pg_core.pgEnum)("user_role", ["user", "admin"]);
+var conversationRoleEnum = (0, import_pg_core.pgEnum)("conversation_role", ["user", "assistant"]);
+var itemTypeEnum = (0, import_pg_core.pgEnum)("item_type", ["vocabulary", "grammar", "scene"]);
+var itemTypeVGEnum = (0, import_pg_core.pgEnum)("item_type_vg", ["vocabulary", "grammar"]);
+var masteryLevelEnum = (0, import_pg_core.pgEnum)("mastery_level", ["learning", "familiar", "mastered"]);
+var jlptLevelEnum = (0, import_pg_core.pgEnum)("jlpt_level", ["N5", "N4", "N3", "N2", "N1"]);
+var sourceTypeEnum = (0, import_pg_core.pgEnum)("source_type", ["web", "ai", "textbook", "anime", "drama", "other"]);
+var difficultyEnum = (0, import_pg_core.pgEnum)("difficulty_level", ["beginner", "intermediate", "advanced"]);
+var resourceTypeEnum = (0, import_pg_core.pgEnum)("resource_type", ["website", "api", "dataset", "dictionary"]);
+var resourceCategoryEnum = (0, import_pg_core.pgEnum)("resource_category", ["vocabulary", "grammar", "listening", "reading", "comprehensive"]);
+var contentTypeEnum = (0, import_pg_core.pgEnum)("content_type", ["vocabulary", "grammar", "exercise", "explanation", "dialogue"]);
+var unitTypeEnum = (0, import_pg_core.pgEnum)("unit_type", ["scene", "expression", "media", "dialogue"]);
+var mediaTypeEnum = (0, import_pg_core.pgEnum)("media_type", ["anime", "jpop", "movie", "drama", "novel", "manga"]);
+var unitSourceTypeEnum = (0, import_pg_core.pgEnum)("unit_source_type", ["original", "anime", "jpop", "movie", "drama", "novel"]);
+var expressionSourceTypeEnum = (0, import_pg_core.pgEnum)("expression_source_type", ["original", "anime", "jpop", "movie", "drama"]);
+var progressStatusEnum = (0, import_pg_core.pgEnum)("progress_status", ["not_started", "in_progress", "completed", "mastered"]);
+var users = (0, import_pg_core.pgTable)("users", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  username: (0, import_pg_core.varchar)("username", { length: 64 }).unique(),
+  email: (0, import_pg_core.varchar)("email", { length: 320 }).unique(),
+  passwordHash: (0, import_pg_core.varchar)("password_hash", { length: 255 }),
+  name: (0, import_pg_core.text)("name"),
   role: userRoleEnum("role").default("user").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  lastSignedIn: timestamp("last_signed_in").defaultNow().notNull()
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull(),
+  updatedAt: (0, import_pg_core.timestamp)("updated_at").defaultNow().notNull(),
+  lastSignedIn: (0, import_pg_core.timestamp)("last_signed_in").defaultNow().notNull()
 });
-var conversations = pgTable("conversations", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  title: varchar("title", { length: 255 }).notNull(),
-  lastMessageAt: timestamp("last_message_at").defaultNow().notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+var conversations = (0, import_pg_core.pgTable)("conversations", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  userId: (0, import_pg_core.integer)("user_id").notNull(),
+  title: (0, import_pg_core.varchar)("title", { length: 255 }).notNull(),
+  lastMessageAt: (0, import_pg_core.timestamp)("last_message_at").defaultNow().notNull(),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull(),
+  updatedAt: (0, import_pg_core.timestamp)("updated_at").defaultNow().notNull()
 });
-var conversationMessages = pgTable("conversation_messages", {
-  id: serial("id").primaryKey(),
-  conversationId: integer("conversation_id").notNull(),
+var conversationMessages = (0, import_pg_core.pgTable)("conversation_messages", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  conversationId: (0, import_pg_core.integer)("conversation_id").notNull(),
   role: conversationRoleEnum("role").notNull(),
-  content: text("content").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull()
+  content: (0, import_pg_core.text)("content").notNull(),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull()
 });
-var vocabulary = pgTable("vocabulary", {
-  id: serial("id").primaryKey(),
-  expression: varchar("expression", { length: 255 }).notNull(),
-  reading: varchar("reading", { length: 255 }).notNull(),
-  romaji: varchar("romaji", { length: 255 }),
-  meaning: text("meaning").notNull(),
-  partOfSpeech: varchar("part_of_speech", { length: 100 }),
+var vocabulary = (0, import_pg_core.pgTable)("vocabulary", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  expression: (0, import_pg_core.varchar)("expression", { length: 255 }).notNull(),
+  reading: (0, import_pg_core.varchar)("reading", { length: 255 }).notNull(),
+  romaji: (0, import_pg_core.varchar)("romaji", { length: 255 }),
+  meaning: (0, import_pg_core.text)("meaning").notNull(),
+  partOfSpeech: (0, import_pg_core.varchar)("part_of_speech", { length: 100 }),
   jlptLevel: jlptLevelEnum("jlpt_level").notNull(),
-  difficulty: integer("difficulty").default(1),
-  tags: json("tags").$type(),
-  category: varchar("category", { length: 50 }).default("standard"),
-  source: varchar("source", { length: 255 }),
-  detailedExplanation: text("detailed_explanation"),
-  collocations: json("collocations").$type(),
-  synonyms: json("synonyms").$type(),
-  antonyms: json("antonyms").$type(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  difficulty: (0, import_pg_core.integer)("difficulty").default(1),
+  tags: (0, import_pg_core.json)("tags").$type(),
+  category: (0, import_pg_core.varchar)("category", { length: 50 }).default("standard"),
+  source: (0, import_pg_core.varchar)("source", { length: 255 }),
+  detailedExplanation: (0, import_pg_core.text)("detailed_explanation"),
+  collocations: (0, import_pg_core.json)("collocations").$type(),
+  synonyms: (0, import_pg_core.json)("synonyms").$type(),
+  antonyms: (0, import_pg_core.json)("antonyms").$type(),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull(),
+  updatedAt: (0, import_pg_core.timestamp)("updated_at").defaultNow().notNull()
 });
-var grammar = pgTable("grammar", {
-  id: serial("id").primaryKey(),
-  pattern: varchar("pattern", { length: 255 }).notNull(),
-  meaning: text("meaning").notNull(),
-  usage: text("usage"),
+var grammar = (0, import_pg_core.pgTable)("grammar", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  pattern: (0, import_pg_core.varchar)("pattern", { length: 255 }).notNull(),
+  meaning: (0, import_pg_core.text)("meaning").notNull(),
+  usage: (0, import_pg_core.text)("usage"),
   jlptLevel: jlptLevelEnum("jlpt_level").notNull(),
-  difficulty: integer("difficulty").default(1),
-  tags: json("tags").$type(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  difficulty: (0, import_pg_core.integer)("difficulty").default(1),
+  tags: (0, import_pg_core.json)("tags").$type(),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull(),
+  updatedAt: (0, import_pg_core.timestamp)("updated_at").defaultNow().notNull()
 });
-var sentences = pgTable("sentences", {
-  id: serial("id").primaryKey(),
-  japanese: text("japanese").notNull(),
-  reading: text("reading"),
-  romaji: text("romaji"),
-  chinese: text("chinese").notNull(),
-  source: varchar("source", { length: 255 }),
+var sentences = (0, import_pg_core.pgTable)("sentences", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  japanese: (0, import_pg_core.text)("japanese").notNull(),
+  reading: (0, import_pg_core.text)("reading"),
+  romaji: (0, import_pg_core.text)("romaji"),
+  chinese: (0, import_pg_core.text)("chinese").notNull(),
+  source: (0, import_pg_core.varchar)("source", { length: 255 }),
   sourceType: sourceTypeEnum("source_type").default("other"),
-  difficulty: integer("difficulty").default(1),
-  tags: json("tags").$type(),
-  createdAt: timestamp("created_at").defaultNow().notNull()
+  difficulty: (0, import_pg_core.integer)("difficulty").default(1),
+  tags: (0, import_pg_core.json)("tags").$type(),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull()
 });
-var scenes = pgTable("scenes", {
-  id: serial("id").primaryKey(),
-  title: varchar("title", { length: 255 }).notNull(),
-  description: text("description"),
-  category: varchar("category", { length: 100 }).notNull(),
+var scenes = (0, import_pg_core.pgTable)("scenes", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  title: (0, import_pg_core.varchar)("title", { length: 255 }).notNull(),
+  description: (0, import_pg_core.text)("description"),
+  category: (0, import_pg_core.varchar)("category", { length: 100 }).notNull(),
   difficulty: difficultyEnum("difficulty").default("beginner"),
-  orderIndex: integer("order_index").default(0),
-  content: json("content").$type(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  orderIndex: (0, import_pg_core.integer)("order_index").default(0),
+  content: (0, import_pg_core.json)("content").$type(),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull(),
+  updatedAt: (0, import_pg_core.timestamp)("updated_at").defaultNow().notNull()
 });
-var learningProgress = pgTable("learning_progress", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+var learningProgress = (0, import_pg_core.pgTable)("learning_progress", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  userId: (0, import_pg_core.integer)("user_id").notNull(),
   itemType: itemTypeEnum("item_type").notNull(),
-  itemId: integer("item_id").notNull(),
+  itemId: (0, import_pg_core.integer)("item_id").notNull(),
   masteryLevel: masteryLevelEnum("mastery_level").default("learning").notNull(),
-  reviewCount: integer("review_count").default(0).notNull(),
-  lastReviewedAt: timestamp("last_reviewed_at"),
-  nextReviewAt: timestamp("next_review_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  reviewCount: (0, import_pg_core.integer)("review_count").default(0).notNull(),
+  lastReviewedAt: (0, import_pg_core.timestamp)("last_reviewed_at"),
+  nextReviewAt: (0, import_pg_core.timestamp)("next_review_at"),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull(),
+  updatedAt: (0, import_pg_core.timestamp)("updated_at").defaultNow().notNull()
 });
-var reviewSchedule = pgTable("review_schedule", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+var reviewSchedule = (0, import_pg_core.pgTable)("review_schedule", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  userId: (0, import_pg_core.integer)("user_id").notNull(),
   itemType: itemTypeEnum("item_type").notNull(),
-  itemId: integer("item_id").notNull(),
-  scheduledAt: timestamp("scheduled_at").notNull(),
-  completed: boolean("completed").default(false).notNull(),
-  completedAt: timestamp("completed_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull()
+  itemId: (0, import_pg_core.integer)("item_id").notNull(),
+  scheduledAt: (0, import_pg_core.timestamp)("scheduled_at").notNull(),
+  completed: (0, import_pg_core.boolean)("completed").default(false).notNull(),
+  completedAt: (0, import_pg_core.timestamp)("completed_at"),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull()
 });
-var vocabularySentences = pgTable("vocabulary_sentences", {
-  id: serial("id").primaryKey(),
-  vocabularyId: integer("vocabulary_id").notNull(),
-  sentenceId: integer("sentence_id").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull()
+var vocabularySentences = (0, import_pg_core.pgTable)("vocabulary_sentences", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  vocabularyId: (0, import_pg_core.integer)("vocabulary_id").notNull(),
+  sentenceId: (0, import_pg_core.integer)("sentence_id").notNull(),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull()
 });
-var grammarSentences = pgTable("grammar_sentences", {
-  id: serial("id").primaryKey(),
-  grammarId: integer("grammar_id").notNull(),
-  sentenceId: integer("sentence_id").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull()
+var grammarSentences = (0, import_pg_core.pgTable)("grammar_sentences", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  grammarId: (0, import_pg_core.integer)("grammar_id").notNull(),
+  sentenceId: (0, import_pg_core.integer)("sentence_id").notNull(),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull()
 });
-var learningResources = pgTable("learning_resources", {
-  id: serial("id").primaryKey(),
-  title: varchar("title", { length: 255 }).notNull(),
-  url: varchar("url", { length: 500 }).notNull(),
+var learningResources = (0, import_pg_core.pgTable)("learning_resources", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  title: (0, import_pg_core.varchar)("title", { length: 255 }).notNull(),
+  url: (0, import_pg_core.varchar)("url", { length: 500 }).notNull(),
   type: resourceTypeEnum("type").notNull(),
   category: resourceCategoryEnum("category").notNull(),
-  description: text("description"),
-  reliability: integer("reliability").default(5).notNull(),
-  lastUpdatedAt: timestamp("last_updated_at").defaultNow().notNull(),
-  isActive: boolean("is_active").default(true).notNull(),
-  metadata: json("metadata").$type(),
-  createdAt: timestamp("created_at").defaultNow().notNull()
+  description: (0, import_pg_core.text)("description"),
+  reliability: (0, import_pg_core.integer)("reliability").default(5).notNull(),
+  lastUpdatedAt: (0, import_pg_core.timestamp)("last_updated_at").defaultNow().notNull(),
+  isActive: (0, import_pg_core.boolean)("is_active").default(true).notNull(),
+  metadata: (0, import_pg_core.json)("metadata").$type(),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull()
 });
-var learningCurriculum = pgTable("learning_curriculum", {
-  id: serial("id").primaryKey(),
+var learningCurriculum = (0, import_pg_core.pgTable)("learning_curriculum", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
   level: jlptLevelEnum("level").notNull(),
-  stage: integer("stage").notNull(),
-  title: varchar("title", { length: 255 }).notNull(),
-  description: text("description"),
-  objectives: json("objectives").$type(),
-  requiredVocabularyCount: integer("required_vocabulary_count").default(0),
-  requiredGrammarCount: integer("required_grammar_count").default(0),
-  estimatedHours: integer("estimated_hours").default(0),
-  prerequisites: json("prerequisites").$type(),
-  orderIndex: integer("order_index").default(0).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  stage: (0, import_pg_core.integer)("stage").notNull(),
+  title: (0, import_pg_core.varchar)("title", { length: 255 }).notNull(),
+  description: (0, import_pg_core.text)("description"),
+  objectives: (0, import_pg_core.json)("objectives").$type(),
+  requiredVocabularyCount: (0, import_pg_core.integer)("required_vocabulary_count").default(0),
+  requiredGrammarCount: (0, import_pg_core.integer)("required_grammar_count").default(0),
+  estimatedHours: (0, import_pg_core.integer)("estimated_hours").default(0),
+  prerequisites: (0, import_pg_core.json)("prerequisites").$type(),
+  orderIndex: (0, import_pg_core.integer)("order_index").default(0).notNull(),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull(),
+  updatedAt: (0, import_pg_core.timestamp)("updated_at").defaultNow().notNull()
 });
-var aiGeneratedContent = pgTable("ai_generated_content", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+var aiGeneratedContent = (0, import_pg_core.pgTable)("ai_generated_content", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  userId: (0, import_pg_core.integer)("user_id").notNull(),
   contentType: contentTypeEnum("content_type").notNull(),
-  prompt: text("prompt").notNull(),
-  generatedContent: json("generated_content").notNull(),
-  curriculumStageId: integer("curriculum_stage_id"),
-  isApproved: boolean("is_approved").default(false).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull()
+  prompt: (0, import_pg_core.text)("prompt").notNull(),
+  generatedContent: (0, import_pg_core.json)("generated_content").notNull(),
+  curriculumStageId: (0, import_pg_core.integer)("curriculum_stage_id"),
+  isApproved: (0, import_pg_core.boolean)("is_approved").default(false).notNull(),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull()
 });
-var userLearningPath = pgTable("user_learning_path", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().unique(),
-  currentCurriculumStageId: integer("current_curriculum_stage_id"),
-  completedStages: json("completed_stages").$type(),
-  startedAt: timestamp("started_at").defaultNow().notNull(),
-  lastActiveAt: timestamp("last_active_at").defaultNow().notNull(),
-  totalStudyHours: numeric("total_study_hours", { precision: 10, scale: 2 }).default("0.00").notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+var userLearningPath = (0, import_pg_core.pgTable)("user_learning_path", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  userId: (0, import_pg_core.integer)("user_id").notNull().unique(),
+  currentCurriculumStageId: (0, import_pg_core.integer)("current_curriculum_stage_id"),
+  completedStages: (0, import_pg_core.json)("completed_stages").$type(),
+  startedAt: (0, import_pg_core.timestamp)("started_at").defaultNow().notNull(),
+  lastActiveAt: (0, import_pg_core.timestamp)("last_active_at").defaultNow().notNull(),
+  totalStudyHours: (0, import_pg_core.numeric)("total_study_hours", { precision: 10, scale: 2 }).default("0.00").notNull(),
+  updatedAt: (0, import_pg_core.timestamp)("updated_at").defaultNow().notNull()
 });
-var userNotes = pgTable("user_notes", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+var userNotes = (0, import_pg_core.pgTable)("user_notes", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  userId: (0, import_pg_core.integer)("user_id").notNull(),
   itemType: itemTypeVGEnum("item_type").notNull(),
-  itemId: integer("item_id").notNull(),
-  content: text("content").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  itemId: (0, import_pg_core.integer)("item_id").notNull(),
+  content: (0, import_pg_core.text)("content").notNull(),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull(),
+  updatedAt: (0, import_pg_core.timestamp)("updated_at").defaultNow().notNull()
 });
-var studyRecords = pgTable("study_records", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+var studyRecords = (0, import_pg_core.pgTable)("study_records", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  userId: (0, import_pg_core.integer)("user_id").notNull(),
   itemType: itemTypeVGEnum("item_type").notNull(),
-  itemId: integer("item_id").notNull(),
-  reviewCount: integer("review_count").default(0).notNull(),
-  easeFactor: numeric("ease_factor", { precision: 3, scale: 2 }).default("2.50").notNull(),
-  firstLearnedAt: timestamp("first_learned_at").defaultNow().notNull(),
-  lastReviewedAt: timestamp("last_reviewed_at").defaultNow().notNull(),
-  nextReviewAt: timestamp("next_review_at").notNull(),
-  correctCount: integer("correct_count").default(0).notNull(),
-  incorrectCount: integer("incorrect_count").default(0).notNull(),
-  isMastered: boolean("is_mastered").default(false).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  itemId: (0, import_pg_core.integer)("item_id").notNull(),
+  reviewCount: (0, import_pg_core.integer)("review_count").default(0).notNull(),
+  easeFactor: (0, import_pg_core.numeric)("ease_factor", { precision: 3, scale: 2 }).default("2.50").notNull(),
+  firstLearnedAt: (0, import_pg_core.timestamp)("first_learned_at").defaultNow().notNull(),
+  lastReviewedAt: (0, import_pg_core.timestamp)("last_reviewed_at").defaultNow().notNull(),
+  nextReviewAt: (0, import_pg_core.timestamp)("next_review_at").notNull(),
+  correctCount: (0, import_pg_core.integer)("correct_count").default(0).notNull(),
+  incorrectCount: (0, import_pg_core.integer)("incorrect_count").default(0).notNull(),
+  isMastered: (0, import_pg_core.boolean)("is_mastered").default(false).notNull(),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull(),
+  updatedAt: (0, import_pg_core.timestamp)("updated_at").defaultNow().notNull()
 });
-var dailyStudyStats = pgTable("daily_study_stats", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  date: varchar("date", { length: 10 }).notNull(),
-  newItemsLearned: integer("new_items_learned").default(0).notNull(),
-  itemsReviewed: integer("items_reviewed").default(0).notNull(),
-  correctReviews: integer("correct_reviews").default(0).notNull(),
-  incorrectReviews: integer("incorrect_reviews").default(0).notNull(),
-  studyMinutes: integer("study_minutes").default(0).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+var dailyStudyStats = (0, import_pg_core.pgTable)("daily_study_stats", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  userId: (0, import_pg_core.integer)("user_id").notNull(),
+  date: (0, import_pg_core.varchar)("date", { length: 10 }).notNull(),
+  newItemsLearned: (0, import_pg_core.integer)("new_items_learned").default(0).notNull(),
+  itemsReviewed: (0, import_pg_core.integer)("items_reviewed").default(0).notNull(),
+  correctReviews: (0, import_pg_core.integer)("correct_reviews").default(0).notNull(),
+  incorrectReviews: (0, import_pg_core.integer)("incorrect_reviews").default(0).notNull(),
+  studyMinutes: (0, import_pg_core.integer)("study_minutes").default(0).notNull(),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull(),
+  updatedAt: (0, import_pg_core.timestamp)("updated_at").defaultNow().notNull()
 });
-var learningUnits = pgTable("learning_units", {
-  id: serial("id").primaryKey(),
+var learningUnits = (0, import_pg_core.pgTable)("learning_units", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
   unitType: unitTypeEnum("unit_type").notNull(),
-  category: varchar("category", { length: 100 }).notNull(),
-  subCategory: varchar("sub_category", { length: 100 }),
-  titleJa: varchar("title_ja", { length: 255 }).notNull(),
-  titleZh: varchar("title_zh", { length: 255 }),
-  descriptionJa: text("description_ja"),
-  difficulty: integer("difficulty").default(1).notNull(),
+  category: (0, import_pg_core.varchar)("category", { length: 100 }).notNull(),
+  subCategory: (0, import_pg_core.varchar)("sub_category", { length: 100 }),
+  titleJa: (0, import_pg_core.varchar)("title_ja", { length: 255 }).notNull(),
+  titleZh: (0, import_pg_core.varchar)("title_zh", { length: 255 }),
+  descriptionJa: (0, import_pg_core.text)("description_ja"),
+  difficulty: (0, import_pg_core.integer)("difficulty").default(1).notNull(),
   jlptLevel: jlptLevelEnum("jlpt_level"),
-  targetExpressions: json("target_expressions").$type(),
-  targetPatterns: json("target_patterns").$type(),
-  targetVocabularyIds: json("target_vocabulary_ids").$type(),
-  targetGrammarIds: json("target_grammar_ids").$type(),
-  prerequisites: json("prerequisites").$type(),
-  relatedUnits: json("related_units").$type(),
-  content: json("content").$type(),
+  targetExpressions: (0, import_pg_core.json)("target_expressions").$type(),
+  targetPatterns: (0, import_pg_core.json)("target_patterns").$type(),
+  targetVocabularyIds: (0, import_pg_core.json)("target_vocabulary_ids").$type(),
+  targetGrammarIds: (0, import_pg_core.json)("target_grammar_ids").$type(),
+  prerequisites: (0, import_pg_core.json)("prerequisites").$type(),
+  relatedUnits: (0, import_pg_core.json)("related_units").$type(),
+  content: (0, import_pg_core.json)("content").$type(),
   sourceType: unitSourceTypeEnum("source_type"),
-  sourceTitle: varchar("source_title", { length: 255 }),
-  sourceYear: integer("source_year"),
-  sourceEpisode: varchar("source_episode", { length: 100 }),
-  sourceUrl: varchar("source_url", { length: 500 }),
-  orderIndex: integer("order_index").default(0),
-  isPublished: boolean("is_published").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  sourceTitle: (0, import_pg_core.varchar)("source_title", { length: 255 }),
+  sourceYear: (0, import_pg_core.integer)("source_year"),
+  sourceEpisode: (0, import_pg_core.varchar)("source_episode", { length: 100 }),
+  sourceUrl: (0, import_pg_core.varchar)("source_url", { length: 500 }),
+  orderIndex: (0, import_pg_core.integer)("order_index").default(0),
+  isPublished: (0, import_pg_core.boolean)("is_published").default(true).notNull(),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull(),
+  updatedAt: (0, import_pg_core.timestamp)("updated_at").defaultNow().notNull()
 });
-var mediaMaterials = pgTable("media_materials", {
-  id: serial("id").primaryKey(),
+var mediaMaterials = (0, import_pg_core.pgTable)("media_materials", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
   mediaType: mediaTypeEnum("media_type").notNull(),
-  title: varchar("title", { length: 255 }).notNull(),
-  titleJa: varchar("title_ja", { length: 255 }),
-  artist: varchar("artist", { length: 255 }),
-  year: integer("year"),
-  episode: varchar("episode", { length: 100 }),
-  contentJa: text("content_ja").notNull(),
-  contentReading: text("content_reading"),
-  analysis: json("analysis").$type(),
-  difficulty: integer("difficulty").default(5).notNull(),
+  title: (0, import_pg_core.varchar)("title", { length: 255 }).notNull(),
+  titleJa: (0, import_pg_core.varchar)("title_ja", { length: 255 }),
+  artist: (0, import_pg_core.varchar)("artist", { length: 255 }),
+  year: (0, import_pg_core.integer)("year"),
+  episode: (0, import_pg_core.varchar)("episode", { length: 100 }),
+  contentJa: (0, import_pg_core.text)("content_ja").notNull(),
+  contentReading: (0, import_pg_core.text)("content_reading"),
+  analysis: (0, import_pg_core.json)("analysis").$type(),
+  difficulty: (0, import_pg_core.integer)("difficulty").default(5).notNull(),
   jlptLevel: jlptLevelEnum("jlpt_level"),
-  tags: json("tags").$type(),
-  themes: json("themes").$type(),
-  sourceUrl: varchar("source_url", { length: 500 }),
-  imageUrl: varchar("image_url", { length: 500 }),
-  audioUrl: varchar("audio_url", { length: 500 }),
-  isPublished: boolean("is_published").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  tags: (0, import_pg_core.json)("tags").$type(),
+  themes: (0, import_pg_core.json)("themes").$type(),
+  sourceUrl: (0, import_pg_core.varchar)("source_url", { length: 500 }),
+  imageUrl: (0, import_pg_core.varchar)("image_url", { length: 500 }),
+  audioUrl: (0, import_pg_core.varchar)("audio_url", { length: 500 }),
+  isPublished: (0, import_pg_core.boolean)("is_published").default(true).notNull(),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull(),
+  updatedAt: (0, import_pg_core.timestamp)("updated_at").defaultNow().notNull()
 });
-var sceneCategories = pgTable("scene_categories", {
-  id: serial("id").primaryKey(),
-  nameJa: varchar("name_ja", { length: 100 }).notNull(),
-  nameZh: varchar("name_zh", { length: 100 }).notNull(),
-  parentId: integer("parent_id"),
-  descriptionJa: text("description_ja"),
-  descriptionZh: text("description_zh"),
-  icon: varchar("icon", { length: 50 }),
-  color: varchar("color", { length: 20 }),
-  minDifficulty: integer("min_difficulty").default(1),
-  maxDifficulty: integer("max_difficulty").default(10),
-  orderIndex: integer("order_index").default(0),
-  createdAt: timestamp("created_at").defaultNow().notNull()
+var sceneCategories = (0, import_pg_core.pgTable)("scene_categories", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  nameJa: (0, import_pg_core.varchar)("name_ja", { length: 100 }).notNull(),
+  nameZh: (0, import_pg_core.varchar)("name_zh", { length: 100 }).notNull(),
+  parentId: (0, import_pg_core.integer)("parent_id"),
+  descriptionJa: (0, import_pg_core.text)("description_ja"),
+  descriptionZh: (0, import_pg_core.text)("description_zh"),
+  icon: (0, import_pg_core.varchar)("icon", { length: 50 }),
+  color: (0, import_pg_core.varchar)("color", { length: 20 }),
+  minDifficulty: (0, import_pg_core.integer)("min_difficulty").default(1),
+  maxDifficulty: (0, import_pg_core.integer)("max_difficulty").default(10),
+  orderIndex: (0, import_pg_core.integer)("order_index").default(0),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull()
 });
-var userUnitProgress = pgTable("user_unit_progress", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  unitId: integer("unit_id").notNull(),
+var userUnitProgress = (0, import_pg_core.pgTable)("user_unit_progress", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  userId: (0, import_pg_core.integer)("user_id").notNull(),
+  unitId: (0, import_pg_core.integer)("unit_id").notNull(),
   status: progressStatusEnum("status").default("not_started").notNull(),
-  completionRate: integer("completion_rate").default(0).notNull(),
-  startedAt: timestamp("started_at"),
-  completedAt: timestamp("completed_at"),
-  lastAccessedAt: timestamp("last_accessed_at"),
-  reviewCount: integer("review_count").default(0).notNull(),
-  nextReviewAt: timestamp("next_review_at"),
-  userRating: integer("user_rating"),
-  userNotes: text("user_notes"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  completionRate: (0, import_pg_core.integer)("completion_rate").default(0).notNull(),
+  startedAt: (0, import_pg_core.timestamp)("started_at"),
+  completedAt: (0, import_pg_core.timestamp)("completed_at"),
+  lastAccessedAt: (0, import_pg_core.timestamp)("last_accessed_at"),
+  reviewCount: (0, import_pg_core.integer)("review_count").default(0).notNull(),
+  nextReviewAt: (0, import_pg_core.timestamp)("next_review_at"),
+  userRating: (0, import_pg_core.integer)("user_rating"),
+  userNotes: (0, import_pg_core.text)("user_notes"),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull(),
+  updatedAt: (0, import_pg_core.timestamp)("updated_at").defaultNow().notNull()
 });
-var dailyLearningPlans = pgTable("daily_learning_plans", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  date: varchar("date", { length: 10 }).notNull(),
-  plannedUnits: json("planned_units").$type(),
-  completedUnits: json("completed_units").$type(),
-  aiReasoning: text("ai_reasoning"),
-  totalPlannedMinutes: integer("total_planned_minutes").default(0),
-  actualStudyMinutes: integer("actual_study_minutes").default(0),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+var dailyLearningPlans = (0, import_pg_core.pgTable)("daily_learning_plans", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  userId: (0, import_pg_core.integer)("user_id").notNull(),
+  date: (0, import_pg_core.varchar)("date", { length: 10 }).notNull(),
+  plannedUnits: (0, import_pg_core.json)("planned_units").$type(),
+  completedUnits: (0, import_pg_core.json)("completed_units").$type(),
+  aiReasoning: (0, import_pg_core.text)("ai_reasoning"),
+  totalPlannedMinutes: (0, import_pg_core.integer)("total_planned_minutes").default(0),
+  actualStudyMinutes: (0, import_pg_core.integer)("actual_study_minutes").default(0),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull(),
+  updatedAt: (0, import_pg_core.timestamp)("updated_at").defaultNow().notNull()
 });
-var expressionBank = pgTable("expression_bank", {
-  id: serial("id").primaryKey(),
-  expressionJa: varchar("expression_ja", { length: 500 }).notNull(),
-  reading: varchar("reading", { length: 500 }),
-  meaningJa: text("meaning_ja"),
-  meaningZh: text("meaning_zh"),
-  functionCategory: varchar("function_category", { length: 100 }).notNull(),
-  situationCategory: varchar("situation_category", { length: 100 }),
-  difficulty: integer("difficulty").default(1).notNull(),
+var expressionBank = (0, import_pg_core.pgTable)("expression_bank", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  expressionJa: (0, import_pg_core.varchar)("expression_ja", { length: 500 }).notNull(),
+  reading: (0, import_pg_core.varchar)("reading", { length: 500 }),
+  meaningJa: (0, import_pg_core.text)("meaning_ja"),
+  meaningZh: (0, import_pg_core.text)("meaning_zh"),
+  functionCategory: (0, import_pg_core.varchar)("function_category", { length: 100 }).notNull(),
+  situationCategory: (0, import_pg_core.varchar)("situation_category", { length: 100 }),
+  difficulty: (0, import_pg_core.integer)("difficulty").default(1).notNull(),
   jlptLevel: jlptLevelEnum("jlpt_level"),
-  usageNotes: text("usage_notes"),
-  examples: json("examples").$type(),
-  relatedExpressions: json("related_expressions").$type(),
-  relatedVocabularyIds: json("related_vocabulary_ids").$type(),
-  relatedGrammarIds: json("related_grammar_ids").$type(),
+  usageNotes: (0, import_pg_core.text)("usage_notes"),
+  examples: (0, import_pg_core.json)("examples").$type(),
+  relatedExpressions: (0, import_pg_core.json)("related_expressions").$type(),
+  relatedVocabularyIds: (0, import_pg_core.json)("related_vocabulary_ids").$type(),
+  relatedGrammarIds: (0, import_pg_core.json)("related_grammar_ids").$type(),
   sourceType: expressionSourceTypeEnum("source_type"),
-  sourceTitle: varchar("source_title", { length: 255 }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  sourceTitle: (0, import_pg_core.varchar)("source_title", { length: 255 }),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull(),
+  updatedAt: (0, import_pg_core.timestamp)("updated_at").defaultNow().notNull()
 });
-var knowledgeExpansions = pgTable("knowledge_expansions", {
-  id: serial("id").primaryKey(),
-  unitId: integer("unit_id").notNull().unique(),
-  content: json("content").$type(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+var knowledgeExpansions = (0, import_pg_core.pgTable)("knowledge_expansions", {
+  id: (0, import_pg_core.serial)("id").primaryKey(),
+  unitId: (0, import_pg_core.integer)("unit_id").notNull().unique(),
+  content: (0, import_pg_core.json)("content").$type(),
+  createdAt: (0, import_pg_core.timestamp)("created_at").defaultNow().notNull(),
+  updatedAt: (0, import_pg_core.timestamp)("updated_at").defaultNow().notNull()
 });
 
 // server/db.ts
@@ -539,8 +573,8 @@ var _client = null;
 async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _client = postgres(process.env.DATABASE_URL);
-      _db = drizzle(_client);
+      _client = (0, import_postgres.default)(process.env.DATABASE_URL);
+      _db = (0, import_postgres_js.drizzle)(_client);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -572,7 +606,7 @@ async function getUserById(id) {
     console.warn("[Database] Cannot get user: database not available");
     return void 0;
   }
-  const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  const result = await db.select().from(users).where((0, import_drizzle_orm.eq)(users.id, id)).limit(1);
   return result.length > 0 ? result[0] : void 0;
 }
 async function getUserByEmail(email) {
@@ -581,7 +615,7 @@ async function getUserByEmail(email) {
     console.warn("[Database] Cannot get user: database not available");
     return void 0;
   }
-  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const result = await db.select().from(users).where((0, import_drizzle_orm.eq)(users.email, email)).limit(1);
   return result.length > 0 ? result[0] : void 0;
 }
 async function getUserByUsername(username) {
@@ -590,7 +624,7 @@ async function getUserByUsername(username) {
     console.warn("[Database] Cannot get user: database not available");
     return void 0;
   }
-  const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
+  const result = await db.select().from(users).where((0, import_drizzle_orm.eq)(users.username, username)).limit(1);
   return result.length > 0 ? result[0] : void 0;
 }
 async function getUserByEmailOrUsername(identifier) {
@@ -600,9 +634,9 @@ async function getUserByEmailOrUsername(identifier) {
     return void 0;
   }
   const result = await db.select().from(users).where(
-    or(
-      eq(users.email, identifier),
-      eq(users.username, identifier)
+    (0, import_drizzle_orm.or)(
+      (0, import_drizzle_orm.eq)(users.email, identifier),
+      (0, import_drizzle_orm.eq)(users.username, identifier)
     )
   ).limit(1);
   return result.length > 0 ? result[0] : void 0;
@@ -610,7 +644,7 @@ async function getUserByEmailOrUsername(identifier) {
 async function updateUserLastSignedIn(userId) {
   const db = await getDb();
   if (!db) return;
-  await db.update(users).set({ lastSignedIn: /* @__PURE__ */ new Date(), updatedAt: /* @__PURE__ */ new Date() }).where(eq(users.id, userId));
+  await db.update(users).set({ lastSignedIn: /* @__PURE__ */ new Date(), updatedAt: /* @__PURE__ */ new Date() }).where((0, import_drizzle_orm.eq)(users.id, userId));
 }
 var KANA_RANGES = {
   a: { start: "\u3042", end: "\u304A" },
@@ -629,31 +663,31 @@ async function getVocabularyList(params) {
   if (!db) return { items: [], total: 0 };
   const conditions = [];
   if (params.jlptLevel) {
-    conditions.push(eq(vocabulary.jlptLevel, params.jlptLevel));
+    conditions.push((0, import_drizzle_orm.eq)(vocabulary.jlptLevel, params.jlptLevel));
   }
   if (params.search) {
     conditions.push(
-      or(
-        like(vocabulary.expression, `%${params.search}%`),
-        like(vocabulary.reading, `%${params.search}%`),
-        like(vocabulary.romaji, `%${params.search}%`),
-        like(vocabulary.meaning, `%${params.search}%`)
+      (0, import_drizzle_orm.or)(
+        (0, import_drizzle_orm.like)(vocabulary.expression, `%${params.search}%`),
+        (0, import_drizzle_orm.like)(vocabulary.reading, `%${params.search}%`),
+        (0, import_drizzle_orm.like)(vocabulary.romaji, `%${params.search}%`),
+        (0, import_drizzle_orm.like)(vocabulary.meaning, `%${params.search}%`)
       )
     );
   }
   if (params.firstLetter && KANA_RANGES[params.firstLetter]) {
     const range = KANA_RANGES[params.firstLetter];
     conditions.push(
-      and(
-        gte(vocabulary.reading, range.start),
-        lte(vocabulary.reading, range.end + "\u3093")
+      (0, import_drizzle_orm.and)(
+        (0, import_drizzle_orm.gte)(vocabulary.reading, range.start),
+        (0, import_drizzle_orm.lte)(vocabulary.reading, range.end + "\u3093")
       )
     );
   }
-  const countQuery = db.select({ count: sql`count(*)` }).from(vocabulary).where(conditions.length > 0 ? and(...conditions) : void 0);
+  const countQuery = db.select({ count: import_drizzle_orm.sql`count(*)` }).from(vocabulary).where(conditions.length > 0 ? (0, import_drizzle_orm.and)(...conditions) : void 0);
   const countResult = await countQuery;
   const total = countResult[0]?.count || 0;
-  let query = db.select().from(vocabulary).where(conditions.length > 0 ? and(...conditions) : void 0);
+  let query = db.select().from(vocabulary).where(conditions.length > 0 ? (0, import_drizzle_orm.and)(...conditions) : void 0);
   if (params.sortBy === "kana") {
     query = query.orderBy(vocabulary.reading);
   } else {
@@ -666,13 +700,13 @@ async function getVocabularyList(params) {
 async function getVocabularyById(id) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.select().from(vocabulary).where(eq(vocabulary.id, id)).limit(1);
+  const result = await db.select().from(vocabulary).where((0, import_drizzle_orm.eq)(vocabulary.id, id)).limit(1);
   return result.length > 0 ? result[0] : null;
 }
 async function getVocabularyByExpression(expression) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.select().from(vocabulary).where(eq(vocabulary.expression, expression)).limit(1);
+  const result = await db.select().from(vocabulary).where((0, import_drizzle_orm.eq)(vocabulary.expression, expression)).limit(1);
   return result.length > 0 ? result[0] : null;
 }
 async function createVocabulary(data) {
@@ -693,11 +727,11 @@ async function getVocabularyWithExamples(id) {
   if (!db) return null;
   const vocab = await getVocabularyById(id);
   if (!vocab) return null;
-  const exampleLinks = await db.select().from(vocabularySentences).where(eq(vocabularySentences.vocabularyId, id));
+  const exampleLinks = await db.select().from(vocabularySentences).where((0, import_drizzle_orm.eq)(vocabularySentences.vocabularyId, id));
   const exampleIds = exampleLinks.map((link) => link.sentenceId);
   let examples = [];
   if (exampleIds.length > 0) {
-    examples = await db.select().from(sentences).where(inArray(sentences.id, exampleIds));
+    examples = await db.select().from(sentences).where((0, import_drizzle_orm.inArray)(sentences.id, exampleIds));
   }
   return {
     ...vocab,
@@ -709,29 +743,29 @@ async function getGrammarList(params) {
   if (!db) return { items: [], total: 0 };
   const conditions = [];
   if (params.jlptLevel) {
-    conditions.push(eq(grammar.jlptLevel, params.jlptLevel));
+    conditions.push((0, import_drizzle_orm.eq)(grammar.jlptLevel, params.jlptLevel));
   }
   if (params.search) {
     conditions.push(
-      or(
-        like(grammar.pattern, `%${params.search}%`),
-        like(grammar.meaning, `%${params.search}%`)
+      (0, import_drizzle_orm.or)(
+        (0, import_drizzle_orm.like)(grammar.pattern, `%${params.search}%`),
+        (0, import_drizzle_orm.like)(grammar.meaning, `%${params.search}%`)
       )
     );
   }
   if (params.firstLetter && KANA_RANGES[params.firstLetter]) {
     const range = KANA_RANGES[params.firstLetter];
     conditions.push(
-      and(
-        gte(grammar.pattern, range.start),
-        lte(grammar.pattern, range.end + "\u3093")
+      (0, import_drizzle_orm.and)(
+        (0, import_drizzle_orm.gte)(grammar.pattern, range.start),
+        (0, import_drizzle_orm.lte)(grammar.pattern, range.end + "\u3093")
       )
     );
   }
-  const countQuery = db.select({ count: sql`count(*)` }).from(grammar).where(conditions.length > 0 ? and(...conditions) : void 0);
+  const countQuery = db.select({ count: import_drizzle_orm.sql`count(*)` }).from(grammar).where(conditions.length > 0 ? (0, import_drizzle_orm.and)(...conditions) : void 0);
   const countResult = await countQuery;
   const total = countResult[0]?.count || 0;
-  let query = db.select().from(grammar).where(conditions.length > 0 ? and(...conditions) : void 0);
+  let query = db.select().from(grammar).where(conditions.length > 0 ? (0, import_drizzle_orm.and)(...conditions) : void 0);
   if (params.sortBy === "kana") {
     query = query.orderBy(grammar.pattern);
   } else {
@@ -744,13 +778,13 @@ async function getGrammarList(params) {
 async function getGrammarById(id) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.select().from(grammar).where(eq(grammar.id, id)).limit(1);
+  const result = await db.select().from(grammar).where((0, import_drizzle_orm.eq)(grammar.id, id)).limit(1);
   return result.length > 0 ? result[0] : null;
 }
 async function getGrammarByPattern(pattern) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.select().from(grammar).where(eq(grammar.pattern, pattern)).limit(1);
+  const result = await db.select().from(grammar).where((0, import_drizzle_orm.eq)(grammar.pattern, pattern)).limit(1);
   return result.length > 0 ? result[0] : null;
 }
 async function createGrammar(data) {
@@ -770,11 +804,11 @@ async function getGrammarWithExamples(id) {
   if (!db) return null;
   const grammarItem = await getGrammarById(id);
   if (!grammarItem) return null;
-  const exampleLinks = await db.select().from(grammarSentences).where(eq(grammarSentences.grammarId, id));
+  const exampleLinks = await db.select().from(grammarSentences).where((0, import_drizzle_orm.eq)(grammarSentences.grammarId, id));
   const exampleIds = exampleLinks.map((link) => link.sentenceId);
   let examples = [];
   if (exampleIds.length > 0) {
-    examples = await db.select().from(sentences).where(inArray(sentences.id, exampleIds));
+    examples = await db.select().from(sentences).where((0, import_drizzle_orm.inArray)(sentences.id, exampleIds));
   }
   return {
     ...grammarItem,
@@ -784,34 +818,34 @@ async function getGrammarWithExamples(id) {
 async function getSceneList() {
   const db = await getDb();
   if (!db) return [];
-  return await db.select().from(scenes).orderBy(asc(scenes.orderIndex));
+  return await db.select().from(scenes).orderBy((0, import_drizzle_orm.asc)(scenes.orderIndex));
 }
 async function getSceneById(id) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.select().from(scenes).where(eq(scenes.id, id)).limit(1);
+  const result = await db.select().from(scenes).where((0, import_drizzle_orm.eq)(scenes.id, id)).limit(1);
   return result.length > 0 ? result[0] : null;
 }
 async function getUserProgress(userId, itemType, itemId) {
   const db = await getDb();
   if (!db) return [];
-  const conditions = [eq(learningProgress.userId, userId)];
+  const conditions = [(0, import_drizzle_orm.eq)(learningProgress.userId, userId)];
   if (itemType) {
-    conditions.push(eq(learningProgress.itemType, itemType));
+    conditions.push((0, import_drizzle_orm.eq)(learningProgress.itemType, itemType));
   }
   if (itemId) {
-    conditions.push(eq(learningProgress.itemId, itemId));
+    conditions.push((0, import_drizzle_orm.eq)(learningProgress.itemId, itemId));
   }
-  return await db.select().from(learningProgress).where(and(...conditions));
+  return await db.select().from(learningProgress).where((0, import_drizzle_orm.and)(...conditions));
 }
 async function upsertLearningProgress(data) {
   const db = await getDb();
   if (!db) return;
   const existing = await db.select().from(learningProgress).where(
-    and(
-      eq(learningProgress.userId, data.userId),
-      eq(learningProgress.itemType, data.itemType),
-      eq(learningProgress.itemId, data.itemId)
+    (0, import_drizzle_orm.and)(
+      (0, import_drizzle_orm.eq)(learningProgress.userId, data.userId),
+      (0, import_drizzle_orm.eq)(learningProgress.itemType, data.itemType),
+      (0, import_drizzle_orm.eq)(learningProgress.itemId, data.itemId)
     )
   ).limit(1);
   if (existing.length > 0) {
@@ -821,7 +855,7 @@ async function upsertLearningProgress(data) {
       reviewCount: currentReviewCount + 1,
       lastReviewedAt: /* @__PURE__ */ new Date(),
       updatedAt: /* @__PURE__ */ new Date()
-    }).where(eq(learningProgress.id, existing[0].id));
+    }).where((0, import_drizzle_orm.eq)(learningProgress.id, existing[0].id));
   } else {
     await db.insert(learningProgress).values({
       userId: data.userId,
@@ -837,36 +871,36 @@ async function getReviewSchedule(userId, limit) {
   const db = await getDb();
   if (!db) return [];
   return await db.select().from(reviewSchedule).where(
-    and(
-      eq(reviewSchedule.userId, userId),
-      eq(reviewSchedule.completed, false)
+    (0, import_drizzle_orm.and)(
+      (0, import_drizzle_orm.eq)(reviewSchedule.userId, userId),
+      (0, import_drizzle_orm.eq)(reviewSchedule.completed, false)
     )
-  ).orderBy(asc(reviewSchedule.scheduledAt)).limit(limit || 20);
+  ).orderBy((0, import_drizzle_orm.asc)(reviewSchedule.scheduledAt)).limit(limit || 20);
 }
 async function getActiveResources(category) {
   const db = await getDb();
   if (!db) return [];
-  const conditions = [eq(learningResources.isActive, true)];
+  const conditions = [(0, import_drizzle_orm.eq)(learningResources.isActive, true)];
   if (category) {
-    conditions.push(eq(learningResources.category, category));
+    conditions.push((0, import_drizzle_orm.eq)(learningResources.category, category));
   }
-  return await db.select().from(learningResources).where(and(...conditions)).orderBy(desc(learningResources.reliability));
+  return await db.select().from(learningResources).where((0, import_drizzle_orm.and)(...conditions)).orderBy((0, import_drizzle_orm.desc)(learningResources.reliability));
 }
 async function getCurriculumByLevel(level) {
   const db = await getDb();
   if (!db) return [];
-  return await db.select().from(learningCurriculum).where(eq(learningCurriculum.level, level)).orderBy(asc(learningCurriculum.orderIndex));
+  return await db.select().from(learningCurriculum).where((0, import_drizzle_orm.eq)(learningCurriculum.level, level)).orderBy((0, import_drizzle_orm.asc)(learningCurriculum.orderIndex));
 }
 async function getCurriculumStageById(id) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.select().from(learningCurriculum).where(eq(learningCurriculum.id, id)).limit(1);
+  const result = await db.select().from(learningCurriculum).where((0, import_drizzle_orm.eq)(learningCurriculum.id, id)).limit(1);
   return result.length > 0 ? result[0] : null;
 }
 async function getUserLearningPath(userId) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.select().from(userLearningPath).where(eq(userLearningPath.userId, userId)).limit(1);
+  const result = await db.select().from(userLearningPath).where((0, import_drizzle_orm.eq)(userLearningPath.userId, userId)).limit(1);
   return result.length > 0 ? result[0] : null;
 }
 async function initUserLearningPath(userId) {
@@ -874,7 +908,7 @@ async function initUserLearningPath(userId) {
   if (!db) return;
   const existing = await getUserLearningPath(userId);
   if (existing) return existing;
-  const firstStage = await db.select().from(learningCurriculum).where(eq(learningCurriculum.level, "N5")).orderBy(asc(learningCurriculum.orderIndex)).limit(1);
+  const firstStage = await db.select().from(learningCurriculum).where((0, import_drizzle_orm.eq)(learningCurriculum.level, "N5")).orderBy((0, import_drizzle_orm.asc)(learningCurriculum.orderIndex)).limit(1);
   await db.insert(userLearningPath).values({
     userId,
     currentCurriculumStageId: firstStage.length > 0 ? firstStage[0].id : null,
@@ -888,14 +922,14 @@ async function initUserLearningPath(userId) {
 async function getAIGeneratedContent(params) {
   const db = await getDb();
   if (!db) return [];
-  const conditions = [eq(aiGeneratedContent.userId, params.userId)];
+  const conditions = [(0, import_drizzle_orm.eq)(aiGeneratedContent.userId, params.userId)];
   if (params.contentType) {
-    conditions.push(eq(aiGeneratedContent.contentType, params.contentType));
+    conditions.push((0, import_drizzle_orm.eq)(aiGeneratedContent.contentType, params.contentType));
   }
   if (params.curriculumStageId) {
-    conditions.push(eq(aiGeneratedContent.curriculumStageId, params.curriculumStageId));
+    conditions.push((0, import_drizzle_orm.eq)(aiGeneratedContent.curriculumStageId, params.curriculumStageId));
   }
-  return await db.select().from(aiGeneratedContent).where(and(...conditions)).orderBy(desc(aiGeneratedContent.createdAt)).limit(params.limit || 10);
+  return await db.select().from(aiGeneratedContent).where((0, import_drizzle_orm.and)(...conditions)).orderBy((0, import_drizzle_orm.desc)(aiGeneratedContent.createdAt)).limit(params.limit || 10);
 }
 async function saveAIGeneratedContent(data) {
   const db = await getDb();
@@ -924,12 +958,12 @@ async function createConversation(userId, title) {
 async function getUserConversations(userId) {
   const db = await getDb();
   if (!db) return [];
-  return await db.select().from(conversations).where(eq(conversations.userId, userId)).orderBy(desc(conversations.lastMessageAt));
+  return await db.select().from(conversations).where((0, import_drizzle_orm.eq)(conversations.userId, userId)).orderBy((0, import_drizzle_orm.desc)(conversations.lastMessageAt));
 }
 async function getConversationMessages(conversationId) {
   const db = await getDb();
   if (!db) return [];
-  return await db.select().from(conversationMessages).where(eq(conversationMessages.conversationId, conversationId)).orderBy(asc(conversationMessages.createdAt));
+  return await db.select().from(conversationMessages).where((0, import_drizzle_orm.eq)(conversationMessages.conversationId, conversationId)).orderBy((0, import_drizzle_orm.asc)(conversationMessages.createdAt));
 }
 async function addMessageToConversation(conversationId, role, content) {
   const db = await getDb();
@@ -939,32 +973,32 @@ async function addMessageToConversation(conversationId, role, content) {
     role,
     content
   });
-  await db.update(conversations).set({ lastMessageAt: /* @__PURE__ */ new Date() }).where(eq(conversations.id, conversationId));
+  await db.update(conversations).set({ lastMessageAt: /* @__PURE__ */ new Date() }).where((0, import_drizzle_orm.eq)(conversations.id, conversationId));
 }
 async function deleteConversation(conversationId, userId) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.delete(conversationMessages).where(eq(conversationMessages.conversationId, conversationId));
-  await db.delete(conversations).where(and(
-    eq(conversations.id, conversationId),
-    eq(conversations.userId, userId)
+  await db.delete(conversationMessages).where((0, import_drizzle_orm.eq)(conversationMessages.conversationId, conversationId));
+  await db.delete(conversations).where((0, import_drizzle_orm.and)(
+    (0, import_drizzle_orm.eq)(conversations.id, conversationId),
+    (0, import_drizzle_orm.eq)(conversations.userId, userId)
   ));
 }
 async function updateConversationTitle(conversationId, userId, title) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.update(conversations).set({ title }).where(and(
-    eq(conversations.id, conversationId),
-    eq(conversations.userId, userId)
+  await db.update(conversations).set({ title }).where((0, import_drizzle_orm.and)(
+    (0, import_drizzle_orm.eq)(conversations.id, conversationId),
+    (0, import_drizzle_orm.eq)(conversations.userId, userId)
   ));
 }
 async function getUserNote(userId, itemType, itemId) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.select().from(userNotes).where(and(
-    eq(userNotes.userId, userId),
-    eq(userNotes.itemType, itemType),
-    eq(userNotes.itemId, itemId)
+  const result = await db.select().from(userNotes).where((0, import_drizzle_orm.and)(
+    (0, import_drizzle_orm.eq)(userNotes.userId, userId),
+    (0, import_drizzle_orm.eq)(userNotes.itemType, itemType),
+    (0, import_drizzle_orm.eq)(userNotes.itemId, itemId)
   )).limit(1);
   return result[0] || null;
 }
@@ -973,7 +1007,7 @@ async function upsertUserNote(data) {
   if (!db) throw new Error("Database not available");
   const existing = await getUserNote(data.userId, data.itemType, data.itemId);
   if (existing) {
-    await db.update(userNotes).set({ content: data.content }).where(eq(userNotes.id, existing.id));
+    await db.update(userNotes).set({ content: data.content }).where((0, import_drizzle_orm.eq)(userNotes.id, existing.id));
     return { ...existing, content: data.content };
   } else {
     const result = await db.insert(userNotes).values({
@@ -991,10 +1025,10 @@ async function upsertUserNote(data) {
 async function deleteUserNote(userId, itemType, itemId) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.delete(userNotes).where(and(
-    eq(userNotes.userId, userId),
-    eq(userNotes.itemType, itemType),
-    eq(userNotes.itemId, itemId)
+  await db.delete(userNotes).where((0, import_drizzle_orm.and)(
+    (0, import_drizzle_orm.eq)(userNotes.userId, userId),
+    (0, import_drizzle_orm.eq)(userNotes.itemType, itemType),
+    (0, import_drizzle_orm.eq)(userNotes.itemId, itemId)
   ));
 }
 var REVIEW_INTERVALS = [1, 2, 4, 7, 15, 30];
@@ -1009,10 +1043,10 @@ function calculateNextReviewTime(reviewCount, easeFactor = 2.5) {
 async function addStudyRecord(userId, itemType, itemId) {
   const db = await getDb();
   if (!db) return null;
-  const existing = await db.select().from(studyRecords).where(and(
-    eq(studyRecords.userId, userId),
-    eq(studyRecords.itemType, itemType),
-    eq(studyRecords.itemId, itemId)
+  const existing = await db.select().from(studyRecords).where((0, import_drizzle_orm.and)(
+    (0, import_drizzle_orm.eq)(studyRecords.userId, userId),
+    (0, import_drizzle_orm.eq)(studyRecords.itemType, itemType),
+    (0, import_drizzle_orm.eq)(studyRecords.itemId, itemId)
   )).limit(1);
   if (existing.length > 0) {
     return existing[0];
@@ -1039,33 +1073,33 @@ async function getDueReviews(userId, itemType, limit = 50) {
   if (!db) return [];
   const now = /* @__PURE__ */ new Date();
   const conditions = [
-    eq(studyRecords.userId, userId),
-    lte(studyRecords.nextReviewAt, now),
-    eq(studyRecords.isMastered, false)
+    (0, import_drizzle_orm.eq)(studyRecords.userId, userId),
+    (0, import_drizzle_orm.lte)(studyRecords.nextReviewAt, now),
+    (0, import_drizzle_orm.eq)(studyRecords.isMastered, false)
   ];
   if (itemType) {
-    conditions.push(eq(studyRecords.itemType, itemType));
+    conditions.push((0, import_drizzle_orm.eq)(studyRecords.itemType, itemType));
   }
-  return await db.select().from(studyRecords).where(and(...conditions)).orderBy(asc(studyRecords.nextReviewAt)).limit(limit);
+  return await db.select().from(studyRecords).where((0, import_drizzle_orm.and)(...conditions)).orderBy((0, import_drizzle_orm.asc)(studyRecords.nextReviewAt)).limit(limit);
 }
 async function getStudyStats(userId) {
   const db = await getDb();
   if (!db) return null;
   const now = /* @__PURE__ */ new Date();
-  const totalLearned = await db.select({ count: sql`count(*)` }).from(studyRecords).where(eq(studyRecords.userId, userId));
-  const dueReviews = await db.select({ count: sql`count(*)` }).from(studyRecords).where(and(
-    eq(studyRecords.userId, userId),
-    lte(studyRecords.nextReviewAt, now),
-    eq(studyRecords.isMastered, false)
+  const totalLearned = await db.select({ count: import_drizzle_orm.sql`count(*)` }).from(studyRecords).where((0, import_drizzle_orm.eq)(studyRecords.userId, userId));
+  const dueReviews = await db.select({ count: import_drizzle_orm.sql`count(*)` }).from(studyRecords).where((0, import_drizzle_orm.and)(
+    (0, import_drizzle_orm.eq)(studyRecords.userId, userId),
+    (0, import_drizzle_orm.lte)(studyRecords.nextReviewAt, now),
+    (0, import_drizzle_orm.eq)(studyRecords.isMastered, false)
   ));
-  const mastered = await db.select({ count: sql`count(*)` }).from(studyRecords).where(and(
-    eq(studyRecords.userId, userId),
-    eq(studyRecords.isMastered, true)
+  const mastered = await db.select({ count: import_drizzle_orm.sql`count(*)` }).from(studyRecords).where((0, import_drizzle_orm.and)(
+    (0, import_drizzle_orm.eq)(studyRecords.userId, userId),
+    (0, import_drizzle_orm.eq)(studyRecords.isMastered, true)
   ));
   const byType = await db.select({
     itemType: studyRecords.itemType,
-    count: sql`count(*)`
-  }).from(studyRecords).where(eq(studyRecords.userId, userId)).groupBy(studyRecords.itemType);
+    count: import_drizzle_orm.sql`count(*)`
+  }).from(studyRecords).where((0, import_drizzle_orm.eq)(studyRecords.userId, userId)).groupBy(studyRecords.itemType);
   return {
     totalLearned: totalLearned[0]?.count || 0,
     dueReviews: dueReviews[0]?.count || 0,
@@ -1077,9 +1111,9 @@ async function getStudyStats(userId) {
 async function updateReviewResult(userId, recordId, quality) {
   const db = await getDb();
   if (!db) return null;
-  const records = await db.select().from(studyRecords).where(and(
-    eq(studyRecords.id, recordId),
-    eq(studyRecords.userId, userId)
+  const records = await db.select().from(studyRecords).where((0, import_drizzle_orm.and)(
+    (0, import_drizzle_orm.eq)(studyRecords.id, recordId),
+    (0, import_drizzle_orm.eq)(studyRecords.userId, userId)
   )).limit(1);
   if (records.length === 0) return null;
   const record = records[0];
@@ -1106,7 +1140,7 @@ async function updateReviewResult(userId, recordId, quality) {
     correctCount: isCorrect ? record.correctCount + 1 : record.correctCount,
     incorrectCount: isCorrect ? record.incorrectCount : record.incorrectCount + 1,
     isMastered
-  }).where(eq(studyRecords.id, recordId));
+  }).where((0, import_drizzle_orm.eq)(studyRecords.id, recordId));
   await updateDailyStats(userId, {
     itemsReviewed: 1,
     correctReviews: isCorrect ? 1 : 0,
@@ -1123,9 +1157,9 @@ async function updateDailyStats(userId, updates) {
   const db = await getDb();
   if (!db) return;
   const today = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
-  const existing = await db.select().from(dailyStudyStats).where(and(
-    eq(dailyStudyStats.userId, userId),
-    eq(dailyStudyStats.date, today)
+  const existing = await db.select().from(dailyStudyStats).where((0, import_drizzle_orm.and)(
+    (0, import_drizzle_orm.eq)(dailyStudyStats.userId, userId),
+    (0, import_drizzle_orm.eq)(dailyStudyStats.date, today)
   )).limit(1);
   if (existing.length > 0) {
     await db.update(dailyStudyStats).set({
@@ -1134,7 +1168,7 @@ async function updateDailyStats(userId, updates) {
       correctReviews: existing[0].correctReviews + (updates.correctReviews || 0),
       incorrectReviews: existing[0].incorrectReviews + (updates.incorrectReviews || 0),
       studyMinutes: existing[0].studyMinutes + (updates.studyMinutes || 0)
-    }).where(eq(dailyStudyStats.id, existing[0].id));
+    }).where((0, import_drizzle_orm.eq)(dailyStudyStats.id, existing[0].id));
   } else {
     await db.insert(dailyStudyStats).values({
       userId,
@@ -1153,28 +1187,28 @@ async function getDailyStats(userId, days = 7) {
   const startDate = /* @__PURE__ */ new Date();
   startDate.setDate(startDate.getDate() - days);
   const startDateStr = startDate.toISOString().split("T")[0];
-  return await db.select().from(dailyStudyStats).where(and(
-    eq(dailyStudyStats.userId, userId),
-    gte(dailyStudyStats.date, startDateStr)
-  )).orderBy(desc(dailyStudyStats.date));
+  return await db.select().from(dailyStudyStats).where((0, import_drizzle_orm.and)(
+    (0, import_drizzle_orm.eq)(dailyStudyStats.userId, userId),
+    (0, import_drizzle_orm.gte)(dailyStudyStats.date, startDateStr)
+  )).orderBy((0, import_drizzle_orm.desc)(dailyStudyStats.date));
 }
 async function isItemInStudyPlan(userId, itemType, itemId) {
   const db = await getDb();
   if (!db) return false;
-  const existing = await db.select({ id: studyRecords.id }).from(studyRecords).where(and(
-    eq(studyRecords.userId, userId),
-    eq(studyRecords.itemType, itemType),
-    eq(studyRecords.itemId, itemId)
+  const existing = await db.select({ id: studyRecords.id }).from(studyRecords).where((0, import_drizzle_orm.and)(
+    (0, import_drizzle_orm.eq)(studyRecords.userId, userId),
+    (0, import_drizzle_orm.eq)(studyRecords.itemType, itemType),
+    (0, import_drizzle_orm.eq)(studyRecords.itemId, itemId)
   )).limit(1);
   return existing.length > 0;
 }
 async function removeFromStudyPlan(userId, itemType, itemId) {
   const db = await getDb();
   if (!db) return false;
-  await db.delete(studyRecords).where(and(
-    eq(studyRecords.userId, userId),
-    eq(studyRecords.itemType, itemType),
-    eq(studyRecords.itemId, itemId)
+  await db.delete(studyRecords).where((0, import_drizzle_orm.and)(
+    (0, import_drizzle_orm.eq)(studyRecords.userId, userId),
+    (0, import_drizzle_orm.eq)(studyRecords.itemType, itemType),
+    (0, import_drizzle_orm.eq)(studyRecords.itemId, itemId)
   ));
   return true;
 }
@@ -1182,32 +1216,32 @@ async function getSceneCategories(parentId) {
   const db = await getDb();
   if (!db) return [];
   if (parentId !== void 0) {
-    return await db.select().from(sceneCategories).where(eq(sceneCategories.parentId, parentId)).orderBy(asc(sceneCategories.orderIndex));
+    return await db.select().from(sceneCategories).where((0, import_drizzle_orm.eq)(sceneCategories.parentId, parentId)).orderBy((0, import_drizzle_orm.asc)(sceneCategories.orderIndex));
   }
-  return await db.select().from(sceneCategories).orderBy(asc(sceneCategories.orderIndex));
+  return await db.select().from(sceneCategories).orderBy((0, import_drizzle_orm.asc)(sceneCategories.orderIndex));
 }
 async function getLearningUnits(params) {
   const db = await getDb();
   if (!db) return { items: [], total: 0 };
-  const conditions = [eq(learningUnits.isPublished, true)];
+  const conditions = [(0, import_drizzle_orm.eq)(learningUnits.isPublished, true)];
   if (params.category) {
-    conditions.push(eq(learningUnits.category, params.category));
+    conditions.push((0, import_drizzle_orm.eq)(learningUnits.category, params.category));
   }
   if (params.subCategory) {
-    conditions.push(eq(learningUnits.subCategory, params.subCategory));
+    conditions.push((0, import_drizzle_orm.eq)(learningUnits.subCategory, params.subCategory));
   }
   if (params.unitType) {
-    conditions.push(eq(learningUnits.unitType, params.unitType));
+    conditions.push((0, import_drizzle_orm.eq)(learningUnits.unitType, params.unitType));
   }
   if (params.jlptLevel) {
-    conditions.push(eq(learningUnits.jlptLevel, params.jlptLevel));
+    conditions.push((0, import_drizzle_orm.eq)(learningUnits.jlptLevel, params.jlptLevel));
   }
   if (params.difficulty) {
-    conditions.push(eq(learningUnits.difficulty, params.difficulty));
+    conditions.push((0, import_drizzle_orm.eq)(learningUnits.difficulty, params.difficulty));
   }
   const [items, countResult] = await Promise.all([
-    db.select().from(learningUnits).where(and(...conditions)).orderBy(asc(learningUnits.difficulty), asc(learningUnits.orderIndex)).limit(params.limit || 50).offset(params.offset || 0),
-    db.select({ count: sql`count(*)` }).from(learningUnits).where(and(...conditions))
+    db.select().from(learningUnits).where((0, import_drizzle_orm.and)(...conditions)).orderBy((0, import_drizzle_orm.asc)(learningUnits.difficulty), (0, import_drizzle_orm.asc)(learningUnits.orderIndex)).limit(params.limit || 50).offset(params.offset || 0),
+    db.select({ count: import_drizzle_orm.sql`count(*)` }).from(learningUnits).where((0, import_drizzle_orm.and)(...conditions))
   ]);
   return {
     items,
@@ -1217,22 +1251,22 @@ async function getLearningUnits(params) {
 async function getLearningUnitById(id) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.select().from(learningUnits).where(eq(learningUnits.id, id)).limit(1);
+  const result = await db.select().from(learningUnits).where((0, import_drizzle_orm.eq)(learningUnits.id, id)).limit(1);
   return result.length > 0 ? result[0] : null;
 }
 async function getMediaMaterials(params) {
   const db = await getDb();
   if (!db) return { items: [], total: 0 };
-  const conditions = [eq(mediaMaterials.isPublished, true)];
+  const conditions = [(0, import_drizzle_orm.eq)(mediaMaterials.isPublished, true)];
   if (params.mediaType) {
-    conditions.push(eq(mediaMaterials.mediaType, params.mediaType));
+    conditions.push((0, import_drizzle_orm.eq)(mediaMaterials.mediaType, params.mediaType));
   }
   if (params.jlptLevel) {
-    conditions.push(eq(mediaMaterials.jlptLevel, params.jlptLevel));
+    conditions.push((0, import_drizzle_orm.eq)(mediaMaterials.jlptLevel, params.jlptLevel));
   }
   const [items, countResult] = await Promise.all([
-    db.select().from(mediaMaterials).where(and(...conditions)).orderBy(desc(mediaMaterials.createdAt)).limit(params.limit || 50).offset(params.offset || 0),
-    db.select({ count: sql`count(*)` }).from(mediaMaterials).where(and(...conditions))
+    db.select().from(mediaMaterials).where((0, import_drizzle_orm.and)(...conditions)).orderBy((0, import_drizzle_orm.desc)(mediaMaterials.createdAt)).limit(params.limit || 50).offset(params.offset || 0),
+    db.select({ count: import_drizzle_orm.sql`count(*)` }).from(mediaMaterials).where((0, import_drizzle_orm.and)(...conditions))
   ]);
   return {
     items,
@@ -1242,7 +1276,7 @@ async function getMediaMaterials(params) {
 async function getMediaMaterialById(id) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.select().from(mediaMaterials).where(eq(mediaMaterials.id, id)).limit(1);
+  const result = await db.select().from(mediaMaterials).where((0, import_drizzle_orm.eq)(mediaMaterials.id, id)).limit(1);
   return result.length > 0 ? result[0] : null;
 }
 async function getUserUnitProgress(userId, unitId) {
@@ -1250,14 +1284,14 @@ async function getUserUnitProgress(userId, unitId) {
   if (!db) return unitId ? null : [];
   if (unitId) {
     const result = await db.select().from(userUnitProgress).where(
-      and(
-        eq(userUnitProgress.userId, userId),
-        eq(userUnitProgress.unitId, unitId)
+      (0, import_drizzle_orm.and)(
+        (0, import_drizzle_orm.eq)(userUnitProgress.userId, userId),
+        (0, import_drizzle_orm.eq)(userUnitProgress.unitId, unitId)
       )
     ).limit(1);
     return result.length > 0 ? result[0] : null;
   }
-  return await db.select().from(userUnitProgress).where(eq(userUnitProgress.userId, userId)).orderBy(desc(userUnitProgress.lastAccessedAt));
+  return await db.select().from(userUnitProgress).where((0, import_drizzle_orm.eq)(userUnitProgress.userId, userId)).orderBy((0, import_drizzle_orm.desc)(userUnitProgress.lastAccessedAt));
 }
 async function updateUserUnitProgress(data) {
   const db = await getDb();
@@ -1269,7 +1303,7 @@ async function updateUserUnitProgress(data) {
       completionRate: data.completionRate ?? existing.completionRate,
       lastAccessedAt: /* @__PURE__ */ new Date(),
       completedAt: data.status === "completed" || data.status === "mastered" ? /* @__PURE__ */ new Date() : existing.completedAt
-    }).where(eq(userUnitProgress.id, existing.id));
+    }).where((0, import_drizzle_orm.eq)(userUnitProgress.id, existing.id));
   } else {
     await db.insert(userUnitProgress).values({
       userId: data.userId,
@@ -1285,9 +1319,9 @@ async function getDailyLearningPlan(userId, date) {
   const db = await getDb();
   if (!db) return null;
   const result = await db.select().from(dailyLearningPlans).where(
-    and(
-      eq(dailyLearningPlans.userId, userId),
-      eq(dailyLearningPlans.date, date)
+    (0, import_drizzle_orm.and)(
+      (0, import_drizzle_orm.eq)(dailyLearningPlans.userId, userId),
+      (0, import_drizzle_orm.eq)(dailyLearningPlans.date, date)
     )
   ).limit(1);
   return result.length > 0 ? result[0] : null;
@@ -1302,7 +1336,7 @@ async function upsertDailyLearningPlan(data) {
       plannedUnits: data.plannedUnits,
       aiReasoning: data.aiReasoning,
       totalPlannedMinutes: totalMinutes
-    }).where(eq(dailyLearningPlans.id, existing.id));
+    }).where((0, import_drizzle_orm.eq)(dailyLearningPlans.id, existing.id));
     return existing.id;
   } else {
     const result = await db.insert(dailyLearningPlans).values({
@@ -1322,18 +1356,18 @@ async function getExpressions(params) {
   if (!db) return { items: [], total: 0 };
   const conditions = [];
   if (params.functionCategory) {
-    conditions.push(eq(expressionBank.functionCategory, params.functionCategory));
+    conditions.push((0, import_drizzle_orm.eq)(expressionBank.functionCategory, params.functionCategory));
   }
   if (params.situationCategory) {
-    conditions.push(eq(expressionBank.situationCategory, params.situationCategory));
+    conditions.push((0, import_drizzle_orm.eq)(expressionBank.situationCategory, params.situationCategory));
   }
   if (params.jlptLevel) {
-    conditions.push(eq(expressionBank.jlptLevel, params.jlptLevel));
+    conditions.push((0, import_drizzle_orm.eq)(expressionBank.jlptLevel, params.jlptLevel));
   }
-  const whereClause = conditions.length > 0 ? and(...conditions) : void 0;
+  const whereClause = conditions.length > 0 ? (0, import_drizzle_orm.and)(...conditions) : void 0;
   const [items, countResult] = await Promise.all([
-    db.select().from(expressionBank).where(whereClause).orderBy(asc(expressionBank.difficulty)).limit(params.limit || 50).offset(params.offset || 0),
-    db.select({ count: sql`count(*)` }).from(expressionBank).where(whereClause)
+    db.select().from(expressionBank).where(whereClause).orderBy((0, import_drizzle_orm.asc)(expressionBank.difficulty)).limit(params.limit || 50).offset(params.offset || 0),
+    db.select({ count: import_drizzle_orm.sql`count(*)` }).from(expressionBank).where(whereClause)
   ]);
   return {
     items,
@@ -1344,40 +1378,40 @@ async function getRecommendedUnits(userId, limit = 10) {
   const db = await getDb();
   if (!db) return [];
   const completedProgress = await db.select({ unitId: userUnitProgress.unitId }).from(userUnitProgress).where(
-    and(
-      eq(userUnitProgress.userId, userId),
-      inArray(userUnitProgress.status, ["completed", "mastered"])
+    (0, import_drizzle_orm.and)(
+      (0, import_drizzle_orm.eq)(userUnitProgress.userId, userId),
+      (0, import_drizzle_orm.inArray)(userUnitProgress.status, ["completed", "mastered"])
     )
   );
   const completedIds = completedProgress.map((p) => p.unitId);
-  const maxDifficultyResult = await db.select({ maxDiff: sql`MAX(${learningUnits.difficulty})` }).from(learningUnits).innerJoin(userUnitProgress, eq(learningUnits.id, userUnitProgress.unitId)).where(
-    and(
-      eq(userUnitProgress.userId, userId),
-      inArray(userUnitProgress.status, ["completed", "mastered"])
+  const maxDifficultyResult = await db.select({ maxDiff: import_drizzle_orm.sql`MAX(${learningUnits.difficulty})` }).from(learningUnits).innerJoin(userUnitProgress, (0, import_drizzle_orm.eq)(learningUnits.id, userUnitProgress.unitId)).where(
+    (0, import_drizzle_orm.and)(
+      (0, import_drizzle_orm.eq)(userUnitProgress.userId, userId),
+      (0, import_drizzle_orm.inArray)(userUnitProgress.status, ["completed", "mastered"])
     )
   );
   const currentMaxDifficulty = maxDifficultyResult[0]?.maxDiff || 0;
   const recommendedUnits = await db.select().from(learningUnits).where(
-    and(
-      eq(learningUnits.isPublished, true),
-      lte(learningUnits.difficulty, currentMaxDifficulty + 2),
-      completedIds.length > 0 ? notInArray(learningUnits.id, completedIds) : void 0
+    (0, import_drizzle_orm.and)(
+      (0, import_drizzle_orm.eq)(learningUnits.isPublished, true),
+      (0, import_drizzle_orm.lte)(learningUnits.difficulty, currentMaxDifficulty + 2),
+      completedIds.length > 0 ? (0, import_drizzle_orm.notInArray)(learningUnits.id, completedIds) : void 0
     )
-  ).orderBy(asc(learningUnits.difficulty), asc(learningUnits.orderIndex)).limit(limit);
+  ).orderBy((0, import_drizzle_orm.asc)(learningUnits.difficulty), (0, import_drizzle_orm.asc)(learningUnits.orderIndex)).limit(limit);
   return recommendedUnits;
 }
 async function getKnowledgeExpansion(unitId) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.select().from(knowledgeExpansions).where(eq(knowledgeExpansions.unitId, unitId)).limit(1);
+  const result = await db.select().from(knowledgeExpansions).where((0, import_drizzle_orm.eq)(knowledgeExpansions.unitId, unitId)).limit(1);
   return result[0]?.content || null;
 }
 async function saveKnowledgeExpansion(unitId, content) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const existing = await db.select().from(knowledgeExpansions).where(eq(knowledgeExpansions.unitId, unitId)).limit(1);
+  const existing = await db.select().from(knowledgeExpansions).where((0, import_drizzle_orm.eq)(knowledgeExpansions.unitId, unitId)).limit(1);
   if (existing.length > 0) {
-    await db.update(knowledgeExpansions).set({ content, updatedAt: /* @__PURE__ */ new Date() }).where(eq(knowledgeExpansions.unitId, unitId));
+    await db.update(knowledgeExpansions).set({ content, updatedAt: /* @__PURE__ */ new Date() }).where((0, import_drizzle_orm.eq)(knowledgeExpansions.unitId, unitId));
   } else {
     await db.insert(knowledgeExpansions).values({
       unitId,
@@ -1390,14 +1424,14 @@ async function saveKnowledgeExpansion(unitId, content) {
 // server/routers/admin.ts
 var adminRouter = router({
   // 批量导入词汇
-  importVocabulary: protectedProcedure.input(z2.object({
-    data: z2.array(z2.object({
-      expression: z2.string(),
-      reading: z2.string(),
-      meaning: z2.string(),
-      level: z2.enum(["N5", "N4", "N3", "N2", "N1"]),
-      partOfSpeech: z2.string().optional(),
-      tags: z2.string().optional()
+  importVocabulary: protectedProcedure.input(import_zod2.z.object({
+    data: import_zod2.z.array(import_zod2.z.object({
+      expression: import_zod2.z.string(),
+      reading: import_zod2.z.string(),
+      meaning: import_zod2.z.string(),
+      level: import_zod2.z.enum(["N5", "N4", "N3", "N2", "N1"]),
+      partOfSpeech: import_zod2.z.string().optional(),
+      tags: import_zod2.z.string().optional()
     }))
   })).mutation(async ({ ctx, input }) => {
     let success = 0;
@@ -1428,13 +1462,13 @@ var adminRouter = router({
     return { success, failed, errors };
   }),
   // 批量导入语法
-  importGrammar: protectedProcedure.input(z2.object({
-    data: z2.array(z2.object({
-      pattern: z2.string(),
-      meaning: z2.string(),
-      level: z2.enum(["N5", "N4", "N3", "N2", "N1"]),
-      explanation: z2.string().optional(),
-      tags: z2.string().optional()
+  importGrammar: protectedProcedure.input(import_zod2.z.object({
+    data: import_zod2.z.array(import_zod2.z.object({
+      pattern: import_zod2.z.string(),
+      meaning: import_zod2.z.string(),
+      level: import_zod2.z.enum(["N5", "N4", "N3", "N2", "N1"]),
+      explanation: import_zod2.z.string().optional(),
+      tags: import_zod2.z.string().optional()
     }))
   })).mutation(async ({ ctx, input }) => {
     let success = 0;
@@ -1466,7 +1500,7 @@ var adminRouter = router({
 });
 
 // server/routers.ts
-import { z as z3 } from "zod";
+var import_zod3 = require("zod");
 
 // server/_core/llm.ts
 var ensureArray = (value) => Array.isArray(value) ? value : [value];
@@ -1752,7 +1786,7 @@ function getLanguageName(langCode) {
 }
 
 // server/slangUpdater.ts
-import { eq as eq2 } from "drizzle-orm";
+var import_drizzle_orm2 = require("drizzle-orm");
 async function extractSlangWordsFromText(searchResults) {
   const prompt = `\u4F60\u662F\u4E00\u4E2A\u65E5\u8BED\u7F51\u7EDC\u70ED\u8BCD\u4E13\u5BB6\u3002\u8BF7\u4ECE\u4EE5\u4E0B\u641C\u7D22\u7ED3\u679C\u4E2D\u63D0\u53D610-15\u4E2A2024-2025\u5E74\u6700\u65B0\u7684\u65E5\u8BED\u7F51\u7EDC\u70ED\u8BCD\u3002
 
@@ -1889,7 +1923,7 @@ async function updateSlangWords() {
     const uniqueWordsList = Array.from(uniqueWords.values());
     for (const word of uniqueWordsList) {
       try {
-        const existing = await db.select().from(vocabulary).where(eq2(vocabulary.expression, word.expression)).limit(1);
+        const existing = await db.select().from(vocabulary).where((0, import_drizzle_orm2.eq)(vocabulary.expression, word.expression)).limit(1);
         if (existing.length > 0) {
           if (existing[0].category !== "slang") {
             console.log(`\u8DF3\u8FC7\u4E0E\u6807\u51C6\u8BCD\u6C47\u5E93\u91CD\u590D\u7684\u8BCD: ${word.expression}`);
@@ -1903,7 +1937,7 @@ async function updateSlangWords() {
             source: word.source,
             partOfSpeech: word.partOfSpeech,
             updatedAt: /* @__PURE__ */ new Date()
-          }).where(eq2(vocabulary.id, existing[0].id));
+          }).where((0, import_drizzle_orm2.eq)(vocabulary.id, existing[0].id));
           updatedCount++;
         } else {
           const [inserted] = await db.insert(vocabulary).values({
@@ -1975,8 +2009,8 @@ async function getSlangUpdateStatus() {
         totalSlangCount: 0
       };
     }
-    const latestSlang = await db.select().from(vocabulary).where(eq2(vocabulary.category, "slang")).orderBy(vocabulary.updatedAt).limit(1);
-    const allSlang = await db.select().from(vocabulary).where(eq2(vocabulary.category, "slang"));
+    const latestSlang = await db.select().from(vocabulary).where((0, import_drizzle_orm2.eq)(vocabulary.category, "slang")).orderBy(vocabulary.updatedAt).limit(1);
+    const allSlang = await db.select().from(vocabulary).where((0, import_drizzle_orm2.eq)(vocabulary.category, "slang"));
     return {
       lastUpdateTime: latestSlang[0]?.updatedAt || null,
       totalSlangCount: allSlang.length
@@ -1991,13 +2025,13 @@ async function getSlangUpdateStatus() {
 }
 
 // server/utils/password.ts
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
-var scryptAsync = promisify(scrypt);
+var import_crypto = require("crypto");
+var import_util = require("util");
+var scryptAsync = (0, import_util.promisify)(import_crypto.scrypt);
 var SALT_LENGTH = 32;
 var KEY_LENGTH = 64;
 async function hashPassword(password) {
-  const salt = randomBytes(SALT_LENGTH);
+  const salt = (0, import_crypto.randomBytes)(SALT_LENGTH);
   const derivedKey = await scryptAsync(password, salt, KEY_LENGTH);
   return `${salt.toString("hex")}:${derivedKey.toString("hex")}`;
 }
@@ -2009,7 +2043,7 @@ async function verifyPassword(password, storedHash) {
   const salt = Buffer.from(saltHex, "hex");
   const storedKey = Buffer.from(hashHex, "hex");
   const derivedKey = await scryptAsync(password, salt, KEY_LENGTH);
-  return timingSafeEqual(storedKey, derivedKey);
+  return (0, import_crypto.timingSafeEqual)(storedKey, derivedKey);
 }
 
 // shared/_core/errors.ts
@@ -2023,15 +2057,15 @@ var HttpError = class extends Error {
 var ForbiddenError = (msg) => new HttpError(403, msg);
 
 // server/_core/sdk.ts
-import { parse as parseCookieHeader } from "cookie";
-import { SignJWT, jwtVerify } from "jose";
+var import_cookie = require("cookie");
+var import_jose = require("jose");
 var isNonEmptyString2 = (value) => typeof value === "string" && value.length > 0;
 var AuthService = class {
   parseCookies(cookieHeader) {
     if (!cookieHeader) {
       return /* @__PURE__ */ new Map();
     }
-    const parsed = parseCookieHeader(cookieHeader);
+    const parsed = (0, import_cookie.parse)(cookieHeader);
     return new Map(Object.entries(parsed));
   }
   getSessionSecret() {
@@ -2046,7 +2080,7 @@ var AuthService = class {
     const expiresInMs = options.expiresInMs ?? ONE_YEAR_MS;
     const expirationSeconds = Math.floor((issuedAt + expiresInMs) / 1e3);
     const secretKey = this.getSessionSecret();
-    return new SignJWT({
+    return new import_jose.SignJWT({
       userId,
       appId: ENV.appId,
       name: options.name || ""
@@ -2059,7 +2093,7 @@ var AuthService = class {
     }
     try {
       const secretKey = this.getSessionSecret();
-      const { payload } = await jwtVerify(cookieValue, secretKey, {
+      const { payload } = await (0, import_jose.jwtVerify)(cookieValue, secretKey, {
         algorithms: ["HS256"]
       });
       const { userId, appId, name } = payload;
@@ -2095,7 +2129,7 @@ var AuthService = class {
 var sdk = new AuthService();
 
 // server/routers.ts
-import { TRPCError as TRPCError3 } from "@trpc/server";
+var import_server3 = require("@trpc/server");
 function extractJSON(content) {
   let cleaned = content.trim();
   if (cleaned.startsWith("```json")) {
@@ -2113,15 +2147,15 @@ var appRouter = router({
   system: systemRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
-    register: publicProcedure.input(z3.object({
-      username: z3.string().min(3).max(64),
-      email: z3.string().email().optional(),
-      password: z3.string().min(6).max(100),
-      name: z3.string().optional()
+    register: publicProcedure.input(import_zod3.z.object({
+      username: import_zod3.z.string().min(3).max(64),
+      email: import_zod3.z.string().email().optional(),
+      password: import_zod3.z.string().min(6).max(100),
+      name: import_zod3.z.string().optional()
     })).mutation(async ({ ctx, input }) => {
       const existingUsername = await getUserByUsername(input.username);
       if (existingUsername) {
-        throw new TRPCError3({
+        throw new import_server3.TRPCError({
           code: "CONFLICT",
           message: "\u7528\u6237\u540D\u5DF2\u5B58\u5728"
         });
@@ -2129,7 +2163,7 @@ var appRouter = router({
       if (input.email) {
         const existingEmail = await getUserByEmail(input.email);
         if (existingEmail) {
-          throw new TRPCError3({
+          throw new import_server3.TRPCError({
             code: "CONFLICT",
             message: "\u90AE\u7BB1\u5DF2\u88AB\u6CE8\u518C"
           });
@@ -2153,27 +2187,27 @@ var appRouter = router({
       });
       return { success: true, userId };
     }),
-    login: publicProcedure.input(z3.object({
-      identifier: z3.string().min(1),
+    login: publicProcedure.input(import_zod3.z.object({
+      identifier: import_zod3.z.string().min(1),
       // username or email
-      password: z3.string().min(1)
+      password: import_zod3.z.string().min(1)
     })).mutation(async ({ ctx, input }) => {
       const user = await getUserByEmailOrUsername(input.identifier);
       if (!user) {
-        throw new TRPCError3({
+        throw new import_server3.TRPCError({
           code: "UNAUTHORIZED",
           message: "\u7528\u6237\u540D\u6216\u5BC6\u7801\u9519\u8BEF"
         });
       }
       if (!user.passwordHash) {
-        throw new TRPCError3({
+        throw new import_server3.TRPCError({
           code: "UNAUTHORIZED",
           message: "\u8BE5\u8D26\u6237\u672A\u8BBE\u7F6E\u5BC6\u7801"
         });
       }
       const isValid = await verifyPassword(input.password, user.passwordHash);
       if (!isValid) {
-        throw new TRPCError3({
+        throw new import_server3.TRPCError({
           code: "UNAUTHORIZED",
           message: "\u7528\u6237\u540D\u6216\u5BC6\u7801\u9519\u8BEF"
         });
@@ -2217,27 +2251,27 @@ var appRouter = router({
     })
   }),
   vocabulary: router({
-    list: publicProcedure.input(z3.object({
-      jlptLevel: z3.enum(["N5", "N4", "N3", "N2", "N1"]).optional(),
-      search: z3.string().optional(),
-      firstLetter: z3.enum(["a", "ka", "sa", "ta", "na", "ha", "ma", "ya", "ra", "wa"]).optional(),
-      sortBy: z3.enum(["default", "kana"]).optional(),
-      limit: z3.number().optional(),
-      offset: z3.number().optional()
+    list: publicProcedure.input(import_zod3.z.object({
+      jlptLevel: import_zod3.z.enum(["N5", "N4", "N3", "N2", "N1"]).optional(),
+      search: import_zod3.z.string().optional(),
+      firstLetter: import_zod3.z.enum(["a", "ka", "sa", "ta", "na", "ha", "ma", "ya", "ra", "wa"]).optional(),
+      sortBy: import_zod3.z.enum(["default", "kana"]).optional(),
+      limit: import_zod3.z.number().optional(),
+      offset: import_zod3.z.number().optional()
     })).query(async ({ input }) => {
       return await getVocabularyList(input);
     }),
-    getById: publicProcedure.input(z3.object({ id: z3.number() })).query(async ({ input }) => {
+    getById: publicProcedure.input(import_zod3.z.object({ id: import_zod3.z.number() })).query(async ({ input }) => {
       return await getVocabularyWithExamples(input.id);
     }),
     // 获取词汇笔记
-    getNote: protectedProcedure.input(z3.object({ vocabularyId: z3.number() })).query(async ({ ctx, input }) => {
+    getNote: protectedProcedure.input(import_zod3.z.object({ vocabularyId: import_zod3.z.number() })).query(async ({ ctx, input }) => {
       return await getUserNote(ctx.user.id, "vocabulary", input.vocabularyId);
     }),
     // 保存词汇笔记
-    saveNote: protectedProcedure.input(z3.object({
-      vocabularyId: z3.number(),
-      content: z3.string()
+    saveNote: protectedProcedure.input(import_zod3.z.object({
+      vocabularyId: import_zod3.z.number(),
+      content: import_zod3.z.string()
     })).mutation(async ({ ctx, input }) => {
       return await upsertUserNote({
         userId: ctx.user.id,
@@ -2247,7 +2281,7 @@ var appRouter = router({
       });
     }),
     // 删除词汇笔记
-    deleteNote: protectedProcedure.input(z3.object({ vocabularyId: z3.number() })).mutation(async ({ ctx, input }) => {
+    deleteNote: protectedProcedure.input(import_zod3.z.object({ vocabularyId: import_zod3.z.number() })).mutation(async ({ ctx, input }) => {
       await deleteUserNote(ctx.user.id, "vocabulary", input.vocabularyId);
       return { success: true };
     })
@@ -2258,27 +2292,27 @@ var appRouter = router({
    * ============================================
    */
   grammar: router({
-    list: publicProcedure.input(z3.object({
-      jlptLevel: z3.enum(["N5", "N4", "N3", "N2", "N1"]).optional(),
-      search: z3.string().optional(),
-      firstLetter: z3.enum(["a", "ka", "sa", "ta", "na", "ha", "ma", "ya", "ra", "wa"]).optional(),
-      sortBy: z3.enum(["default", "kana"]).optional(),
-      limit: z3.number().optional(),
-      offset: z3.number().optional()
+    list: publicProcedure.input(import_zod3.z.object({
+      jlptLevel: import_zod3.z.enum(["N5", "N4", "N3", "N2", "N1"]).optional(),
+      search: import_zod3.z.string().optional(),
+      firstLetter: import_zod3.z.enum(["a", "ka", "sa", "ta", "na", "ha", "ma", "ya", "ra", "wa"]).optional(),
+      sortBy: import_zod3.z.enum(["default", "kana"]).optional(),
+      limit: import_zod3.z.number().optional(),
+      offset: import_zod3.z.number().optional()
     })).query(async ({ input }) => {
       return await getGrammarList(input);
     }),
-    getById: publicProcedure.input(z3.object({ id: z3.number() })).query(async ({ input }) => {
+    getById: publicProcedure.input(import_zod3.z.object({ id: import_zod3.z.number() })).query(async ({ input }) => {
       return await getGrammarWithExamples(input.id);
     }),
     // 获取语法笔记
-    getNote: protectedProcedure.input(z3.object({ grammarId: z3.number() })).query(async ({ ctx, input }) => {
+    getNote: protectedProcedure.input(import_zod3.z.object({ grammarId: import_zod3.z.number() })).query(async ({ ctx, input }) => {
       return await getUserNote(ctx.user.id, "grammar", input.grammarId);
     }),
     // 保存语法笔记
-    saveNote: protectedProcedure.input(z3.object({
-      grammarId: z3.number(),
-      content: z3.string()
+    saveNote: protectedProcedure.input(import_zod3.z.object({
+      grammarId: import_zod3.z.number(),
+      content: import_zod3.z.string()
     })).mutation(async ({ ctx, input }) => {
       return await upsertUserNote({
         userId: ctx.user.id,
@@ -2288,7 +2322,7 @@ var appRouter = router({
       });
     }),
     // 删除语法笔记
-    deleteNote: protectedProcedure.input(z3.object({ grammarId: z3.number() })).mutation(async ({ ctx, input }) => {
+    deleteNote: protectedProcedure.input(import_zod3.z.object({ grammarId: import_zod3.z.number() })).mutation(async ({ ctx, input }) => {
       await deleteUserNote(ctx.user.id, "grammar", input.grammarId);
       return { success: true };
     })
@@ -2302,7 +2336,7 @@ var appRouter = router({
     list: publicProcedure.query(async () => {
       return await getSceneList();
     }),
-    getById: publicProcedure.input(z3.object({ id: z3.number() })).query(async ({ input }) => {
+    getById: publicProcedure.input(import_zod3.z.object({ id: import_zod3.z.number() })).query(async ({ input }) => {
       return await getSceneById(input.id);
     })
   }),
@@ -2312,10 +2346,10 @@ var appRouter = router({
    * ============================================
    */
   learning: router({
-    recordProgress: protectedProcedure.input(z3.object({
-      itemType: z3.enum(["vocabulary", "grammar", "scene"]),
-      itemId: z3.number(),
-      masteryLevel: z3.enum(["learning", "familiar", "mastered"])
+    recordProgress: protectedProcedure.input(import_zod3.z.object({
+      itemType: import_zod3.z.enum(["vocabulary", "grammar", "scene"]),
+      itemId: import_zod3.z.number(),
+      masteryLevel: import_zod3.z.enum(["learning", "familiar", "mastered"])
     })).mutation(async ({ ctx, input }) => {
       await upsertLearningProgress({
         userId: ctx.user.id,
@@ -2344,8 +2378,8 @@ var appRouter = router({
         progress
       };
     }),
-    getReviewSchedule: protectedProcedure.input(z3.object({
-      limit: z3.number().optional()
+    getReviewSchedule: protectedProcedure.input(import_zod3.z.object({
+      limit: import_zod3.z.number().optional()
     })).query(async ({ ctx, input }) => {
       return await getReviewSchedule(ctx.user.id, input.limit);
     })
@@ -2357,10 +2391,10 @@ var appRouter = router({
    */
   ai: router({
     // 生成个性化例句
-    generateExamples: protectedProcedure.input(z3.object({
-      vocabularyId: z3.number().optional(),
-      grammarId: z3.number().optional(),
-      count: z3.number().default(3)
+    generateExamples: protectedProcedure.input(import_zod3.z.object({
+      vocabularyId: import_zod3.z.number().optional(),
+      grammarId: import_zod3.z.number().optional(),
+      count: import_zod3.z.number().default(3)
     })).mutation(async ({ ctx, input }) => {
       let context = "";
       if (input.vocabularyId) {
@@ -2431,10 +2465,10 @@ ${context}
       return { examples };
     }),
     // 生成对话场景
-    generateDialogue: protectedProcedure.input(z3.object({
-      vocabularyId: z3.number().optional(),
-      grammarId: z3.number().optional(),
-      scenario: z3.string().optional()
+    generateDialogue: protectedProcedure.input(import_zod3.z.object({
+      vocabularyId: import_zod3.z.number().optional(),
+      grammarId: import_zod3.z.number().optional(),
+      scenario: import_zod3.z.string().optional()
     })).mutation(async ({ ctx, input }) => {
       let context = "";
       if (input.vocabularyId) {
@@ -2513,9 +2547,9 @@ ${context}
       return result;
     }),
     // 解释语法点
-    explainGrammar: protectedProcedure.input(z3.object({
-      grammarPoint: z3.string(),
-      question: z3.string().optional()
+    explainGrammar: protectedProcedure.input(import_zod3.z.object({
+      grammarPoint: import_zod3.z.string(),
+      question: import_zod3.z.string().optional()
     })).mutation(async ({ ctx, input }) => {
       const response = await invokeLLM({
         messages: [
@@ -2597,9 +2631,9 @@ ${resources.map((r) => `- ${r.title}: ${r.url} (${r.description || ""})`).join("
       return { advice };
     }),
     // 生成下一阶段学习内容
-    generateNextStageContent: protectedProcedure.input(z3.object({
-      contentType: z3.enum(["vocabulary", "grammar", "exercise"]),
-      count: z3.number().default(5)
+    generateNextStageContent: protectedProcedure.input(import_zod3.z.object({
+      contentType: import_zod3.z.enum(["vocabulary", "grammar", "exercise"]),
+      count: import_zod3.z.number().default(5)
     })).mutation(async ({ ctx, input }) => {
       const userPath = await getUserLearningPath(ctx.user.id);
       if (!userPath) {
@@ -2673,10 +2707,10 @@ ${existingItems || "(\u6682\u65E0)"}
       return parsed;
     }),
     // 对话练习
-    chat: protectedProcedure.input(z3.object({
-      message: z3.string(),
-      context: z3.string().optional(),
-      conversationId: z3.number().optional()
+    chat: protectedProcedure.input(import_zod3.z.object({
+      message: import_zod3.z.string(),
+      context: import_zod3.z.string().optional(),
+      conversationId: import_zod3.z.number().optional()
     })).mutation(async ({ ctx, input }) => {
       let convId = input.conversationId;
       if (!convId) {
@@ -2711,25 +2745,25 @@ ${existingItems || "(\u6682\u65E0)"}
       return await getUserConversations(ctx.user.id);
     }),
     // 获取对话消息
-    getConversationMessages: protectedProcedure.input(z3.object({ conversationId: z3.number() })).query(async ({ input }) => {
+    getConversationMessages: protectedProcedure.input(import_zod3.z.object({ conversationId: import_zod3.z.number() })).query(async ({ input }) => {
       return await getConversationMessages(input.conversationId);
     }),
     // 删除对话
-    deleteConversation: protectedProcedure.input(z3.object({ conversationId: z3.number() })).mutation(async ({ ctx, input }) => {
+    deleteConversation: protectedProcedure.input(import_zod3.z.object({ conversationId: import_zod3.z.number() })).mutation(async ({ ctx, input }) => {
       await deleteConversation(input.conversationId, ctx.user.id);
       return { success: true };
     }),
     // 更新对话标题
-    updateConversationTitle: protectedProcedure.input(z3.object({
-      conversationId: z3.number(),
-      title: z3.string()
+    updateConversationTitle: protectedProcedure.input(import_zod3.z.object({
+      conversationId: import_zod3.z.number(),
+      title: import_zod3.z.string()
     })).mutation(async ({ ctx, input }) => {
       await updateConversationTitle(input.conversationId, ctx.user.id, input.title);
       return { success: true };
     }),
     // 分析词汇/语法点
-    analyzeWord: publicProcedure.input(z3.object({
-      text: z3.string().min(1).max(50)
+    analyzeWord: publicProcedure.input(import_zod3.z.object({
+      text: import_zod3.z.string().min(1).max(50)
     })).mutation(async ({ input }) => {
       const response = await invokeLLM({
         messages: [
@@ -2799,9 +2833,9 @@ ${existingItems || "(\u6682\u65E0)"}
       }
     }),
     // 翻译日语文本
-    translate: publicProcedure.input(z3.object({
-      text: z3.string(),
-      targetLang: z3.enum(["zh", "en"]).default("zh")
+    translate: publicProcedure.input(import_zod3.z.object({
+      text: import_zod3.z.string(),
+      targetLang: import_zod3.z.enum(["zh", "en"]).default("zh")
     })).mutation(async ({ input }) => {
       const response = await invokeLLM({
         messages: [
@@ -2820,8 +2854,8 @@ ${existingItems || "(\u6682\u65E0)"}
       return { translation };
     }),
     // 获取日语文本的假名读音
-    getReading: publicProcedure.input(z3.object({
-      text: z3.string()
+    getReading: publicProcedure.input(import_zod3.z.object({
+      text: import_zod3.z.string()
     })).mutation(async ({ input }) => {
       const hasKanji = /[\u4e00-\u9faf\u3400-\u4dbf]/.test(input.text);
       if (!hasKanji) {
@@ -2844,8 +2878,8 @@ ${existingItems || "(\u6682\u65E0)"}
       return { reading };
     }),
     // 分析句子 - 返回翻译、重要词汇和语法知识点
-    analyzeSentence: publicProcedure.input(z3.object({
-      sentence: z3.string().min(1).max(500)
+    analyzeSentence: publicProcedure.input(import_zod3.z.object({
+      sentence: import_zod3.z.string().min(1).max(500)
     })).mutation(async ({ input }) => {
       const response = await invokeLLM({
         messages: [
@@ -2919,9 +2953,9 @@ ${existingItems || "(\u6682\u65E0)"}
    * ============================================
    */
   voice: router({
-    transcribe: protectedProcedure.input(z3.object({
-      audioUrl: z3.string(),
-      language: z3.string().optional()
+    transcribe: protectedProcedure.input(import_zod3.z.object({
+      audioUrl: import_zod3.z.string(),
+      language: import_zod3.z.string().optional()
     })).mutation(async ({ input }) => {
       const result = await transcribeAudio({
         audioUrl: input.audioUrl,
@@ -2936,8 +2970,8 @@ ${existingItems || "(\u6682\u65E0)"}
    * ============================================
    */
   resources: router({
-    list: publicProcedure.input(z3.object({
-      category: z3.string().optional()
+    list: publicProcedure.input(import_zod3.z.object({
+      category: import_zod3.z.string().optional()
     })).query(async ({ input }) => {
       return await getActiveResources(input.category);
     })
@@ -2948,8 +2982,8 @@ ${existingItems || "(\u6682\u65E0)"}
    * ============================================
    */
   curriculum: router({
-    getByLevel: publicProcedure.input(z3.object({
-      level: z3.enum(["N5", "N4", "N3", "N2", "N1"])
+    getByLevel: publicProcedure.input(import_zod3.z.object({
+      level: import_zod3.z.enum(["N5", "N4", "N3", "N2", "N1"])
     })).query(async ({ input }) => {
       return await getCurriculumByLevel(input.level);
     }),
@@ -2974,51 +3008,51 @@ ${existingItems || "(\u6682\u65E0)"}
    */
   immersive: router({
     // 获取场景分类列表
-    getCategories: publicProcedure.input(z3.object({
-      parentId: z3.number().optional()
+    getCategories: publicProcedure.input(import_zod3.z.object({
+      parentId: import_zod3.z.number().optional()
     })).query(async ({ input }) => {
       return await getSceneCategories(input.parentId);
     }),
     // 获取学习单元列表
-    getUnits: publicProcedure.input(z3.object({
-      category: z3.string().optional(),
-      subCategory: z3.string().optional(),
-      unitType: z3.enum(["daily_conversation", "anime_scene", "jpop_lyrics", "movie_clip", "news_article", "business_japanese"]).optional(),
-      jlptLevel: z3.enum(["N5", "N4", "N3", "N2", "N1"]).optional(),
-      difficulty: z3.number().min(1).max(10).optional(),
-      limit: z3.number().optional(),
-      offset: z3.number().optional()
+    getUnits: publicProcedure.input(import_zod3.z.object({
+      category: import_zod3.z.string().optional(),
+      subCategory: import_zod3.z.string().optional(),
+      unitType: import_zod3.z.enum(["daily_conversation", "anime_scene", "jpop_lyrics", "movie_clip", "news_article", "business_japanese"]).optional(),
+      jlptLevel: import_zod3.z.enum(["N5", "N4", "N3", "N2", "N1"]).optional(),
+      difficulty: import_zod3.z.number().min(1).max(10).optional(),
+      limit: import_zod3.z.number().optional(),
+      offset: import_zod3.z.number().optional()
     })).query(async ({ input }) => {
       return await getLearningUnits(input);
     }),
     // 获取学习单元详情
-    getUnitById: publicProcedure.input(z3.object({ id: z3.number() })).query(async ({ input }) => {
+    getUnitById: publicProcedure.input(import_zod3.z.object({ id: import_zod3.z.number() })).query(async ({ input }) => {
       return await getLearningUnitById(input.id);
     }),
     // 获取媒体素材列表
-    getMediaMaterials: publicProcedure.input(z3.object({
-      mediaType: z3.enum(["anime", "jpop", "movie", "drama", "variety", "news"]).optional(),
-      jlptLevel: z3.enum(["N5", "N4", "N3", "N2", "N1"]).optional(),
-      limit: z3.number().optional(),
-      offset: z3.number().optional()
+    getMediaMaterials: publicProcedure.input(import_zod3.z.object({
+      mediaType: import_zod3.z.enum(["anime", "jpop", "movie", "drama", "variety", "news"]).optional(),
+      jlptLevel: import_zod3.z.enum(["N5", "N4", "N3", "N2", "N1"]).optional(),
+      limit: import_zod3.z.number().optional(),
+      offset: import_zod3.z.number().optional()
     })).query(async ({ input }) => {
       return await getMediaMaterials(input);
     }),
     // 获取媒体素材详情
-    getMediaById: publicProcedure.input(z3.object({ id: z3.number() })).query(async ({ input }) => {
+    getMediaById: publicProcedure.input(import_zod3.z.object({ id: import_zod3.z.number() })).query(async ({ input }) => {
       return await getMediaMaterialById(input.id);
     }),
     // 获取用户单元学习进度
-    getUserProgress: protectedProcedure.input(z3.object({
-      unitId: z3.number().optional()
+    getUserProgress: protectedProcedure.input(import_zod3.z.object({
+      unitId: import_zod3.z.number().optional()
     })).query(async ({ ctx, input }) => {
       return await getUserUnitProgress(ctx.user.id, input.unitId);
     }),
     // 更新用户单元学习进度
-    updateProgress: protectedProcedure.input(z3.object({
-      unitId: z3.number(),
-      status: z3.enum(["not_started", "in_progress", "completed", "mastered"]).optional(),
-      completionRate: z3.number().min(0).max(100).optional()
+    updateProgress: protectedProcedure.input(import_zod3.z.object({
+      unitId: import_zod3.z.number(),
+      status: import_zod3.z.enum(["not_started", "in_progress", "completed", "mastered"]).optional(),
+      completionRate: import_zod3.z.number().min(0).max(100).optional()
     })).mutation(async ({ ctx, input }) => {
       await updateUserUnitProgress({
         userId: ctx.user.id,
@@ -3029,17 +3063,17 @@ ${existingItems || "(\u6682\u65E0)"}
       return { success: true };
     }),
     // 获取每日学习计划
-    getDailyPlan: protectedProcedure.input(z3.object({
-      date: z3.string().optional()
+    getDailyPlan: protectedProcedure.input(import_zod3.z.object({
+      date: import_zod3.z.string().optional()
       // YYYY-MM-DD format
     })).query(async ({ ctx, input }) => {
       const date = input.date || (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
       return await getDailyLearningPlan(ctx.user.id, date);
     }),
     // 生成每日学习计划 (AI驱动)
-    generateDailyPlan: protectedProcedure.input(z3.object({
-      targetMinutes: z3.number().min(10).max(120).default(30),
-      focusAreas: z3.array(z3.string()).optional()
+    generateDailyPlan: protectedProcedure.input(import_zod3.z.object({
+      targetMinutes: import_zod3.z.number().min(10).max(120).default(30),
+      focusAreas: import_zod3.z.array(import_zod3.z.string()).optional()
     })).mutation(async ({ ctx, input }) => {
       const date = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
       const userProgress = await getUserUnitProgress(ctx.user.id);
@@ -3126,19 +3160,19 @@ ${recommendedUnits.slice(0, 10).map((u) => `- ID:${u.id} \u300C${u.titleJa}\u300
       return await getDailyLearningPlan(ctx.user.id, date);
     }),
     // 获取表达库
-    getExpressions: publicProcedure.input(z3.object({
-      functionCategory: z3.string().optional(),
-      situationCategory: z3.string().optional(),
-      jlptLevel: z3.enum(["N5", "N4", "N3", "N2", "N1"]).optional(),
-      limit: z3.number().optional(),
-      offset: z3.number().optional()
+    getExpressions: publicProcedure.input(import_zod3.z.object({
+      functionCategory: import_zod3.z.string().optional(),
+      situationCategory: import_zod3.z.string().optional(),
+      jlptLevel: import_zod3.z.enum(["N5", "N4", "N3", "N2", "N1"]).optional(),
+      limit: import_zod3.z.number().optional(),
+      offset: import_zod3.z.number().optional()
     })).query(async ({ input }) => {
       return await getExpressions(input);
     }),
     // AI生成对话变体
-    generateDialogueVariant: protectedProcedure.input(z3.object({
-      unitId: z3.number(),
-      style: z3.enum(["casual", "polite", "formal", "slang"]).default("casual")
+    generateDialogueVariant: protectedProcedure.input(import_zod3.z.object({
+      unitId: import_zod3.z.number(),
+      style: import_zod3.z.enum(["casual", "polite", "formal", "slang"]).default("casual")
     })).mutation(async ({ ctx, input }) => {
       const unit = await getLearningUnitById(input.unitId);
       if (!unit) {
@@ -3178,10 +3212,10 @@ ${recommendedUnits.slice(0, 10).map((u) => `- ID:${u.id} \u300C${u.titleJa}\u300
       return { dialogue: content };
     }),
     // 完成学习单元
-    completeUnit: protectedProcedure.input(z3.object({
-      unitId: z3.number(),
-      score: z3.number().min(0).max(100).optional(),
-      timeSpent: z3.number().optional()
+    completeUnit: protectedProcedure.input(import_zod3.z.object({
+      unitId: import_zod3.z.number(),
+      score: import_zod3.z.number().min(0).max(100).optional(),
+      timeSpent: import_zod3.z.number().optional()
       // 实际花费时间(分钟)
     })).mutation(async ({ ctx, input }) => {
       await updateUserUnitProgress({
@@ -3193,8 +3227,8 @@ ${recommendedUnits.slice(0, 10).map((u) => `- ID:${u.id} \u300C${u.titleJa}\u300
       return { success: true };
     }),
     // 获取单元知识扩展内容
-    getKnowledgeExpansion: publicProcedure.input(z3.object({
-      unitId: z3.number()
+    getKnowledgeExpansion: publicProcedure.input(import_zod3.z.object({
+      unitId: import_zod3.z.number()
     })).query(async ({ input }) => {
       const unit = await getLearningUnitById(input.unitId);
       if (!unit) {
@@ -3207,8 +3241,8 @@ ${recommendedUnits.slice(0, 10).map((u) => `- ID:${u.id} \u300C${u.titleJa}\u300
       return null;
     }),
     // AI生成知识扩展内容
-    generateKnowledgeExpansion: publicProcedure.input(z3.object({
-      unitId: z3.number()
+    generateKnowledgeExpansion: publicProcedure.input(import_zod3.z.object({
+      unitId: import_zod3.z.number()
     })).mutation(async ({ input }) => {
       const unit = await getLearningUnitById(input.unitId);
       if (!unit) {
@@ -3428,9 +3462,9 @@ JLPT\u7B49\u7EA7\uFF1A${unit.jlptLevel}
       return await getStudyStats(ctx.user.id);
     }),
     // 获取待复习内容
-    getDueReviews: protectedProcedure.input(z3.object({
-      itemType: z3.enum(["vocabulary", "grammar"]).optional(),
-      limit: z3.number().optional().default(50)
+    getDueReviews: protectedProcedure.input(import_zod3.z.object({
+      itemType: import_zod3.z.enum(["vocabulary", "grammar"]).optional(),
+      limit: import_zod3.z.number().optional().default(50)
     })).query(async ({ ctx, input }) => {
       const records = await getDueReviews(ctx.user.id, input.itemType, input.limit);
       const enrichedRecords = await Promise.all(
@@ -3447,36 +3481,36 @@ JLPT\u7B49\u7EA7\uFF1A${unit.jlptLevel}
       return enrichedRecords;
     }),
     // 添加到学习计划
-    addToStudyPlan: protectedProcedure.input(z3.object({
-      itemType: z3.enum(["vocabulary", "grammar"]),
-      itemId: z3.number()
+    addToStudyPlan: protectedProcedure.input(import_zod3.z.object({
+      itemType: import_zod3.z.enum(["vocabulary", "grammar"]),
+      itemId: import_zod3.z.number()
     })).mutation(async ({ ctx, input }) => {
       return await addStudyRecord(ctx.user.id, input.itemType, input.itemId);
     }),
     // 检查是否已在学习计划中
-    isInStudyPlan: protectedProcedure.input(z3.object({
-      itemType: z3.enum(["vocabulary", "grammar"]),
-      itemId: z3.number()
+    isInStudyPlan: protectedProcedure.input(import_zod3.z.object({
+      itemType: import_zod3.z.enum(["vocabulary", "grammar"]),
+      itemId: import_zod3.z.number()
     })).query(async ({ ctx, input }) => {
       return await isItemInStudyPlan(ctx.user.id, input.itemType, input.itemId);
     }),
     // 从学习计划中移除
-    removeFromStudyPlan: protectedProcedure.input(z3.object({
-      itemType: z3.enum(["vocabulary", "grammar"]),
-      itemId: z3.number()
+    removeFromStudyPlan: protectedProcedure.input(import_zod3.z.object({
+      itemType: import_zod3.z.enum(["vocabulary", "grammar"]),
+      itemId: import_zod3.z.number()
     })).mutation(async ({ ctx, input }) => {
       return await removeFromStudyPlan(ctx.user.id, input.itemType, input.itemId);
     }),
     // 更新复习结果
-    updateReviewResult: protectedProcedure.input(z3.object({
-      recordId: z3.number(),
-      quality: z3.number().min(1).max(5)
+    updateReviewResult: protectedProcedure.input(import_zod3.z.object({
+      recordId: import_zod3.z.number(),
+      quality: import_zod3.z.number().min(1).max(5)
     })).mutation(async ({ ctx, input }) => {
       return await updateReviewResult(ctx.user.id, input.recordId, input.quality);
     }),
     // 获取每日学习统计
-    getDailyStats: protectedProcedure.input(z3.object({
-      days: z3.number().optional().default(7)
+    getDailyStats: protectedProcedure.input(import_zod3.z.object({
+      days: import_zod3.z.number().optional().default(7)
     })).query(async ({ ctx, input }) => {
       return await getDailyStats(ctx.user.id, input.days);
     })
@@ -3499,13 +3533,13 @@ async function createContext(opts) {
 }
 
 // api/index.ts
-var app = express();
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ limit: "50mb", extended: true }));
+var app = (0, import_express.default)();
+app.use(import_express.default.json({ limit: "50mb" }));
+app.use(import_express.default.urlencoded({ limit: "50mb", extended: true }));
 registerOAuthRoutes(app);
 app.use(
   "/api/trpc",
-  createExpressMiddleware({
+  (0, import_express2.createExpressMiddleware)({
     router: appRouter,
     createContext
   })
@@ -3513,6 +3547,3 @@ app.use(
 function handler(req, res) {
   return app(req, res);
 }
-export {
-  handler as default
-};
