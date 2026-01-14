@@ -1,15 +1,21 @@
 {
   "version": 2,
   "buildCommand": "pnpm run build",
-  "outputDirectory": "dist/public",
+  "outputDirectory": "public",
+  "functions": {
+    "api/*.js": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
     {
       "source": "/api/oauth/:path*",
-      "destination": "/api/index"
+      "destination": "/api/index.js"
     },
     {
       "source": "/api/trpc/:path*",
-      "destination": "/api/index"
+      "destination": "/api/index.js"
     },
     {
       "source": "/:path*",
