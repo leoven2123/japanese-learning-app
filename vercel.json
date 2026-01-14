@@ -2,21 +2,23 @@
   "version": 2,
   "buildCommand": "pnpm run build",
   "outputDirectory": "dist/public",
-  "routes": [
+  "functions": {
+    "api/index.ts": {
+      "includeFiles": "{server/**/*,shared/**/*,drizzle/**/*}"
+    }
+  },
+  "rewrites": [
     {
-      "src": "/api/oauth/(.*)",
-      "dest": "/api/index.js"
+      "source": "/api/oauth/:path*",
+      "destination": "/api/index"
     },
     {
-      "src": "/api/trpc/(.*)",
-      "dest": "/api/index.js"
+      "source": "/api/trpc/:path*",
+      "destination": "/api/index"
     },
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/:path*",
+      "destination": "/index.html"
     }
   ]
 }
