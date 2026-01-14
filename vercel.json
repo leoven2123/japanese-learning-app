@@ -1,25 +1,35 @@
 {
   "version": 2,
-  "buildCommand": "pnpm run build",
-  "outputDirectory": "public",
-  "functions": {
-    "api/*.js": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  },
-  "rewrites": [
+  "builds": [
     {
-      "source": "/api/oauth/:path*",
-      "destination": "/api/index.js"
+      "src": "api/*.js",
+      "use": "@vercel/node"
     },
     {
-      "source": "/api/trpc/:path*",
-      "destination": "/api/index.js"
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/oauth/(.*)",
+      "dest": "/api/index.js"
     },
     {
-      "source": "/:path*",
-      "destination": "/index.html"
+      "src": "/api/trpc/(.*)",
+      "dest": "/api/index.js"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1.js"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
     }
-  ]
+  ],
+  "buildCommand": "pnpm run build"
 }
