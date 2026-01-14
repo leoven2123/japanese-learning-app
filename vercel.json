@@ -2,13 +2,6 @@
   "version": 2,
   "buildCommand": "pnpm run build",
   "outputDirectory": "dist/public",
-  "functions": {
-    "api/**/*.ts": {
-      "memory": 1024,
-      "maxDuration": 30,
-      "includeFiles": "**"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/oauth/:path*",
