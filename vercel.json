@@ -1,45 +1,36 @@
 {
-  "version": 2,
-  "buildCommand": "pnpm run build",
-  "outputDirectory": "dist/public",
-  "builds": [
-    {
-      "src": "api/index.ts",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist/public"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/oauth/.*",
-      "dest": "/api/index.ts"
-    },
-    {
-      "src": "/api/trpc/.*",
-      "dest": "/api/index.ts"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/dist/public/$1"
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "/api/index.ts"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/dist/public/index.html"
-    }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+    "version": 2,
+    "buildCommand": "pnpm run build",
+    "outputDirectory": "dist/public",
+    "builds": [
+          {
+                  "src": "api/index.ts",
+                  "use": "@vercel/node"
+          },
+          {
+                  "src": "package.json",
+                  "use": "@vercel/static-build",
+                  "config": {
+                            "distDir": "dist/public"
+                  }
+          }
+    ],
+    "routes": [
+          {
+                  "src": "/api/oauth/.*",
+                  "dest": "/api/index.ts"
+          },
+          {
+                  "src": "/api/trpc/.*",
+                  "dest": "/api/index.ts"
+          },
+          {
+                  "src": "/dist/public/.*",
+                  "dest": "/dist/public/$1"
+          },
+          {
+                  "src": "/(.*)",
+                  "dest": "/dist/public/index.html"
+          }
+    ]
 }
