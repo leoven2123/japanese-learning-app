@@ -1,15 +1,10 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "api/**/*.js", "use": "@vercel/node" },
-    { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "public" } }
-  ],
-  "routes": [
-    { "src": "/api/oauth/(.*)", "dest": "/api/index.js" },
-    { "src": "/api/trpc/(.*)", "dest": "/api/index.js" },
-    { "src": "/api/ping", "dest": "/api/ping.js" },
-    { "src": "/assets/(.*)", "dest": "/assets/$1" },
-    { "src": "/(.*\.(js|css|ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot))", "dest": "/$1" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "buildCommand": "pnpm run build",
+  "outputDirectory": "public",
+  "rewrites": [
+    { "source": "/api/oauth/:path*", "destination": "/api/index.js" },
+    { "source": "/api/trpc/:path*", "destination": "/api/index.js" },
+    { "source": "/:path((?!api/).*)", "destination": "/index.html" }
   ]
 }
