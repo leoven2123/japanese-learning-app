@@ -238,7 +238,7 @@ export async function updateSlangWords(): Promise<{
               category: "slang",
               difficulty: 3
             })
-            .$returningId();
+            .returning({ id: vocabulary.id });
 
           // 插入例句
           if (inserted && word.examples && word.examples.length > 0) {
@@ -254,7 +254,7 @@ export async function updateSlangWords(): Promise<{
                   sourceType: "web",
                   difficulty: 3
                 })
-                .$returningId();
+                .returning({ id: sentences.id });
 
               if (sentenceInserted) {
                 await db.insert(vocabularySentences).values({

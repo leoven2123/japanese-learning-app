@@ -730,9 +730,9 @@ export async function createConversation(userId: number, title: string) {
     userId,
     title,
     lastMessageAt: new Date(),
-  });
+  }).returning({ id: conversations.id });
 
-  return result[0].insertId;
+  return result[0].id;
 }
 
 /**
@@ -888,9 +888,9 @@ export async function upsertUserNote(data: {
       itemType: data.itemType,
       itemId: data.itemId,
       content: data.content,
-    });
+    }).returning({ id: userNotes.id });
     return {
-      id: Number(result[0].insertId),
+      id: result[0].id,
       ...data,
     };
   }
@@ -989,7 +989,7 @@ export async function addStudyRecord(
 
   // 创建新的学习记录
   const nextReviewAt = calculateNextReviewTime(0);
-  
+
   const result = await db.insert(studyRecords).values({
     userId,
     itemType,
@@ -1002,12 +1002,12 @@ export async function addStudyRecord(
     correctCount: 0,
     incorrectCount: 0,
     isMastered: false,
-  });
+  }).returning({ id: studyRecords.id });
 
   // 更新每日统计
   await updateDailyStats(userId, { newItemsLearned: 1 });
 
-  return { id: result[0].insertId, nextReviewAt };
+  return { id: result[0].id, nextReviewAt };
 }
 
 /**
@@ -1399,8 +1399,8 @@ export async function createLearningUnit(data: InsertLearningUnit) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const result = await db.insert(learningUnits).values(data);
-  return result[0].insertId;
+  const result = await db.insert(learningUnits).values(data).returning({ id: learningUnits.id });
+  return result[0].id;
 }
 
 /**
@@ -1468,8 +1468,8 @@ export async function createMediaMaterial(data: InsertMediaMaterial) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const result = await db.insert(mediaMaterials).values(data);
-  return result[0].insertId;
+  const result = await db.insert(mediaMaterials).values(data).returning({ id: mediaMaterials.id });
+  return result[0].id;
 }
 
 /**
@@ -1596,8 +1596,8 @@ export async function upsertDailyLearningPlan(data: {
       aiReasoning: data.aiReasoning,
       totalPlannedMinutes: totalMinutes,
       actualStudyMinutes: 0,
-    });
-    return result[0].insertId;
+    }).returning({ id: dailyLearningPlans.id });
+    return result[0].id;
   }
 }
 
@@ -1655,8 +1655,8 @@ export async function createExpression(data: InsertExpressionBank) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const result = await db.insert(expressionBank).values(data);
-  return result[0].insertId;
+  const result = await db.insert(expressionBank).values(data).returning({ id: expressionBank.id });
+  return result[0].id;
 }
 
 /**

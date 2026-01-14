@@ -2,44 +2,23 @@
   "version": 2,
   "buildCommand": "pnpm run build",
   "outputDirectory": "dist/public",
-  "builds": [
-    {
-      "src": "api/index.ts",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist/public"
-      }
+  "functions": {
+    "api/index.ts": {
+      "runtime": "@vercel/node@3"
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/oauth/.*",
-      "dest": "/api/index.ts"
-    },
-    {
-      "src": "/api/trpc/.*",
-      "dest": "/api/index.ts"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/dist/public/$1"
-    }
-  ],
+  },
   "rewrites": [
     {
-      "source": "/api/:path*",
+      "source": "/api/oauth/:path*",
       "destination": "/api/index.ts"
     },
     {
-      "source": "/(.*)",
-      "destination": "/dist/public/index.html"
+      "source": "/api/trpc/:path*",
+      "destination": "/api/index.ts"
+    },
+    {
+      "source": "/:path((?!api/).*)",
+      "destination": "/index.html"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
