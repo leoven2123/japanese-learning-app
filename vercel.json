@@ -2,18 +2,21 @@
   "version": 2,
   "buildCommand": "pnpm run build",
   "outputDirectory": "dist/public",
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/oauth/:path*",
-      "destination": "/api/index.js"
+      "src": "/api/oauth/(.*)",
+      "dest": "/api/index.js"
     },
     {
-      "source": "/api/trpc/:path*",
-      "destination": "/api/index.js"
+      "src": "/api/trpc/(.*)",
+      "dest": "/api/index.js"
     },
     {
-      "source": "/:path((?!api/).*)",
-      "destination": "/index.html"
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
