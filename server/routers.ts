@@ -1,4 +1,4 @@
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { router, publicProcedure, protectedProcedure } from "./_core/trpc";
@@ -8,13 +8,135 @@ import * as db from "./db";
 import { invokeLLM } from "./_core/llm";
 import { transcribeAudio } from "./_core/voiceTranscription";
 import { updateSlangWords, getSlangUpdateStatus } from "./slangUpdater";
+import { hashPassword, verifyPassword } from "./utils/password";
+import { sdk } from "./_core/sdk";
+import { TRPCError } from "@trpc/server";
+
+// Helper function to clean LLM response and extract JSON
+function extractJSON(content: string): string {
+  // Remove markdown code blocks if present
+  let cleaned = content.trim();
+  if (cleaned.startsWith('```json')) {
+    cleaned = cleaned.slice(7);
+  } else if (cleaned.startsWith('```')) {
+    cleaned = cleaned.slice(3);
+  }
+  if (cleaned.endsWith('```')) {
+    cleaned = cleaned.slice(0, -3);
+  }
+  return cleaned.trim();
+}
 
 export const appRouter = router({
   admin: adminRouter,
   system: systemRouter,
-  
+
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
+
+    register: publicProcedure
+      .input(z.object({
+        username: z.string().min(3).max(64),
+        email: z.string().email().optional(),
+        password: z.string().min(6).max(100),
+        name: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Check if username already exists
+        const existingUsername = await db.getUserByUsername(input.username);
+        if (existingUsername) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "用户名已存在",
+          });
+        }
+
+        // Check if email already exists (if provided)
+        if (input.email) {
+          const existingEmail = await db.getUserByEmail(input.email);
+          if (existingEmail) {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message: "邮箱已被注册",
+            });
+          }
+        }
+
+        // Hash password and create user
+        const passwordHash = await hashPassword(input.password);
+        const userId = await db.createUser({
+          username: input.username,
+          email: input.email,
+          passwordHash,
+          name: input.name,
+        });
+
+        // Create session token
+        const sessionToken = await sdk.createSessionToken(userId, {
+          name: input.name || input.username,
+          expiresInMs: ONE_YEAR_MS,
+        });
+
+        // Set cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, {
+          ...cookieOptions,
+          maxAge: ONE_YEAR_MS,
+        });
+
+        return { success: true, userId };
+      }),
+
+    login: publicProcedure
+      .input(z.object({
+        identifier: z.string().min(1), // username or email
+        password: z.string().min(1),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Find user by username or email
+        const user = await db.getUserByEmailOrUsername(input.identifier);
+        if (!user) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "用户名或密码错误",
+          });
+        }
+
+        // Verify password
+        if (!user.passwordHash) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "该账户未设置密码",
+          });
+        }
+
+        const isValid = await verifyPassword(input.password, user.passwordHash);
+        if (!isValid) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "用户名或密码错误",
+          });
+        }
+
+        // Update last signed in
+        await db.updateUserLastSignedIn(user.id);
+
+        // Create session token
+        const sessionToken = await sdk.createSessionToken(user.id, {
+          name: user.name || user.username || "",
+          expiresInMs: ONE_YEAR_MS,
+        });
+
+        // Set cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, {
+          ...cookieOptions,
+          maxAge: ONE_YEAR_MS,
+        });
+
+        return { success: true, userId: user.id };
+      }),
+
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
@@ -294,18 +416,20 @@ export const appRouter = router({
         
         const content = response.choices[0]?.message?.content;
         if (!content || typeof content !== 'string') return { examples: [] };
-        
-        const parsed = JSON.parse(content);
-        
+
+        const parsed = JSON.parse(extractJSON(content));
+        // LLM may return array directly or wrapped in { examples: [...] }
+        const examples = Array.isArray(parsed) ? parsed : (parsed.examples || []);
+
         // 保存AI生成的内容
         await db.saveAIGeneratedContent({
           userId: ctx.user.id,
           contentType: "dialogue",
           prompt: `生成例句: ${context}`,
-          generatedContent: parsed.examples,
+          generatedContent: examples,
         });
-        
-        return parsed;
+
+        return { examples };
       }),
 
     // 生成对话场景
@@ -377,7 +501,7 @@ export const appRouter = router({
         
         const content = response.choices[0]?.message?.content;
         const contentStr = typeof content === 'string' ? content : '{}';
-        const result = JSON.parse(contentStr);
+        const result = JSON.parse(extractJSON(contentStr));
         
         // 保存AI生成的内容
         await db.saveAIGeneratedContent({
@@ -573,7 +697,7 @@ ${existingItems || '(暂无)'}
         if (!content || typeof content !== 'string') {
           throw new Error("无法生成内容");
         }
-        const parsed = JSON.parse(content);
+        const parsed = JSON.parse(extractJSON(content));
         
         // 保存生成的内容
         await db.saveAIGeneratedContent({
@@ -730,9 +854,9 @@ ${existingItems || '(暂无)'}
         
         const content = response.choices[0]?.message?.content;
         if (!content || typeof content !== 'string') return null;
-        
+
         try {
-          return JSON.parse(content);
+          return JSON.parse(extractJSON(content));
         } catch {
           return null;
         }
@@ -1118,9 +1242,9 @@ ${recommendedUnits.slice(0, 10).map(u => `- ID:${u.id} 「${u.titleJa}」 难度
         
         const content = response.choices[0]?.message?.content;
         let plan = { reasoning: "", units: [] as any[] };
-        
+
         try {
-          plan = JSON.parse(typeof content === 'string' ? content : '{}');
+          plan = JSON.parse(extractJSON(typeof content === 'string' ? content : '{}'));
         } catch (e) {
           console.error('Failed to parse AI response:', e);
         }
@@ -1426,9 +1550,9 @@ JLPT等级：${unit.jlptLevel}
         
         const content = response.choices[0]?.message?.content;
         let expansion = null;
-        
+
         try {
-          expansion = JSON.parse(typeof content === 'string' ? content : '{}');
+          expansion = JSON.parse(extractJSON(typeof content === 'string' ? content : '{}'));
         } catch (e) {
           console.error('Failed to parse AI response:', e);
           throw new Error('生成知识扩展内容失败');
