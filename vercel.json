@@ -4,14 +4,14 @@
   "buildCommand": "pnpm run build",
   "outputDirectory": "public",
   "functions": {
-    "api/*.js": {
+    "api/*.mjs": {
       "memory": 1024,
       "maxDuration": 30
     }
   },
   "rewrites": [
-    { "source": "/api/oauth/:path*", "destination": "/api/index.js" },
-    { "source": "/api/trpc/:path*", "destination": "/api/index.js" },
+    { "source": "/api/oauth/:path*", "destination": "/api/index.mjs" },
+    { "source": "/api/trpc/:path*", "destination": "/api/index.mjs" },
     { "source": "/:path((?!api/).*)", "destination": "/index.html" }
   ]
 }

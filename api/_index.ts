@@ -1,4 +1,4 @@
-import "dotenv/config";
+// dotenv is not needed on Vercel - environment variables are injected automatically
 import express from "express";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "../server/_core/oauth";
