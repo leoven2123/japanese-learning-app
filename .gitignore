@@ -109,3 +109,8 @@ temp/
 # Vercel
 .vercel
 .vercel/
+
+# Build outputs - Vercel will build these
+public/
+api/*.js
+api/*.mjs
