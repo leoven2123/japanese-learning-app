@@ -42,49 +42,62 @@ export const appRouter = router({
         name: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
-        // Check if username already exists
-        const existingUsername = await db.getUserByUsername(input.username);
-        if (existingUsername) {
-          throw new TRPCError({
-            code: "CONFLICT",
-            message: "用户名已存在",
-          });
-        }
-
-        // Check if email already exists (if provided)
-        if (input.email) {
-          const existingEmail = await db.getUserByEmail(input.email);
-          if (existingEmail) {
+        try {
+          // Check if username already exists
+          const existingUsername = await db.getUserByUsername(input.username);
+          if (existingUsername) {
             throw new TRPCError({
               code: "CONFLICT",
-              message: "邮箱已被注册",
+              message: "用户名已存在",
             });
           }
+
+          // Check if email already exists (if provided)
+          if (input.email) {
+            const existingEmail = await db.getUserByEmail(input.email);
+            if (existingEmail) {
+              throw new TRPCError({
+                code: "CONFLICT",
+                message: "邮箱已被注册",
+              });
+            }
+          }
+
+          // Hash password and create user
+          const passwordHash = await hashPassword(input.password);
+          const userId = await db.createUser({
+            username: input.username,
+            email: input.email,
+            passwordHash,
+            name: input.name,
+          });
+
+          // Create session token
+          const sessionToken = await sdk.createSessionToken(userId, {
+            name: input.name || input.username,
+            expiresInMs: ONE_YEAR_MS,
+          });
+
+          // Set cookie
+          const cookieOptions = getSessionCookieOptions(ctx.req);
+          ctx.res.cookie(COOKIE_NAME, sessionToken, {
+            ...cookieOptions,
+            maxAge: ONE_YEAR_MS,
+          });
+
+          return { success: true, userId };
+        } catch (error) {
+          // Re-throw TRPCErrors as-is
+          if (error instanceof TRPCError) {
+            throw error;
+          }
+          // Wrap other errors in TRPCError for proper JSON response
+          console.error("[Register Error]", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: error instanceof Error ? error.message : "注册失败，请稍后重试",
+          });
         }
-
-        // Hash password and create user
-        const passwordHash = await hashPassword(input.password);
-        const userId = await db.createUser({
-          username: input.username,
-          email: input.email,
-          passwordHash,
-          name: input.name,
-        });
-
-        // Create session token
-        const sessionToken = await sdk.createSessionToken(userId, {
-          name: input.name || input.username,
-          expiresInMs: ONE_YEAR_MS,
-        });
-
-        // Set cookie
-        const cookieOptions = getSessionCookieOptions(ctx.req);
-        ctx.res.cookie(COOKIE_NAME, sessionToken, {
-          ...cookieOptions,
-          maxAge: ONE_YEAR_MS,
-        });
-
-        return { success: true, userId };
       }),
 
     login: publicProcedure
@@ -93,48 +106,61 @@ export const appRouter = router({
         password: z.string().min(1),
       }))
       .mutation(async ({ ctx, input }) => {
-        // Find user by username or email
-        const user = await db.getUserByEmailOrUsername(input.identifier);
-        if (!user) {
+        try {
+          // Find user by username or email
+          const user = await db.getUserByEmailOrUsername(input.identifier);
+          if (!user) {
+            throw new TRPCError({
+              code: "UNAUTHORIZED",
+              message: "用户名或密码错误",
+            });
+          }
+
+          // Verify password
+          if (!user.passwordHash) {
+            throw new TRPCError({
+              code: "UNAUTHORIZED",
+              message: "该账户未设置密码",
+            });
+          }
+
+          const isValid = await verifyPassword(input.password, user.passwordHash);
+          if (!isValid) {
+            throw new TRPCError({
+              code: "UNAUTHORIZED",
+              message: "用户名或密码错误",
+            });
+          }
+
+          // Update last signed in
+          await db.updateUserLastSignedIn(user.id);
+
+          // Create session token
+          const sessionToken = await sdk.createSessionToken(user.id, {
+            name: user.name || user.username || "",
+            expiresInMs: ONE_YEAR_MS,
+          });
+
+          // Set cookie
+          const cookieOptions = getSessionCookieOptions(ctx.req);
+          ctx.res.cookie(COOKIE_NAME, sessionToken, {
+            ...cookieOptions,
+            maxAge: ONE_YEAR_MS,
+          });
+
+          return { success: true, userId: user.id };
+        } catch (error) {
+          // Re-throw TRPCErrors as-is
+          if (error instanceof TRPCError) {
+            throw error;
+          }
+          // Wrap other errors in TRPCError for proper JSON response
+          console.error("[Login Error]", error);
           throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "用户名或密码错误",
+            code: "INTERNAL_SERVER_ERROR",
+            message: error instanceof Error ? error.message : "登录失败，请稍后重试",
           });
         }
-
-        // Verify password
-        if (!user.passwordHash) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "该账户未设置密码",
-          });
-        }
-
-        const isValid = await verifyPassword(input.password, user.passwordHash);
-        if (!isValid) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "用户名或密码错误",
-          });
-        }
-
-        // Update last signed in
-        await db.updateUserLastSignedIn(user.id);
-
-        // Create session token
-        const sessionToken = await sdk.createSessionToken(user.id, {
-          name: user.name || user.username || "",
-          expiresInMs: ONE_YEAR_MS,
-        });
-
-        // Set cookie
-        const cookieOptions = getSessionCookieOptions(ctx.req);
-        ctx.res.cookie(COOKIE_NAME, sessionToken, {
-          ...cookieOptions,
-          maxAge: ONE_YEAR_MS,
-        });
-
-        return { success: true, userId: user.id };
       }),
 
     logout: publicProcedure.mutation(({ ctx }) => {
